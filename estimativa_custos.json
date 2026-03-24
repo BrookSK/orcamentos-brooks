@@ -1,0 +1,1004 @@
+{
+    "cabecalho": {
+        "cliente": "Rose e Marco",
+        "arquiteto": "JOIA BERGAMO",
+        "obra": "Residência RM",
+        "endereco": "Alameda Piratuba, 267. Condomínio Morada dos Lagos",
+        "local": "Barueri/SP",
+        "data": "25-fev-25",
+        "revisao": "00",
+        "area": "1677,00 m²",
+        "proposta": "P 025 25",
+        "contrato": "Administração",
+        "prazo_execucao": "210,00 dias"
+    },
+    "servicos_preliminares": [
+        {
+            "codigo": "1",
+            "descricao": "PROJETOS COMPLEMENTARES",
+            "itens": [
+                {
+                    "codigo": "1.1",
+                    "descricao": "PROJETO DE INSTALAÇÕES ELÉTRICAS (Entrada de energia, Distribuição elétrica de baixa tensão, Infraestrutura seca para sistemas complementares)",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 33760.0,
+                    "valor_total": 33760.0
+                },
+                {
+                    "codigo": "1.2",
+                    "descricao": "PROJETO DE INSTALAÇÕES HIDRÁULICAS E GÁS (Esgoto, Água fria/quente, Aquecimento, Hidromassagem, Dreno AC, Isométricos, Gás)",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 29840.0,
+                    "valor_total": 29840.0
+                },
+                {
+                    "codigo": "1.3",
+                    "descricao": "PROJETO ESTRUTURAL",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 55000.0,
+                    "valor_total": 55000.0
+                },
+                {
+                    "codigo": "1.4",
+                    "descricao": "PROJETO DE FUNDAÇÃO E CONTENÇÃO + Consultoria",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 21000.0,
+                    "valor_total": 21000.0
+                },
+                {
+                    "codigo": "1.5",
+                    "descricao": "PROJETO DE AR CONDICIONADO E EXAUSTÃO",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 0.0,
+                    "valor_total": 0.0,
+                    "status": "excluso"
+                },
+                {
+                    "codigo": "1.6",
+                    "descricao": "PROJETO DE AUTOMAÇÃO",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 0.0,
+                    "valor_total": 0.0,
+                    "status": "excluso"
+                }
+            ],
+            "total_grupo": 139600.0
+        },
+        {
+            "codigo": "2",
+            "descricao": "CANTEIRO DE OBRAS",
+            "itens": [
+                {
+                    "codigo": "2.1",
+                    "descricao": "Instalações provisórias",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 3000.0,
+                    "valor_total": 3000.0
+                },
+                {
+                    "codigo": "2.2",
+                    "descricao": "Locação de containers para canteiro de obras",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 2700.0,
+                    "valor_total": 18900.0
+                },
+                {
+                    "codigo": "2.3",
+                    "descricao": "Fretes ida e volta de containers",
+                    "quantidade": 2.0,
+                    "unidade": "unid",
+                    "valor_unitario": 4000.0,
+                    "valor_total": 8000.0
+                },
+                {
+                    "codigo": "2.4",
+                    "descricao": "Isolamento de tapume com telha trapezoidal metálica h: 2,3m",
+                    "quantidade": 71.3,
+                    "unidade": "m²",
+                    "valor_unitario": 200.0,
+                    "valor_total": 14260.0
+                },
+                {
+                    "codigo": "2.5",
+                    "descricao": "Caçamba estacionária para remoção de entulho",
+                    "quantidade": 56.0,
+                    "unidade": "und",
+                    "valor_unitario": 430.0,
+                    "valor_total": 24080.0
+                },
+                {
+                    "codigo": "2.6",
+                    "descricao": "Locação de equipamentos gerais de obra",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 900.0,
+                    "valor_total": 6300.0
+                },
+                {
+                    "codigo": "2.7",
+                    "descricao": "Locação de andaimes",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 5500.0,
+                    "valor_total": 5500.0
+                },
+                {
+                    "codigo": "2.8",
+                    "descricao": "Fretes e carretos - entrega de materiais",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 1300.0,
+                    "valor_total": 9100.0
+                },
+                {
+                    "codigo": "2.8",
+                    "descricao": "Despesas de canteiro - Materiais de escritório, limpeza e TI",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 600.0,
+                    "valor_total": 4200.0
+                },
+                {
+                    "codigo": "2.9",
+                    "descricao": "Consumo de água fria, esgoto e elétrica",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 0.0,
+                    "valor_total": 0.0,
+                    "status": "excluso"
+                },
+                {
+                    "codigo": "2.10",
+                    "descricao": "Lava rodas / wap",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 2500.0,
+                    "valor_total": 2500.0
+                },
+                {
+                    "codigo": "2.11",
+                    "descricao": "Consultoria de Segurança - Técnico de Seg. do Trabalho",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 4500.0,
+                    "valor_total": 31500.0
+                }
+            ],
+            "total_grupo": 127340.0
+        },
+        {
+            "codigo": "3",
+            "descricao": "TAXAS E SEGUROS",
+            "itens": [
+                {
+                    "codigo": "3.1",
+                    "descricao": "ART - Anotação de Responsabilidade Técnica",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 300.0,
+                    "valor_total": 300.0
+                },
+                {
+                    "codigo": "3.2",
+                    "descricao": "Seguro de Obra",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 16350.75,
+                    "valor_total": 16350.75
+                },
+                {
+                    "codigo": "3.3",
+                    "descricao": "Cópias e plotagens de projetos",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 700.0,
+                    "valor_total": 4900.0
+                },
+                {
+                    "codigo": "3.4",
+                    "descricao": "Abertura e fechamento de CNO",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 0.0,
+                    "valor_total": 0.0,
+                    "status": "excluso"
+                },
+                {
+                    "codigo": "3.5",
+                    "descricao": "Acompanhamento fiscal - Análise tributária (ISS/INSS)",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 0.0,
+                    "valor_total": 0.0,
+                    "status": "excluso"
+                },
+                {
+                    "codigo": "3.6",
+                    "descricao": "Laudo de vistoria cautelar em vizinhança - 02 Vizinhos",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 6000.0,
+                    "valor_total": 6000.0
+                }
+            ],
+            "total_grupo": 27550.75
+        },
+        {
+            "codigo": "4",
+            "descricao": "EQUIPE TÉCNICA",
+            "itens": [
+                {
+                    "codigo": "4.1",
+                    "descricao": "Engenheiro residente",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 14331.69,
+                    "valor_total": 100321.83
+                },
+                {
+                    "codigo": "4.2",
+                    "descricao": "Encarregado de Obras",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 12203.71,
+                    "valor_total": 85425.97
+                },
+                {
+                    "codigo": "4.3",
+                    "descricao": "Estagiário de Arq./Eng.",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 3701.86,
+                    "valor_total": 25913.02
+                },
+                {
+                    "codigo": "4.4",
+                    "descricao": "Refeição e transporte de equipe",
+                    "quantidade": 7.0,
+                    "unidade": "mês",
+                    "valor_unitario": 4330.0,
+                    "valor_total": 30310.0
+                }
+            ],
+            "total_grupo": 241970.82
+        }
+    ],
+    "obra": [
+        {
+            "codigo": "5",
+            "descricao": "MOVIMENTAÇÃO DE TERRA",
+            "itens": [
+                {
+                    "codigo": "5.1.1",
+                    "descricao": "Mobilização e desmobilização de equipamento",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 7500.0,
+                    "valor_total": 7500.0
+                },
+                {
+                    "codigo": "5.1.2",
+                    "descricao": "Escavação",
+                    "quantidade": 414.0,
+                    "unidade": "m³",
+                    "valor_unitario": 75.0,
+                    "valor_total": 31050.0
+                },
+                {
+                    "codigo": "5.1.3",
+                    "descricao": "Bota fora de material escavado | Empolamento: 30%",
+                    "quantidade": 538.2,
+                    "unidade": "m³",
+                    "valor_unitario": 125.0,
+                    "valor_total": 67275.0
+                },
+                {
+                    "codigo": "5.1.4",
+                    "descricao": "Regularização/limpeza de terreno",
+                    "quantidade": 1338.0,
+                    "unidade": "m²",
+                    "valor_unitario": 6.0,
+                    "valor_total": 8028.0
+                },
+                {
+                    "codigo": "5.1.5",
+                    "descricao": "Topógrafo para terraplenagem e fundações",
+                    "quantidade": 5.0,
+                    "unidade": "dia",
+                    "valor_unitario": 1500.0,
+                    "valor_total": 7500.0
+                },
+                {
+                    "codigo": "5.1.6",
+                    "descricao": "Execução de gabarito",
+                    "quantidade": 130.0,
+                    "unidade": "m",
+                    "valor_unitario": 85.0,
+                    "valor_total": 11050.0
+                }
+            ],
+            "total_grupo": 132403.0,
+            "observacoes": "EXCLUSO CORTE / RETIRADA DE ROCHAS. ESTA REGIÃO POSSUI MUITO MATACÃO"
+        },
+        {
+            "codigo": "6",
+            "descricao": "FUNDAÇÕES",
+            "subgrupos": [
+                {
+                    "codigo": "6.1",
+                    "descricao": "FUNDAÇÃO PROFUNDA - TUBULÃO / ESTACA ESCAVADA",
+                    "itens": [
+                        {
+                            "codigo": "6.1.1",
+                            "descricao": "Mobilização de equipamento",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 2000.0,
+                            "valor_total": 2000.0
+                        },
+                        {
+                            "codigo": "6.1.2",
+                            "descricao": "Execução de 35 tubulões x 6m de profundidade e diâmetro 80cm",
+                            "quantidade": 210.0,
+                            "unidade": "m",
+                            "valor_unitario": 60.5,
+                            "valor_total": 12705.0
+                        },
+                        {
+                            "codigo": "6.1.3",
+                            "descricao": "Abertura de base 120cm",
+                            "quantidade": 40.0,
+                            "unidade": "unid",
+                            "valor_unitario": 275.0,
+                            "valor_total": 11000.0
+                        },
+                        {
+                            "codigo": "6.1.4",
+                            "descricao": "Execução de 12 estacas escavadas x 6m de profundidade Ø30cm",
+                            "quantidade": 72.0,
+                            "unidade": "m",
+                            "valor_unitario": 40.0,
+                            "valor_total": 2880.0
+                        },
+                        {
+                            "codigo": "6.1.5",
+                            "descricao": "Montagem de ferragem das estacas / tubulão",
+                            "quantidade": 3979.4,
+                            "unidade": "kg",
+                            "valor_unitario": 2.8,
+                            "valor_total": 11142.32
+                        },
+                        {
+                            "codigo": "6.1.6",
+                            "descricao": "Fornecimento de Armação CA-50",
+                            "quantidade": 3979.4,
+                            "unidade": "kg",
+                            "valor_unitario": 9.5,
+                            "valor_total": 37804.31
+                        },
+                        {
+                            "codigo": "6.1.7",
+                            "descricao": "Concreto fck 30MPa bombeado",
+                            "quantidade": 153.1,
+                            "unidade": "m³",
+                            "valor_unitario": 666.67,
+                            "valor_total": 102035.92
+                        },
+                        {
+                            "codigo": "6.1.8",
+                            "descricao": "Arrasamento de estacas",
+                            "quantidade": 47.0,
+                            "unidade": "unid",
+                            "valor_unitario": 220.0,
+                            "valor_total": 10340.0
+                        },
+                        {
+                            "codigo": "6.1.9",
+                            "descricao": "Bota fora de material escavado | Empolamento: 30%",
+                            "quantidade": 183.7,
+                            "unidade": "m³",
+                            "valor_unitario": 100.0,
+                            "valor_total": 18366.47
+                        },
+                        {
+                            "codigo": "6.1.10",
+                            "descricao": "Apoio civil",
+                            "quantidade": 5.0,
+                            "unidade": "dia",
+                            "valor_unitario": 320.0,
+                            "valor_total": 1600.0
+                        },
+                        {
+                            "codigo": "6.1.11",
+                            "descricao": "Ensaio tecnológico para concreto",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 7652.69,
+                            "valor_total": 7652.69
+                        }
+                    ],
+                    "total_subgrupo": 217526.71
+                },
+                {
+                    "codigo": "6.2",
+                    "descricao": "BLOCOS E BALDRAMES",
+                    "itens": [
+                        {
+                            "codigo": "6.2.1",
+                            "descricao": "Escavação",
+                            "quantidade": 92.87,
+                            "unidade": "m³",
+                            "valor_unitario": 360.0,
+                            "valor_total": 33433.92
+                        },
+                        {
+                            "codigo": "6.2.2",
+                            "descricao": "Lastro de concreto magro fck 10/15MPa",
+                            "quantidade": 4.7,
+                            "unidade": "m³",
+                            "valor_unitario": 400.0,
+                            "valor_total": 1880.0
+                        },
+                        {
+                            "codigo": "6.2.3",
+                            "descricao": "Forma",
+                            "quantidade": 420.4,
+                            "unidade": "m²",
+                            "valor_unitario": 55.0,
+                            "valor_total": 23122.0
+                        },
+                        {
+                            "codigo": "6.2.4",
+                            "descricao": "Concreto fck 30MPa bombeado",
+                            "quantidade": 78.58,
+                            "unidade": "m³",
+                            "valor_unitario": 683.33,
+                            "valor_total": 53699.07
+                        },
+                        {
+                            "codigo": "6.2.5",
+                            "descricao": "Impermeabilização com neutrol",
+                            "quantidade": 546.52,
+                            "unidade": "m²",
+                            "valor_unitario": 32.0,
+                            "valor_total": 17488.64
+                        },
+                        {
+                            "codigo": "6.2.6",
+                            "descricao": "Armadura CA-50",
+                            "quantidade": 5000.8,
+                            "unidade": "kg",
+                            "valor_unitario": 9.5,
+                            "valor_total": 47507.6
+                        },
+                        {
+                            "codigo": "6.2.7",
+                            "descricao": "Mão de obra para apiloamento, lastro, forma, armação, concretagem, desforma, impermeabilização e apoio civil",
+                            "quantidade": 71.44,
+                            "unidade": "m³",
+                            "valor_unitario": 1500.0,
+                            "valor_total": 107160.0
+                        },
+                        {
+                            "codigo": "6.2.8",
+                            "descricao": "Reaterro",
+                            "quantidade": 21.43,
+                            "unidade": "m³",
+                            "valor_unitario": 190.0,
+                            "valor_total": 4072.08
+                        },
+                        {
+                            "codigo": "6.2.9",
+                            "descricao": "Bota fora de material escavado | Empolamento: 30%",
+                            "quantidade": 92.87,
+                            "unidade": "m³",
+                            "valor_unitario": 100.0,
+                            "valor_total": 9287.2
+                        },
+                        {
+                            "codigo": "6.2.10",
+                            "descricao": "Ensaio tecnológico para concreto",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 6286.72,
+                            "valor_total": 6286.72
+                        }
+                    ],
+                    "total_subgrupo": 303937.23
+                },
+                {
+                    "codigo": "6.3",
+                    "descricao": "CONTENÇÃO",
+                    "itens": [
+                        {
+                            "codigo": "6.3.1",
+                            "descricao": "Escavação / Aterramento",
+                            "quantidade": 40.0,
+                            "unidade": "m³",
+                            "valor_unitario": 360.0,
+                            "valor_total": 14400.0
+                        },
+                        {
+                            "codigo": "6.3.2",
+                            "descricao": "Forma",
+                            "quantidade": 189.0,
+                            "unidade": "m²",
+                            "valor_unitario": 55.0,
+                            "valor_total": 10395.0
+                        },
+                        {
+                            "codigo": "6.3.3",
+                            "descricao": "Concreto fck 30MPa bombeado",
+                            "quantidade": 41.58,
+                            "unidade": "m³",
+                            "valor_unitario": 683.33,
+                            "valor_total": 28413.0
+                        },
+                        {
+                            "codigo": "6.3.4",
+                            "descricao": "Impermeabilização com neutrol",
+                            "quantidade": 189.0,
+                            "unidade": "m²",
+                            "valor_unitario": 32.0,
+                            "valor_total": 6048.0
+                        },
+                        {
+                            "codigo": "6.3.5",
+                            "descricao": "Armadura CA-50",
+                            "quantidade": 3118.5,
+                            "unidade": "kg",
+                            "valor_unitario": 9.5,
+                            "valor_total": 29625.75
+                        },
+                        {
+                            "codigo": "6.3.6",
+                            "descricao": "Mão de obra para apiloamento, lastro, forma, armação, concretagem, desforma, impermeabilização e apoio civil",
+                            "quantidade": 37.8,
+                            "unidade": "m³",
+                            "valor_unitario": 1500.0,
+                            "valor_total": 56700.0
+                        },
+                        {
+                            "codigo": "6.3.7",
+                            "descricao": "Escoramento",
+                            "quantidade": 189.0,
+                            "unidade": "m³",
+                            "valor_unitario": 40.0,
+                            "valor_total": 7560.0
+                        },
+                        {
+                            "codigo": "6.3.8",
+                            "descricao": "Drenagem com manta geodreno",
+                            "quantidade": 189.0,
+                            "unidade": "m³",
+                            "valor_unitario": 60.0,
+                            "valor_total": 11340.0
+                        }
+                    ],
+                    "total_subgrupo": 164481.75
+                }
+            ],
+            "total_grupo": 685945.69
+        },
+        {
+            "codigo": "7",
+            "descricao": "ESTRUTURA",
+            "subgrupos": [
+                {
+                    "codigo": "7.1",
+                    "descricao": "METÁLICA",
+                    "itens": [
+                        {
+                            "codigo": "7.1.1",
+                            "descricao": "Estrutura metálica - Estimado 40kg/m²",
+                            "quantidade": 42680.0,
+                            "unidade": "kg",
+                            "valor_unitario": 26.5,
+                            "valor_total": 1131020.0
+                        },
+                        {
+                            "codigo": "7.1.2",
+                            "descricao": "FORNECIMENTO E INSTALAÇÃO DE FORMA STEEL DECK",
+                            "quantidade": 889.0,
+                            "unidade": "m²",
+                            "valor_unitario": 315.0,
+                            "valor_total": 280035.0
+                        },
+                        {
+                            "codigo": "7.1.3",
+                            "descricao": "MOBILIZAÇÃO / FRETES",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 57000.0,
+                            "valor_total": 57000.0
+                        },
+                        {
+                            "codigo": "7.1.4",
+                            "descricao": "RUFOS",
+                            "quantidade": 160.0,
+                            "unidade": "m",
+                            "valor_unitario": 110.0,
+                            "valor_total": 17600.0
+                        }
+                    ],
+                    "total_subgrupo": 1485655.0,
+                    "observacoes": "Aguardando projeto complementar"
+                },
+                {
+                    "codigo": "7.2",
+                    "descricao": "CONCRETO ARMADO",
+                    "itens": [
+                        {
+                            "codigo": "7.2.1",
+                            "descricao": "Capeamento de laje",
+                            "quantidade": 889.0,
+                            "unidade": "m²",
+                            "valor_unitario": 221.19,
+                            "valor_total": 196638.33
+                        },
+                        {
+                            "codigo": "7.2.2",
+                            "descricao": "Furos técnicos",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 2000.0,
+                            "valor_total": 2000.0
+                        },
+                        {
+                            "codigo": "7.2.3",
+                            "descricao": "Proteções perimetrais da edificação, isolamento para vão de escada e shafts",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 4000.0,
+                            "valor_total": 4000.0
+                        }
+                    ],
+                    "total_subgrupo": 202638.33
+                },
+                {
+                    "codigo": "7.3",
+                    "descricao": "CONCRETO ARMADO - PISCINA",
+                    "itens": [
+                        {
+                            "codigo": "7.3.1",
+                            "descricao": "Concreto fck 35MPa bombeado",
+                            "quantidade": 36.4,
+                            "unidade": "m³",
+                            "valor_unitario": 666.67,
+                            "valor_total": 24242.0
+                        },
+                        {
+                            "codigo": "7.3.2",
+                            "descricao": "Forma",
+                            "quantidade": 299.6,
+                            "unidade": "m²",
+                            "valor_unitario": 55.0,
+                            "valor_total": 16478.0
+                        },
+                        {
+                            "codigo": "7.3.3",
+                            "descricao": "Escoramento",
+                            "quantidade": 122.0,
+                            "unidade": "m²",
+                            "valor_unitario": 45.0,
+                            "valor_total": 5490.0
+                        },
+                        {
+                            "codigo": "7.3.4",
+                            "descricao": "Armadura CA-50 | Taxa de 100kg/m³",
+                            "quantidade": 3162.0,
+                            "unidade": "kg",
+                            "valor_unitario": 9.5,
+                            "valor_total": 30039.0
+                        },
+                        {
+                            "codigo": "7.3.5",
+                            "descricao": "Mão de obra para forma, escoramento, armação, concretagem e desforma",
+                            "quantidade": 31.6,
+                            "unidade": "m³",
+                            "valor_unitario": 2500.0,
+                            "valor_total": 79050.0
+                        },
+                        {
+                            "codigo": "7.3.6",
+                            "descricao": "Ensaio tecnológico para concreto",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 2909.04,
+                            "valor_total": 2909.04
+                        }
+                    ],
+                    "total_subgrupo": 158208.04,
+                    "observacoes": "Aguardando projeto complementar"
+                }
+            ],
+            "total_grupo": 1846501.37
+        },
+        {
+            "codigo": "8",
+            "descricao": "INFRA DE AR CONDICIONADO E EXAUSTÃO MECÂNICA",
+            "itens": [
+                {
+                    "codigo": "8.1",
+                    "descricao": "SISTEMA DE CLIMATIZAÇÃO VRV DAIKIN (SOMENTE INFRA + GRELHAS + DUTOS)",
+                    "quantidade": 34.0,
+                    "unidade": "TR",
+                    "valor_unitario": 6400.0,
+                    "valor_total": 217600.0
+                }
+            ],
+            "total_grupo": 217600.0,
+            "observacoes": "EXCLUSO EQUIPAMENTOS CONFORME SOLICITADO"
+        },
+        {
+            "codigo": "9",
+            "descricao": "INSTALAÇÕES HIDRÁULICAS E DE GÁS",
+            "itens": [
+                {
+                    "codigo": "9.1",
+                    "descricao": "Estimativa para execução das instalações hidráulicas e gás (Excluso distribuição de água quente)",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 419250.0,
+                    "valor_total": 419250.0
+                },
+                {
+                    "codigo": "9.2",
+                    "descricao": "Pressurizador",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 24000.0,
+                    "valor_total": 24000.0
+                }
+            ],
+            "total_grupo": 443250.0,
+            "observacoes": "Aguardando projeto complementar"
+        },
+        {
+            "codigo": "10",
+            "descricao": "INSTALAÇÕES ELÉTRICAS E SISTEMAS ESPECIAIS",
+            "itens": [
+                {
+                    "codigo": "10.1.1",
+                    "descricao": "Estimativa para execução das instalações elétricas e SPDA",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 721110.0,
+                    "valor_total": 721110.0
+                }
+            ],
+            "total_grupo": 721110.0,
+            "observacoes": "Aguardando projeto complementar"
+        },
+        {
+            "codigo": "11",
+            "descricao": "PAREDES E PAINÉIS",
+            "subgrupos": [
+                {
+                    "codigo": "11.1",
+                    "descricao": "DRYWALL",
+                    "status": "excluso"
+                },
+                {
+                    "codigo": "11.2",
+                    "descricao": "ALVENARIA",
+                    "itens": [
+                        {
+                            "codigo": "11.2.1",
+                            "descricao": "Alvenaria em blocos cerâmicos de 14x19x39cm",
+                            "quantidade": 1750.4,
+                            "unidade": "m²",
+                            "valor_unitario": 140.0,
+                            "valor_total": 245056.0
+                        },
+                        {
+                            "codigo": "11.2.2",
+                            "descricao": "Muro de divisa h=2,3m",
+                            "quantidade": 276.0,
+                            "unidade": "m²",
+                            "valor_unitario": 157.0,
+                            "valor_total": 43332.0
+                        },
+                        {
+                            "codigo": "11.2.3",
+                            "descricao": "Chapisco + emboço para alvenarias novas",
+                            "quantidade": 3564.7,
+                            "unidade": "m²",
+                            "valor_unitario": 98.0,
+                            "valor_total": 349342.56
+                        },
+                        {
+                            "codigo": "11.2.4",
+                            "descricao": "Abertura e fechamento de valas para passagem de instalações hidráulicas e elétricas",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 8700.0,
+                            "valor_total": 8700.0
+                        },
+                        {
+                            "codigo": "11.2.5",
+                            "descricao": "Caixas de inspeções / passagem em alvenaria",
+                            "quantidade": 5.0,
+                            "unidade": "unid",
+                            "valor_unitario": 990.0,
+                            "valor_total": 4950.0
+                        },
+                        {
+                            "codigo": "11.2.6",
+                            "descricao": "Bases diversas",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 3481.2,
+                            "valor_total": 3481.2
+                        },
+                        {
+                            "codigo": "11.2.7",
+                            "descricao": "Abrigo para entrada de energia / hidráulica / gás",
+                            "quantidade": 1.0,
+                            "unidade": "vb",
+                            "valor_unitario": 5500.0,
+                            "valor_total": 5500.0
+                        },
+                        {
+                            "codigo": "11.2.8",
+                            "descricao": "Arremates civis - Considerando 01 Oficial",
+                            "quantidade": 4.0,
+                            "unidade": "mês",
+                            "valor_unitario": 7800.0,
+                            "valor_total": 31200.0
+                        },
+                        {
+                            "codigo": "11.2.9",
+                            "descricao": "Equipe de 3 ajudantes para limpeza e transporte de material",
+                            "quantidade": 7.0,
+                            "unidade": "mês",
+                            "valor_unitario": 19800.0,
+                            "valor_total": 138600.0
+                        }
+                    ],
+                    "total_subgrupo": 830161.76
+                }
+            ],
+            "total_grupo": 830161.76
+        },
+        {
+            "codigo": "12",
+            "descricao": "IMPERMEABILIZAÇÃO",
+            "itens": [
+                {
+                    "codigo": "12.1",
+                    "descricao": "Regularização + proteção mecânica para área de impermeabilização",
+                    "quantidade": 1564.2,
+                    "unidade": "m²",
+                    "valor_unitario": 103.0,
+                    "valor_total": 161110.54
+                },
+                {
+                    "codigo": "12.2",
+                    "descricao": "Fornecimento e instalação de manta asfáltica 4mm (simples) em áreas molhadas",
+                    "quantidade": 101.2,
+                    "unidade": "m²",
+                    "valor_unitario": 189.0,
+                    "valor_total": 19126.8
+                },
+                {
+                    "codigo": "12.3",
+                    "descricao": "Fornecimento e installation de manta asfáltica 4mm (simples) em varandas superiores",
+                    "quantidade": 72.8,
+                    "unidade": "m²",
+                    "valor_unitario": 189.0,
+                    "valor_total": 13759.2
+                },
+                {
+                    "codigo": "12.4",
+                    "descricao": "Fornecimento e instalação de manta asfáltica 3+4mm (dupla) em laje de cobertura, térreo descoberto e piscina",
+                    "quantidade": 1234.0,
+                    "unidade": "m²",
+                    "valor_unitario": 313.0,
+                    "valor_total": 386235.74
+                },
+                {
+                    "codigo": "12.5",
+                    "descricao": "Fornecimento e aplicação de 1x Viaplus 1000 + 2x Viaplus 7000 em áreas molhadas sobre terra",
+                    "quantidade": 156.2,
+                    "unidade": "m²",
+                    "valor_unitario": 79.0,
+                    "valor_total": 12339.8
+                }
+            ],
+            "total_grupo": 592572.08
+        },
+        {
+            "codigo": "13",
+            "descricao": "CONTRAPISO",
+            "itens": [
+                {
+                    "codigo": "13.1",
+                    "descricao": "Contrapiso armado ± 10cm (incluso rampa e pisadas em concreto externas)",
+                    "quantidade": 930.0,
+                    "unidade": "m²",
+                    "valor_unitario": 225.0,
+                    "valor_total": 209250.0
+                },
+                {
+                    "codigo": "13.2",
+                    "descricao": "Contrapiso sem armação ± 3cm",
+                    "quantidade": 889.0,
+                    "unidade": "m²",
+                    "valor_unitario": 105.0,
+                    "valor_total": 93345.0
+                },
+                {
+                    "codigo": "13.3",
+                    "descricao": "Abertura e fechamento de valas para instalações enterradas",
+                    "quantidade": 1.0,
+                    "unidade": "vb",
+                    "valor_unitario": 25000.0,
+                    "valor_total": 25000.0
+                }
+            ],
+            "total_grupo": 327595.0
+        }
+    ],
+    "resumo_financeiro": {
+        "custo_servicos_preliminares_obra_fase_cinza": 6333600.47,
+        "administracao": {
+            "percentual": "9%",
+            "valor": 570024.04
+        },
+        "impostos": {
+            "descricao": "Somente sobre ADM e Equipe Técnica",
+            "valor": 122944.53
+        },
+        "total_geral": 7026569.04
+    },
+    "exclusoes": [
+        "Projeto legal",
+        "Aprovações em concessionárias e órgãos públicos",
+        "Licenciamento de obra, alvarás, ISS, habite-se",
+        "Corte e/ou transplante de árvores",
+        "Corte ou retirada de rochas",
+        "Fossa séptica",
+        "Alimentação elétrica fora do perímetro",
+        "Alimentação hidráulica fora do perímetro",
+        "Sistema de aquecimento hidráulico",
+        "Automação, áudio e vídeo, som, dimerização, aspiração central",
+        "Equipamentos de cozinha/gourmet",
+        "Aquecimento de piso",
+        "Etapa azul (acabamentos)"
+    ],
+    "lista_projetos": [
+        {
+            "nome": "03A.JB.ROSE E MARCOS LAYOUT_R07-FOLHA A1",
+            "data": "20/02/2025"
+        },
+        {
+            "nome": "03B.JB.ROSE E MARCOS LAYOUT_R07-FOLHA A1",
+            "data": "21/02/2025"
+        },
+        {
+            "nome": "03C.JB.ROSE E MARCOS LAYOUT_R07-FOLHA A1",
+            "data": "22/02/2025"
+        },
+        {
+            "nome": "ABU DHABI ADMNISTRAÇÃO DE ATIVOS PRÓPRIOS LTDA - PASTA - 05390.24",
+            "data": "23/02/2025"
+        },
+        {
+            "nome": "MT-LEV. LOTE 7 QUADRA 1 - MORADA DOS LAGOS-A1",
+            "data": "24/02/2025"
+        },
+        {
+            "nome": "MT-LEV.LOTE 8 QUADRA 1 - MORADA DOS LAGOS-A1",
+            "data": "25/02/2025"
+        }
+    ]
+}
