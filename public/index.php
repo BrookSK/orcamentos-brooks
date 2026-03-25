@@ -42,6 +42,7 @@ if ($controllerName === 'orcamentos') {
         'print' => ['GET'],
         'pdf' => ['GET'],
         'adequacao' => ['GET'],
+        'adequacaoPreview' => ['POST'],
     ];
 
     if (!isset($allowed[$action]) || !in_array($method, $allowed[$action], true)) {

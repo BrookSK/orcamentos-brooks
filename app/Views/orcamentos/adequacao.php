@@ -384,12 +384,15 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('preview-section').style.display = 'none';
             
-            fetch(`/orcamentos/${orcamentoId}/adequacao/preview`, {
+            fetch(`/?route=orcamentos/adequacaoPreview`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ valor_desejado: valorDesejado })
+                body: JSON.stringify({ 
+                    valor_desejado: valorDesejado,
+                    orcamento_id: orcamentoId
+                })
             })
             .then(response => response.json())
             .then(data => {

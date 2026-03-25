@@ -835,6 +835,30 @@ final class OrcamentoController
         ]);
     }
 
+    public function adequacaoPreview(): void
+    {
+        header('Content-Type: application/json');
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $valorDesejado = (float)($input['valor_desejado'] ?? 0);
+        $orcamentoId = (int)($input['orcamento_id'] ?? 0);
+        
+        if ($valorDesejado <= 0 || $orcamentoId <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Parâmetros inválidos']);
+            exit;
+        }
+        
+        try {
+            $preview = OrcamentoAdequacao::calcularPreview($orcamentoId, $valorDesejado);
+            echo json_encode($preview);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erro ao calcular preview: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
     private function handleLogoUpload(string $field): ?string
     {
         if (!isset($_FILES[$field]) || !is_array($_FILES[$field])) {
