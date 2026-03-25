@@ -825,8 +825,12 @@ final class OrcamentoController
             return;
         }
 
+        $totais = OrcamentoItem::getTotaisGerais($id);
+
         $this->render('orcamentos/adequacao', [
             'orcamento' => $orcamento,
+            'totais' => $totais,
+            'historico' => [],
             'errors' => [],
         ]);
     }
