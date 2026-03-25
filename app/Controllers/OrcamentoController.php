@@ -814,6 +814,23 @@ final class OrcamentoController
         $this->redirect('/?route=orcamentos/print&id=' . $id);
     }
 
+    public function adequacao(): void
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        Logger::info('orcamentos.adequacao', ['id' => $id]);
+        $orcamento = Orcamento::find($id);
+        if (!$orcamento) {
+            Logger::warning('orcamentos.adequacao.not_found', ['id' => $id]);
+            $this->redirect('/?route=orcamentos/index');
+            return;
+        }
+
+        $this->render('orcamentos/adequacao', [
+            'orcamento' => $orcamento,
+            'errors' => [],
+        ]);
+    }
+
     private function handleLogoUpload(string $field): ?string
     {
         if (!isset($_FILES[$field]) || !is_array($_FILES[$field])) {
