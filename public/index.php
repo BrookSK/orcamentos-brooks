@@ -41,6 +41,7 @@ if ($controllerName === 'orcamentos') {
         'unidadesDelete' => ['POST'],
         'print' => ['GET'],
         'pdf' => ['GET'],
+        'adequacao' => ['GET'],
     ];
 
     if (!isset($allowed[$action]) || !in_array($method, $allowed[$action], true)) {
