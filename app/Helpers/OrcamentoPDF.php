@@ -459,7 +459,7 @@ HTML;
      */
     private static function gerarPaginaApresentacao(array $orcamento): string
     {
-        $numeroPropo sta = htmlspecialchars($orcamento['numero_proposta'] ?? '');
+        $numeroProposta = htmlspecialchars($orcamento['numero_proposta'] ?? '');
         $obraNome = htmlspecialchars($orcamento['obra_nome'] ?? '');
         $clienteNome = htmlspecialchars($orcamento['cliente_nome'] ?? '');
         $endereco = htmlspecialchars($orcamento['endereco_obra'] ?? '');
@@ -673,6 +673,12 @@ HTML;
         $totalMaoObra = (float)$totaisGerais['total_mao_obra'];
         $totalGeral = (float)$totaisGerais['total_cobranca'];
         
+        // Informações de adequação
+        $adequacaoAplicada = (bool)($orcamento['adequacao_aplicada'] ?? false);
+        $valorOriginal = (float)($orcamento['valor_original'] ?? 0);
+        $valorAdequado = (float)($orcamento['valor_adequado'] ?? 0);
+        $fatorAdequacao = (float)($orcamento['fator_adequacao'] ?? 1.0);
+        
         $html = <<<HTML
 <div class="page">
     <h1 class="section-title">Resumo Executivo</h1>
@@ -683,17 +689,43 @@ HTML;
         <div class="resumo-cards">
             <div class="resumo-card">
                 <div class="resumo-card-label">📦 Custo Previsto (Material)</div>
-                <div class="resumo-card-value">R$ {$this->formatarValor($totalMaterial)}</div>
+                <div class="resumo-card-value">R$ {self::formatarValor($totalMaterial)}</div>
             </div>
             <div class="resumo-card">
                 <div class="resumo-card-label">👷 Custo Efetivo (Mão de Obra)</div>
-                <div class="resumo-card-value">R$ {$this->formatarValor($totalMaoObra)}</div>
+                <div class="resumo-card-value">R$ {self::formatarValor($totalMaoObra)}</div>
             </div>
             <div class="resumo-card">
                 <div class="resumo-card-label">💰 Valor Total do Projeto</div>
-                <div class="resumo-card-value">R$ {$this->formatarValor($totalGeral)}</div>
+                <div class="resumo-card-value">R$ {self::formatarValor($totalGeral)}</div>
             </div>
         </div>
+HTML;
+        
+        // Adicionar informações de adequação se aplicada
+        if ($adequacaoAplicada && $valorOriginal > 0) {
+            $percentualAjuste = (($fatorAdequacao - 1) * 100);
+            $tipoAjuste = $percentualAjuste >= 0 ? 'aumento' : 'redução';
+            $corAjuste = $percentualAjuste >= 0 ? '#28a745' : '#dc3545';
+            
+            $html .= sprintf(
+                '<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 5px;">'
+                . '<h3 style="font-size: 16px; color: #856404; margin-bottom: 15px;">💰 Adequação de Valores Aplicada</h3>'
+                . '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 13px; color: #856404;">'
+                . '<div><strong>Valor Original:</strong><br>R$ %s</div>'
+                . '<div><strong>Valor Adequado:</strong><br>R$ %s</div>'
+                . '<div><strong>Ajuste:</strong><br><span style="color: %s; font-weight: bold;">%+.2f%% (%s)</span></div>'
+                . '</div>'
+                . '</div>',
+                self::formatarValor($valorOriginal),
+                self::formatarValor($valorAdequado),
+                $corAjuste,
+                $percentualAjuste,
+                $tipoAjuste
+            );
+        }
+        
+        $html .= <<<HTML
         
         <table class="table-resumo">
             <thead>

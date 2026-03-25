@@ -29,6 +29,7 @@ $totalGeral = 0.0;
         <div class="actions">
             <a class="btn" href="/?route=orcamentos/index">Voltar</a>
             <a class="btn" href="/?route=orcamentos/edit&id=<?php echo (int)$orcamento['id']; ?>">Editar cabeçalho</a>
+            <a class="btn" style="background: #e94560; color: white;" href="/?route=orcamentos/adequacao&id=<?php echo (int)$orcamento['id']; ?>">💰 Ajustar Valor do Contrato</a>
             <!-- <a class="btn" href="/?route=orcamentos/print&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Imprimir</a> -->
             <a class="btn primary" href="/?route=orcamentos/pdf&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Exportar PDF</a>
         </div>
@@ -36,7 +37,11 @@ $totalGeral = 0.0;
 </div>
 
 <div class="card" style="padding:16px; margin-bottom:12px;">
-    <div style="font-weight:800; margin-bottom:10px;">Adicionar item</div>
+    <div style="font-weight:800; margin-bottom:10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleAdicionarItem()">
+        <span>Adicionar item</span>
+        <span id="toggle-icon" style="font-size: 20px;">▼</span>
+    </div>
+    <div id="form-adicionar-item" style="display: none;">
     <form method="post" action="/?route=orcamentos/itemStore">
         <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
         <div class="form" style="padding:0;">
@@ -120,7 +125,23 @@ $totalGeral = 0.0;
             </div>
         </div>
     </form>
+    </div>
 </div>
+
+<script>
+function toggleAdicionarItem() {
+    const form = document.getElementById('form-adicionar-item');
+    const icon = document.getElementById('toggle-icon');
+    
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        icon.textContent = '▲';
+    } else {
+        form.style.display = 'none';
+        icon.textContent = '▼';
+    }
+}
+</script>
 
 <div class="card">
     <table>
