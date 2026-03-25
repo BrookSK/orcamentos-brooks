@@ -81,26 +81,39 @@ final class OrcamentoItem
     {
         $pdo = Database::pdo();
 
-        $valorUnitario = (float)$data['valor_unitario'];
-        $quantidade = (float)$data['quantidade'];
+        $valorUnitario = (float)($data['valor_unitario'] ?? 0);
+        $quantidade = (float)($data['quantidade'] ?? 0);
         $valorTotal = self::calculateTotal($quantidade, $valorUnitario);
+        
+        $custoMaterial = (float)($data['custo_material'] ?? 0);
+        $custoMaoObra = (float)($data['custo_mao_obra'] ?? 0);
+        $margemLucro = (float)($data['margem_lucro'] ?? 0);
+        $descontoItem = (float)($data['desconto_item'] ?? 0);
+        
+        $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
 
         $stmt = $pdo->prepare(
-            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem) '
-            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem)'
+            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item) '
+            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :valor_cobranca, :margem_lucro, :desconto_item)'
         );
 
         $stmt->execute([
             ':orcamento_id' => $orcamentoId,
-            ':grupo' => (string)$data['grupo'],
-            ':categoria' => (string)$data['categoria'],
-            ':codigo' => (string)$data['codigo'],
-            ':descricao' => (string)$data['descricao'],
-            ':quantidade' => (float)$quantidade,
-            ':unidade' => (string)$data['unidade'],
-            ':valor_unitario' => (float)$valorUnitario,
-            ':valor_total' => (float)$valorTotal,
+            ':grupo' => (string)($data['grupo'] ?? ''),
+            ':categoria' => (string)($data['categoria'] ?? ''),
+            ':codigo' => (string)($data['codigo'] ?? ''),
+            ':descricao' => (string)($data['descricao'] ?? ''),
+            ':quantidade' => $quantidade,
+            ':unidade' => (string)($data['unidade'] ?? ''),
+            ':valor_unitario' => $valorUnitario,
+            ':valor_total' => $valorTotal,
             ':ordem' => (int)($data['ordem'] ?? 0),
+            ':etapa' => (string)($data['etapa'] ?? ''),
+            ':custo_material' => $custoMaterial,
+            ':custo_mao_obra' => $custoMaoObra,
+            ':valor_cobranca' => $valorCobranca,
+            ':margem_lucro' => $margemLucro,
+            ':desconto_item' => $descontoItem,
         ]);
 
         return (int)$pdo->lastInsertId();
@@ -117,9 +130,16 @@ final class OrcamentoItem
     {
         $pdo = Database::pdo();
 
-        $valorUnitario = (float)$data['valor_unitario'];
-        $quantidade = (float)$data['quantidade'];
+        $valorUnitario = (float)($data['valor_unitario'] ?? 0);
+        $quantidade = (float)($data['quantidade'] ?? 0);
         $valorTotal = self::calculateTotal($quantidade, $valorUnitario);
+        
+        $custoMaterial = (float)($data['custo_material'] ?? 0);
+        $custoMaoObra = (float)($data['custo_mao_obra'] ?? 0);
+        $margemLucro = (float)($data['margem_lucro'] ?? 0);
+        $descontoItem = (float)($data['desconto_item'] ?? 0);
+        
+        $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
 
         $stmt = $pdo->prepare(
             'UPDATE orcamento_itens SET'
@@ -131,21 +151,33 @@ final class OrcamentoItem
             . ' unidade = :unidade,'
             . ' valor_unitario = :valor_unitario,'
             . ' valor_total = :valor_total,'
-            . ' ordem = :ordem'
+            . ' ordem = :ordem,'
+            . ' etapa = :etapa,'
+            . ' custo_material = :custo_material,'
+            . ' custo_mao_obra = :custo_mao_obra,'
+            . ' valor_cobranca = :valor_cobranca,'
+            . ' margem_lucro = :margem_lucro,'
+            . ' desconto_item = :desconto_item'
             . ' WHERE id = :id'
         );
 
         $stmt->execute([
             ':id' => $id,
-            ':grupo' => (string)$data['grupo'],
-            ':categoria' => (string)$data['categoria'],
-            ':codigo' => (string)$data['codigo'],
-            ':descricao' => (string)$data['descricao'],
-            ':quantidade' => (float)$quantidade,
-            ':unidade' => (string)$data['unidade'],
-            ':valor_unitario' => (float)$valorUnitario,
-            ':valor_total' => (float)$valorTotal,
+            ':grupo' => (string)($data['grupo'] ?? ''),
+            ':categoria' => (string)($data['categoria'] ?? ''),
+            ':codigo' => (string)($data['codigo'] ?? ''),
+            ':descricao' => (string)($data['descricao'] ?? ''),
+            ':quantidade' => $quantidade,
+            ':unidade' => (string)($data['unidade'] ?? ''),
+            ':valor_unitario' => $valorUnitario,
+            ':valor_total' => $valorTotal,
             ':ordem' => (int)($data['ordem'] ?? 0),
+            ':etapa' => (string)($data['etapa'] ?? ''),
+            ':custo_material' => $custoMaterial,
+            ':custo_mao_obra' => $custoMaoObra,
+            ':valor_cobranca' => $valorCobranca,
+            ':margem_lucro' => $margemLucro,
+            ':desconto_item' => $descontoItem,
         ]);
     }
 
@@ -205,10 +237,15 @@ final class OrcamentoItem
         $out['codigo'] = trim((string)($data['codigo'] ?? ''));
         $out['descricao'] = trim((string)($data['descricao'] ?? ''));
         $out['unidade'] = trim((string)($data['unidade'] ?? ''));
+        $out['etapa'] = trim((string)($data['etapa'] ?? ''));
         $out['ordem'] = (int)($data['ordem'] ?? 0);
 
         $out['valor_unitario'] = self::parsePtBrNumber((string)($data['valor_unitario'] ?? '0'));
         $out['quantidade'] = self::parsePtBrNumber((string)($data['quantidade'] ?? '0'));
+        $out['custo_material'] = self::parsePtBrNumber((string)($data['custo_material'] ?? '0'));
+        $out['custo_mao_obra'] = self::parsePtBrNumber((string)($data['custo_mao_obra'] ?? '0'));
+        $out['margem_lucro'] = self::parsePtBrNumber((string)($data['margem_lucro'] ?? '0'));
+        $out['desconto_item'] = self::parsePtBrNumber((string)($data['desconto_item'] ?? '0'));
 
         return $out;
     }
@@ -226,5 +263,205 @@ final class OrcamentoItem
     public static function formatNumber(float $value): string
     {
         return number_format($value, 2, ',', '.');
+    }
+
+    public static function calculateValorCobranca(float $custoMaterial, float $custoMaoObra, float $margemLucro, float $descontoItem): float
+    {
+        $custoTotal = $custoMaterial + $custoMaoObra;
+        $valorComMargem = $custoTotal * (1 + ($margemLucro / 100));
+        $valorFinal = $valorComMargem * (1 - ($descontoItem / 100));
+        return round($valorFinal, 2);
+    }
+
+    public static function getTotaisPorEtapa(int $orcamentoId): array
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT etapa, '
+            . 'SUM(custo_material) as total_material, '
+            . 'SUM(custo_mao_obra) as total_mao_obra, '
+            . 'SUM(valor_cobranca) as total_cobranca '
+            . 'FROM orcamento_itens '
+            . 'WHERE orcamento_id = :id '
+            . 'GROUP BY etapa '
+            . 'ORDER BY ordem'
+        );
+        $stmt->execute([':id' => $orcamentoId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function getTotaisPorCategoria(int $orcamentoId, string $etapa = ''): array
+    {
+        $pdo = Database::pdo();
+        if ($etapa !== '') {
+            $stmt = $pdo->prepare(
+                'SELECT categoria, '
+                . 'SUM(custo_material) as total_material, '
+                . 'SUM(custo_mao_obra) as total_mao_obra, '
+                . 'SUM(valor_cobranca) as total_cobranca '
+                . 'FROM orcamento_itens '
+                . 'WHERE orcamento_id = :id AND etapa = :etapa '
+                . 'GROUP BY categoria '
+                . 'ORDER BY ordem'
+            );
+            $stmt->execute([':id' => $orcamentoId, ':etapa' => $etapa]);
+        } else {
+            $stmt = $pdo->prepare(
+                'SELECT categoria, '
+                . 'SUM(custo_material) as total_material, '
+                . 'SUM(custo_mao_obra) as total_mao_obra, '
+                . 'SUM(valor_cobranca) as total_cobranca '
+                . 'FROM orcamento_itens '
+                . 'WHERE orcamento_id = :id '
+                . 'GROUP BY categoria '
+                . 'ORDER BY ordem'
+            );
+            $stmt->execute([':id' => $orcamentoId]);
+        }
+        return $stmt->fetchAll();
+    }
+
+    public static function getTotaisGerais(int $orcamentoId): array
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT '
+            . 'SUM(custo_material) as total_material, '
+            . 'SUM(custo_mao_obra) as total_mao_obra, '
+            . 'SUM(valor_cobranca) as total_cobranca, '
+            . 'SUM(custo_material + custo_mao_obra) as custo_total '
+            . 'FROM orcamento_itens '
+            . 'WHERE orcamento_id = :id'
+        );
+        $stmt->execute([':id' => $orcamentoId]);
+        $result = $stmt->fetch();
+        return $result ?: [
+            'total_material' => 0,
+            'total_mao_obra' => 0,
+            'total_cobranca' => 0,
+            'custo_total' => 0,
+        ];
+    }
+
+    /**
+     * Agrupa itens por finalidade (grupo_finalidade), separando material e mão de obra
+     * Retorna array com estrutura: [grupo_finalidade => ['material' => [...], 'mao_obra' => [...]]]
+     */
+    public static function getItensAgrupadosPorFinalidade(int $orcamentoId, string $etapa = ''): array
+    {
+        $pdo = Database::pdo();
+        
+        if ($etapa !== '') {
+            $stmt = $pdo->prepare(
+                'SELECT * FROM orcamento_itens '
+                . 'WHERE orcamento_id = :id AND etapa = :etapa '
+                . 'ORDER BY grupo_finalidade, categoria, ordem, id'
+            );
+            $stmt->execute([':id' => $orcamentoId, ':etapa' => $etapa]);
+        } else {
+            $stmt = $pdo->prepare(
+                'SELECT * FROM orcamento_itens '
+                . 'WHERE orcamento_id = :id '
+                . 'ORDER BY grupo_finalidade, categoria, ordem, id'
+            );
+            $stmt->execute([':id' => $orcamentoId]);
+        }
+        
+        $items = $stmt->fetchAll();
+        $agrupados = [];
+        
+        foreach ($items as $item) {
+            $finalidade = $item['grupo_finalidade'] ?: $item['grupo'];
+            
+            if (!isset($agrupados[$finalidade])) {
+                $agrupados[$finalidade] = [
+                    'material' => [],
+                    'mao_obra' => [],
+                    'total_material' => 0.0,
+                    'total_mao_obra' => 0.0,
+                    'total_geral' => 0.0,
+                ];
+            }
+            
+            // Determinar se é material ou mão de obra baseado na categoria
+            $isMaterial = stripos($item['categoria'], 'MATERIAL') !== false || 
+                         stripos($item['categoria'], 'CUSTO PREVISTO') !== false;
+            
+            if ($isMaterial) {
+                $agrupados[$finalidade]['material'][] = $item;
+                $agrupados[$finalidade]['total_material'] += (float)$item['custo_material'];
+            } else {
+                $agrupados[$finalidade]['mao_obra'][] = $item;
+                $agrupados[$finalidade]['total_mao_obra'] += (float)$item['custo_mao_obra'];
+            }
+            
+            $agrupados[$finalidade]['total_geral'] += (float)$item['valor_cobranca'];
+        }
+        
+        return $agrupados;
+    }
+
+    /**
+     * Retorna resumo de valores por etapa com separação de material e mão de obra
+     */
+    public static function getResumoEtapas(int $orcamentoId): array
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT '
+            . 'etapa, '
+            . 'SUM(custo_material) as total_material, '
+            . 'SUM(custo_mao_obra) as total_mao_obra, '
+            . 'SUM(valor_cobranca) as total_cobranca, '
+            . 'SUM(custo_material + custo_mao_obra) as custo_total, '
+            . 'COUNT(*) as total_itens '
+            . 'FROM orcamento_itens '
+            . 'WHERE orcamento_id = :id '
+            . 'GROUP BY etapa '
+            . 'ORDER BY MIN(ordem)'
+        );
+        $stmt->execute([':id' => $orcamentoId]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Retorna resumo de valores por grupo/finalidade dentro de uma etapa
+     */
+    public static function getResumoGruposPorEtapa(int $orcamentoId, string $etapa): array
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT '
+            . 'COALESCE(grupo_finalidade, grupo) as grupo_nome, '
+            . 'SUM(custo_material) as total_material, '
+            . 'SUM(custo_mao_obra) as total_mao_obra, '
+            . 'SUM(valor_cobranca) as total_cobranca, '
+            . 'COUNT(*) as total_itens '
+            . 'FROM orcamento_itens '
+            . 'WHERE orcamento_id = :id AND etapa = :etapa '
+            . 'GROUP BY grupo_nome '
+            . 'ORDER BY MIN(ordem)'
+        );
+        $stmt->execute([':id' => $orcamentoId, ':etapa' => $etapa]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Atualiza o tipo de custo e grupo de finalidade de um item
+     */
+    public static function updateTipoEGrupo(int $id, string $tipoCusto, string $grupoFinalidade): void
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare(
+            'UPDATE orcamento_itens SET '
+            . 'tipo_custo = :tipo_custo, '
+            . 'grupo_finalidade = :grupo_finalidade '
+            . 'WHERE id = :id'
+        );
+        $stmt->execute([
+            ':id' => $id,
+            ':tipo_custo' => $tipoCusto,
+            ':grupo_finalidade' => $grupoFinalidade,
+        ]);
     }
 }
