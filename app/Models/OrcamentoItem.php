@@ -461,16 +461,16 @@ final class OrcamentoItem
             . 'grupo, '
             . 'etapa, '
             . 'SUM(valor_cobranca) as total_cobranca, '
-            . 'SUM(custo_material + custo_mao_obra) as custo_total '
+            . 'SUM(custo_material + custo_mao_obra) as custo_total, '
+            . 'CASE '
+            . '  WHEN SUM(valor_cobranca) > 0 THEN (SUM(valor_cobranca * percentual_realizado) / SUM(valor_cobranca)) '
+            . '  ELSE AVG(percentual_realizado) '
+            . 'END as percentual_realizado '
             . 'FROM orcamento_itens '
             . 'WHERE orcamento_id = :id '
             . 'GROUP BY etapa, grupo '
             . 'ORDER BY MIN(ordem), etapa, grupo'
-        );, '
-            . 'CASE '
-            . '  WHEN SUM(valor_cobranca) > 0 THEN (SUM(valor_cobranca * percentual_realizado) / SUM(valor_cobranca)) '
-            . '  ELSE AVG(percentual_realizado) '
-            . 'END as percentual_realizado
+        );
         $stmt->execute([':id' => $orcamentoId]);
         $rows = $stmt->fetchAll();
 
