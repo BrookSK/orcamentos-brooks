@@ -21,8 +21,8 @@ declare(strict_types=1);
         .boxtchr { background:#fff; color:#111; border:1px solid #cfcfcf; padding:10px 12px; }
         .title { margin-top: 14px; background:#fff; color:#111; padding:8px 10px; text-align:center; font-weight:700; font-size: 12px; border:1px solid #cfcfcf; border-bottom: 2px solid #5b8cff; }
         .subtitle { background:#5b8cff; padding:6px 10px; font-weight:700; font-size: 11px; text-align:center; color:#fff; }
-        table { width:100%; border-collapse: collapse; font-size: 10.5px; margin-top: 8px; }
-        th, td { border:1px solid #cfcfcf; padding:6px 6px; vertical-align: top; }
+        table { width:100%; border-collapse: collapse; font-size: 10.5px; margin-top: 8px; table-layout: fixed; }
+        th, td { border:1px solid #cfcfcf; padding:6px 6px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere; }
         th { background:#5b8cff; color:#fff; text-align:center; font-weight:700; }
         td.num { text-align:right; white-space:nowrap; }
         td.center { text-align:center; }
@@ -32,7 +32,7 @@ declare(strict_types=1);
         .boxchr { background: #fff !important; }
         .pagebreak { page-break-before: always; }
         .summary-title { margin-top: 14px; background:#fff; color:#111; padding:8px 10px; text-align:center; font-weight:700; font-size: 12px; border:1px solid #cfcfcf; border-bottom: 2px solid #5b8cff; }
-        table.summary { width:100%; border-collapse: collapse; font-size: 10.5px; margin-top: 8px; }
+        table.summary { width:100%; border-collapse: collapse; font-size: 9.5px; margin-top: 8px; table-layout: fixed; }
         table.summary th, table.summary td { border:1px solid #cfcfcf; padding:6px 6px; vertical-align: top; }
         table.summary th { background:#5b8cff; color:#fff; text-align:center; font-weight:700; }
         table.summary td.num { text-align:right; white-space:nowrap; }

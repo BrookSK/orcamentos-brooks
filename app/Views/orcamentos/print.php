@@ -31,6 +31,11 @@ foreach ($grouped as $grupo => $cats) {
     $groupTotals[(string)$grupo] = $sum;
 }
 
+$totalGeralDetalhamento = 0.0;
+foreach ($groupTotals as $v) {
+    $totalGeralDetalhamento += (float)$v;
+}
+
 $fixedLogoFile = __DIR__ . '/../../../public/brooks.png';
 $fallbackLogoPath = (string)($orcamento['logo_path'] ?? '');
 
@@ -108,11 +113,13 @@ if ($logoFile !== '') {
                 <th style="width:70px">UNID</th>
                 <th style="width:110px">VALOR UNIT.</th>
                 <th style="width:110px">VALOR TOTAL</th>
+                <th style="width:85px">% da etapa</th>
+                <th style="width:85px">% do total</th>
             </tr>
             </thead>
             <tbody>
             <?php foreach ($cats as $categoria => $rows) : ?>
-                <tr class="cat"><td colspan="6"><?php echo htmlspecialchars($categoria); ?></td></tr>
+                <tr class="cat"><td colspan="8"><?php echo htmlspecialchars($categoria); ?></td></tr>
 
                 <?php $subtotalCategoria = 0.0; ?>
                 <?php foreach ($rows as $row) : ?>
@@ -120,6 +127,10 @@ if ($logoFile !== '') {
                         $valorTotal = (float)($row['valor_total'] ?? 0);
                         $subtotalCategoria += $valorTotal;
                         $totalGeral += $valorTotal;
+
+                        $totalDaEtapaDetalhamento = (float)($groupTotals[(string)$grupo] ?? 0);
+                        $percentualDaEtapaDetalhamento = $totalDaEtapaDetalhamento > 0 ? ($valorTotal / $totalDaEtapaDetalhamento) * 100 : 0;
+                        $percentualDoTotalDetalhamento = $totalGeralDetalhamento > 0 ? ($valorTotal / $totalGeralDetalhamento) * 100 : 0;
                     ?>
                     <tr>
                         <td class="center"><?php echo htmlspecialchars((string)$row['codigo']); ?></td>
@@ -128,13 +139,16 @@ if ($logoFile !== '') {
                         <td class="center"><?php echo htmlspecialchars((string)$row['unidade']); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney((float)$row['valor_unitario']); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorTotal); ?></td>
+                        <td class="num"><?php echo number_format($percentualDaEtapaDetalhamento, 2, ',', '.') . '%'; ?></td>
+                        <td class="num"><?php echo number_format($percentualDoTotalDetalhamento, 2, ',', '.') . '%'; ?></td>
                     </tr>
                 <?php endforeach; ?>
 
                 <tr class="subtotal">
-                    <td colspan="4"></td>
-                    <td class="center"><b>R$</b></td>
+                    <td colspan="5"></td>
                     <td class="num"><b><?php echo OrcamentoItem::formatMoney($subtotalCategoria); ?></b></td>
+                    <td></td>
+                    <td></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
@@ -189,7 +203,6 @@ if ($logoFile !== '') {
             <th style="width:40px">#</th>
             <th>DESCRIÇÃO</th>
             <th style="width:140px">CATEGORIA</th>
-            <th style="width:40px">R$</th>
             <th style="width:120px">TOTAL</th>
             <th style="width:90px">% da etapa</th>
             <th style="width:90px">% do total</th>
@@ -234,7 +247,6 @@ if ($logoFile !== '') {
                 <td class="center"><?php echo (int)$idx; ?></td>
                 <td><?php echo htmlspecialchars($descricaoNome); ?></td>
                 <td><?php echo htmlspecialchars($categoriaNome); ?></td>
-                <td class="center">R$</td>
                 <td class="num"><?php echo OrcamentoItem::formatMoney($valorLinha); ?></td>
                 <td class="num"><?php echo number_format($percentualDaEtapa, 2, ',', '.') . '%'; ?></td>
                 <td class="num"><?php echo number_format($percentualDoTotal, 2, ',', '.') . '%'; ?></td>
@@ -245,7 +257,6 @@ if ($logoFile !== '') {
         <?php endforeach; ?>
         <tr class="total">
             <td colspan="3"></td>
-            <td class="center">R$</td>
             <td class="num"><?php echo OrcamentoItem::formatMoney((float)$totalGeralCobranca); ?></td>
             <td class="num"></td>
             <td class="num">100,00%</td>
