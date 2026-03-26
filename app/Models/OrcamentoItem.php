@@ -50,6 +50,11 @@ final class OrcamentoItem
         return (float)$value;
     }
 
+    private static function calculateTotal(float $quantidade, float $valorUnitario): float
+    {
+        return round($quantidade * $valorUnitario, 2);
+    }
+
     public static function allByOrcamento(int $orcamentoId): array
     {
         $pdo = Database::pdo();
