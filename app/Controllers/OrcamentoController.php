@@ -912,10 +912,34 @@ final class OrcamentoController
         try {
             $resultado = OrcamentoAdequacao::aplicarAdequacao($orcamentoId, $valorDesejado, $observacao);
 
+            if (!is_array($resultado) || empty($resultado['sucesso'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'sucesso' => false,
+                    'erro' => (string)($resultado['erro'] ?? 'Falha ao aplicar adequação.'),
+                    'resultado' => $resultado,
+                ]);
+                exit;
+            }
+
+            $itensAtualizados = (int)($resultado['itens_atualizados'] ?? 0);
+            if ($itensAtualizados <= 0) {
+                http_response_code(500);
+                echo json_encode([
+                    'sucesso' => false,
+                    'erro' => 'Nenhum item foi atualizado. Verifique se o orçamento possui itens.',
+                    'resultado' => $resultado,
+                ]);
+                exit;
+            }
+
+            $totaisDepois = OrcamentoItem::getTotaisGerais($orcamentoId);
+
             echo json_encode([
                 'sucesso' => true,
-                'mensagem' => 'Adequação aplicada com sucesso.',
+                'mensagem' => (string)($resultado['mensagem'] ?? 'Adequação aplicada com sucesso.'),
                 'resultado' => $resultado,
+                'totais_depois' => $totaisDepois,
             ]);
         } catch (\Throwable $e) {
             Logger::error('orcamentos.adequacao.aplicar.error', [
