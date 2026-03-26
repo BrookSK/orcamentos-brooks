@@ -335,11 +335,29 @@ final class OrcamentoItem
         );
         $stmt->execute([':id' => $orcamentoId]);
         $result = $stmt->fetch();
-        return $result ?: [
-            'total_material' => 0,
-            'total_mao_obra' => 0,
-            'total_cobranca' => 0,
-            'custo_total' => 0,
+        if (!$result) {
+            return [
+                'total_material' => 0,
+                'total_mao_obra' => 0,
+                'total_cobranca' => 0,
+                'custo_total' => 0,
+            ];
+        }
+
+        $totalMaterial = (float)($result['total_material'] ?? 0);
+        $totalMaoObra = (float)($result['total_mao_obra'] ?? 0);
+        $totalCobranca = (float)($result['total_cobranca'] ?? 0);
+        $custoTotal = (float)($result['custo_total'] ?? 0);
+
+        if ($totalCobranca <= 0 && $custoTotal > 0) {
+            $totalCobranca = $custoTotal;
+        }
+
+        return [
+            'total_material' => $totalMaterial,
+            'total_mao_obra' => $totalMaoObra,
+            'total_cobranca' => $totalCobranca,
+            'custo_total' => $custoTotal,
         ];
     }
 
@@ -421,7 +439,16 @@ final class OrcamentoItem
             . 'ORDER BY MIN(ordem)'
         );
         $stmt->execute([':id' => $orcamentoId]);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $totalCobranca = (float)($row['total_cobranca'] ?? 0);
+            $custoTotal = (float)($row['custo_total'] ?? 0);
+            if ($totalCobranca <= 0 && $custoTotal > 0) {
+                $row['total_cobranca'] = $custoTotal;
+            }
+        }
+        unset($row);
+        return $rows;
     }
 
     /**

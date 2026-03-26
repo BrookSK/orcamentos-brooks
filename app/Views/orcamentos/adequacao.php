@@ -3,378 +3,163 @@
  * View de Adequação de Valores do Orçamento
  */
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adequação de Valores - Orçamento #<?= htmlspecialchars($orcamento['numero_proposta'] ?? '') ?></title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-        
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .info-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .info-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-        
-        .info-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        input[type="number"],
-        input[type="text"],
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        
-        input[type="number"]:focus,
-        input[type="text"]:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-block;
-            text-decoration: none;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .preview-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        .preview-table th,
-        .preview-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .preview-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .preview-table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .valor-positivo {
-            color: #28a745;
-            font-weight: bold;
-        }
-        
-        .valor-negativo {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-info {
-            background: #d1ecf1;
-            border-left: 4px solid #0c5460;
-            color: #0c5460;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            border-left: 4px solid #155724;
-            color: #155724;
-        }
-        
-        .alert-warning {
-            background: #fff3cd;
-            border-left: 4px solid #856404;
-            color: #856404;
-        }
-        
-        .historico-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .historico-data {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        
-        .historico-valores {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-        }
-        
-        #preview-section {
-            display: none;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <h1>💰 Adequação de Valores</h1>
-            <p class="subtitle">Orçamento: <?= htmlspecialchars($orcamento['numero_proposta'] ?? '') ?> - <?= htmlspecialchars($orcamento['obra_nome'] ?? '') ?></p>
-            
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Valor Atual Total</div>
-                    <div class="info-value">R$ <?= number_format($totais['total_cobranca'], 2, ',', '.') ?></div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Custo Material</div>
-                    <div class="info-value" style="color: #2196F3;">R$ <?= number_format($totais['total_material'], 2, ',', '.') ?></div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Custo Mão de Obra</div>
-                    <div class="info-value" style="color: #4CAF50;">R$ <?= number_format($totais['total_mao_obra'], 2, ',', '.') ?></div>
-                </div>
-                <?php if ($orcamento['adequacao_aplicada']): ?>
-                <div class="info-item">
-                    <div class="info-label">Última Adequação</div>
-                    <div class="info-value" style="font-size: 14px;">
-                        Fator: <?= number_format($orcamento['fator_adequacao'], 4) ?><br>
-                        <small><?= date('d/m/Y H:i', strtotime($orcamento['data_adequacao'])) ?></small>
-                    </div>
-                </div>
+<div class="card" style="padding:16px; margin-bottom:12px;">
+    <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+        <div>
+            <div style="font-weight:800; font-size:14px;">Adequação de Valores</div>
+            <div class="muted" style="margin-top:4px; font-size:12px;">
+                Orçamento: <?php echo htmlspecialchars((string)($orcamento['numero_proposta'] ?? '')); ?>
+                <?php if (!empty($orcamento['cliente_nome'])) : ?>
+                    · Cliente: <?php echo htmlspecialchars((string)$orcamento['cliente_nome']); ?>
                 <?php endif; ?>
             </div>
-            
-            <?php if (isset($mensagem)): ?>
-            <div class="alert alert-<?= $mensagem['tipo'] ?>">
-                <?= htmlspecialchars($mensagem['texto']) ?>
-            </div>
-            <?php endif; ?>
-            
-            <div class="alert alert-info">
-                <strong>ℹ️ Como funciona:</strong><br>
-                Informe o valor total que deseja receber pelo contrato. O sistema ajustará <strong>proporcionalmente</strong> todos os itens de todas as etapas, mantendo as proporções relativas entre elas.
-            </div>
-            
-            <form id="form-adequacao" method="POST">
-                <div class="form-group">
-                    <label for="valor_desejado">💵 Valor Total Desejado (R$)</label>
-                    <input type="number" 
-                           id="valor_desejado" 
-                           name="valor_desejado" 
-                           step="0.01" 
-                           min="0.01"
-                           placeholder="Ex: 5000000.00"
-                           required>
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        Digite o valor total que você deseja receber pelo contrato
-                    </small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="observacao">📝 Observação (opcional)</label>
-                    <textarea id="observacao" 
-                              name="observacao" 
-                              rows="3" 
-                              placeholder="Ex: Ajuste solicitado pelo cliente para adequação ao orçamento disponível"></textarea>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button type="button" class="btn btn-secondary" onclick="calcularPreview()">
-                        🔍 Visualizar Preview
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="btn-aplicar" disabled>
-                        ✅ Aplicar Adequação
-                    </button>
-                    <a href="/?route=orcamentos/show&id=<?= $orcamento['id'] ?>" class="btn btn-secondary">
-                        ← Voltar
-                    </a>
-                </div>
-            </form>
-            
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p style="margin-top: 10px;">Calculando...</p>
-            </div>
-            
-            <div id="preview-section">
-                <h2 style="margin-bottom: 20px;">📊 Preview da Adequação</h2>
-                <div id="preview-content"></div>
-            </div>
         </div>
-        
-        <?php if (!empty($historico)): ?>
-        <div class="card">
-            <h2 style="margin-bottom: 20px;">📜 Histórico de Adequações</h2>
-            <?php foreach ($historico as $item): ?>
-            <div class="historico-item">
-                <div class="historico-data">
-                    <?= date('d/m/Y H:i:s', strtotime($item['created_at'])) ?>
-                    <?php if ($item['usuario']): ?>
-                    - Por: <?= htmlspecialchars($item['usuario']) ?>
-                    <?php endif; ?>
-                </div>
-                <div class="historico-valores">
-                    <div>
-                        <strong>Valor Anterior:</strong> R$ <?= number_format($item['valor_anterior'], 2, ',', '.') ?>
-                    </div>
-                    <div>
-                        <strong>Valor Novo:</strong> R$ <?= number_format($item['valor_desejado'], 2, ',', '.') ?>
-                    </div>
-                    <div>
-                        <strong>Ajuste:</strong> 
-                        <span class="<?= $item['percentual_ajuste'] >= 0 ? 'valor-positivo' : 'valor-negativo' ?>">
-                            <?= number_format($item['percentual_ajuste'], 2, ',', '.') ?>%
-                        </span>
-                    </div>
-                </div>
-                <?php if ($item['observacao']): ?>
-                <div style="margin-top: 10px; font-size: 14px; color: #666;">
-                    <strong>Obs:</strong> <?= htmlspecialchars($item['observacao']) ?>
-                </div>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; ?>
+        <div class="actions">
+            <a class="btn" href="/?route=orcamentos/show&id=<?php echo (int)($orcamento['id'] ?? 0); ?>">Voltar</a>
         </div>
-        <?php endif; ?>
     </div>
-    
-    <script>
-        const orcamentoId = <?= $orcamento['id'] ?>;
-        const valorAtual = <?= $totais['total_cobranca'] ?>;
+</div>
+
+<div class="card" style="padding:16px; margin-bottom:12px; background:#fff; color:#111;">
+    <div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px;">
+        <div style="border:1px solid rgba(0,0,0,.12); border-radius:12px; padding:12px;">
+            <div style="font-size:12px; color:#444; font-weight:700;">VALOR ATUAL TOTAL</div>
+            <div style="font-size:18px; font-weight:900; margin-top:6px;">R$ <?php echo number_format((float)($totais['total_cobranca'] ?? 0), 2, ',', '.'); ?></div>
+        </div>
+        <div style="border:1px solid rgba(0,0,0,.12); border-radius:12px; padding:12px;">
+            <div style="font-size:12px; color:#444; font-weight:700;">CUSTO MATERIAL</div>
+            <div style="font-size:18px; font-weight:900; margin-top:6px; color:#1d4ed8;">R$ <?php echo number_format((float)($totais['total_material'] ?? 0), 2, ',', '.'); ?></div>
+        </div>
+        <div style="border:1px solid rgba(0,0,0,.12); border-radius:12px; padding:12px;">
+            <div style="font-size:12px; color:#444; font-weight:700;">CUSTO MÃO DE OBRA</div>
+            <div style="font-size:18px; font-weight:900; margin-top:6px; color:#16a34a;">R$ <?php echo number_format((float)($totais['total_mao_obra'] ?? 0), 2, ',', '.'); ?></div>
+        </div>
+    </div>
+
+    <div style="margin-top:14px; border:1px solid rgba(0,0,0,.12); background:#eef8ff; padding:12px; border-radius:12px;">
+        <div style="font-weight:900; margin-bottom:4px;">Como funciona:</div>
+        <div style="color:#111;">Informe o valor total que você deseja receber pelo contrato. O sistema ajustará <strong>proporcionalmente</strong> todos os itens de todas as etapas, mantendo as proporções relativas entre elas.</div>
+    </div>
+
+    <form id="form-adequacao">
+        <div class="form-group">
+            <label for="valor_desejado">💰 Valor Total Desejado (R$)</label>
+            <input type="text" 
+                   id="valor_desejado" 
+                   name="valor_desejado" 
+                   inputmode="decimal"
+                   placeholder="Ex: 8.000.000,00 ou 8 M"
+                   required>
+            <small style="color: #666; margin-top: 5px; display: block;">
+                Digite o valor total que você deseja receber pelo contrato
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="observacao">� Observação (opcional)</label>
+            <textarea id="observacao" 
+                      name="observacao" 
+                      rows="3" 
+                      placeholder="Ex: Ajuste solicitado pelo cliente para adequação ao orçamento disponível"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button type="button" class="btn" onclick="calcularPreview()">Visualizar Preview</button>
+            <button type="submit" class="btn primary" id="btn-aplicar" disabled>Aplicar Adequação</button>
+        </div>
+    </form>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 10px;">Calculando...</p>
+    </div>
+
+    <div id="preview-section" style="display:none; margin-top:16px;">
+        <div style="font-weight:900; margin-bottom:10px;">Preview da Adequação</div>
+        <div id="preview-content"></div>
+    </div>
+</div>
+
+<?php if (!empty($historico)) : ?>
+<div class="card" style="padding:16px; margin-bottom:12px; background:#fff; color:#111;">
+    <div style="font-weight:900; margin-bottom:10px;">Histórico de Adequações</div>
+    <div style="overflow:auto; border:1px solid rgba(0,0,0,.12); border-radius:12px;">
+        <table style="width:100%; border-collapse:collapse;">
+            <thead style="background:#f3f4f6;">
+                <tr>
+                    <th style="padding:10px; text-align:left; border-bottom:1px solid rgba(0,0,0,.10);">Data</th>
+                    <th style="padding:10px; text-align:right; border-bottom:1px solid rgba(0,0,0,.10);">Anterior</th>
+                    <th style="padding:10px; text-align:right; border-bottom:1px solid rgba(0,0,0,.10);">Novo</th>
+                    <th style="padding:10px; text-align:right; border-bottom:1px solid rgba(0,0,0,.10);">Ajuste</th>
+                    <th style="padding:10px; text-align:left; border-bottom:1px solid rgba(0,0,0,.10);">Obs.</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach (($historico ?? []) as $item) : ?>
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06);">
+                            <?php echo htmlspecialchars(date('d/m/Y H:i:s', strtotime((string)($item['created_at'] ?? '')))); ?>
+                        </td>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06); text-align:right;">
+                            R$ <?php echo number_format((float)($item['valor_anterior'] ?? 0), 2, ',', '.'); ?>
+                        </td>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06); text-align:right;">
+                            R$ <?php echo number_format((float)($item['valor_desejado'] ?? 0), 2, ',', '.'); ?>
+                        </td>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06); text-align:right; font-weight:900; color:<?php echo ((float)($item['percentual_ajuste'] ?? 0)) >= 0 ? '#15803d' : '#b91c1c'; ?>;">
+                            <?php echo number_format((float)($item['percentual_ajuste'] ?? 0), 2, ',', '.'); ?>%
+                        </td>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06);">
+                            <?php echo htmlspecialchars((string)($item['observacao'] ?? '')); ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
+
+<script>
+        const orcamentoId = <?= (int)($orcamento['id'] ?? 0) ?>;
+        const valorAtual = <?= (float)($totais['total_cobranca'] ?? 0) ?>;
+
+        function parseValorDesejado(raw) {
+            if (raw == null) {
+                return 0;
+            }
+
+            let s = String(raw).trim();
+            if (s === '') {
+                return 0;
+            }
+
+            s = s.replace(/\s+/g, '');
+            s = s.replace(/^R\$?/i, '');
+
+            let multiplier = 1;
+            const last = s.slice(-1).toLowerCase();
+            if (last === 'm') {
+                multiplier = 1000000;
+                s = s.slice(0, -1);
+            } else if (last === 'k') {
+                multiplier = 1000;
+                s = s.slice(0, -1);
+            }
+
+            s = s.replace(/\./g, '');
+            s = s.replace(',', '.');
+
+            const num = parseFloat(s);
+            if (!Number.isFinite(num)) {
+                return 0;
+            }
+
+            return num * multiplier;
+        }
         
         function calcularPreview() {
-            const valorDesejado = parseFloat(document.getElementById('valor_desejado').value);
+            const valorDesejado = parseValorDesejado(document.getElementById('valor_desejado').value);
             
             if (!valorDesejado || valorDesejado <= 0) {
                 alert('Por favor, informe um valor válido.');
@@ -425,19 +210,19 @@
             const classeDiferenca = diferenca > 0 ? 'valor-positivo' : 'valor-negativo';
             
             let html = `
-                <div class="alert alert-${diferenca > 0 ? 'success' : 'warning'}">
-                    <strong>${diferenca > 0 ? '📈' : '📉'} ${tipoAjuste.toUpperCase()} de ${Math.abs(data.percentual_ajuste).toFixed(2)}%</strong><br>
-                    Diferença: <span class="${classeDiferenca}">R$ ${Math.abs(diferenca).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                <div style="border:1px solid rgba(0,0,0,.12); background:${diferenca > 0 ? '#e8fff0' : '#fff9db'}; padding:12px; border-radius:12px; margin-bottom:12px;">
+                    <div style="font-weight:900;">${tipoAjuste.toUpperCase()} de ${Math.abs(data.percentual_ajuste).toFixed(2)}%</div>
+                    <div style="margin-top:6px;">Diferença: <strong style="color:${diferenca > 0 ? '#15803d' : '#b45309'};">R$ ${Math.abs(diferenca).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></div>
                 </div>
-                
-                <table class="preview-table">
-                    <thead>
+                <div style="overflow:auto; border:1px solid rgba(0,0,0,.12); border-radius:12px;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead style="background:#f3f4f6;">
                         <tr>
-                            <th>Etapa</th>
-                            <th style="text-align: right;">Valor Atual</th>
-                            <th style="text-align: right;">Valor Novo</th>
-                            <th style="text-align: right;">Diferença</th>
-                            <th style="text-align: right;">% do Total</th>
+                            <th style="padding:10px; text-align:left; border-bottom:1px solid rgba(0,0,0,.10);">Etapa</th>
+                            <th style="padding:10px; text-align:right; border-bottom:1px solid rgba(0,0,0,.10);">Valor Atual</th>
+                            <th style="padding:10px; text-align:right; border-bottom:1px solid rgba(0,0,0,.10);">Valor Novo</th>
+                            <th style="padding:10px; text-align:right; border-bottom:1px solid rgba(0,0,0,.10);">Diferença</th>
+                            <th style="padding:10px; text-align:right; border-bottom:1px solid rgba(0,0,0,.10);">% do Total</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -449,29 +234,28 @@
                 
                 html += `
                     <tr>
-                        <td><strong>${etapa.etapa}</strong></td>
-                        <td style="text-align: right;">R$ ${etapa.valor_atual.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td style="text-align: right;">R$ ${etapa.valor_novo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td style="text-align: right;" class="${classeDif}">
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06);"><strong>${etapa.etapa}</strong></td>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06); text-align:right;">R$ ${etapa.valor_atual.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06); text-align:right;">R$ ${etapa.valor_novo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06); text-align:right; color:${diferencaEtapa > 0 ? '#15803d' : '#b91c1c'}; font-weight:900;">
                             ${diferencaEtapa > 0 ? '+' : ''}R$ ${diferencaEtapa.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                         </td>
-                        <td style="text-align: right;">${etapa.percentual.toFixed(2)}%</td>
+                        <td style="padding:10px; border-bottom:1px solid rgba(0,0,0,.06); text-align:right;">${etapa.percentual.toFixed(2)}%</td>
                     </tr>
                 `;
             });
             
             html += `
-                    <tr style="background: #f8f9fa; font-weight: bold; font-size: 16px;">
-                        <td>TOTAL</td>
-                        <td style="text-align: right;">R$ ${data.valor_atual.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td style="text-align: right;">R$ ${data.valor_desejado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td style="text-align: right;" class="${classeDiferenca}">
-                            ${diferenca > 0 ? '+' : ''}R$ ${Math.abs(diferenca).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                        </td>
-                        <td style="text-align: right;">100.00%</td>
+                    <tr style="background:#f3f4f6; font-weight:900;">
+                        <td style="padding:10px;">TOTAL</td>
+                        <td style="padding:10px; text-align:right;">R$ ${data.valor_atual.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="padding:10px; text-align:right;">R$ ${data.valor_desejado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="padding:10px; text-align:right; color:${diferenca > 0 ? '#15803d' : '#b91c1c'};">${diferenca > 0 ? '+' : ''}R$ ${Math.abs(diferenca).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="padding:10px; text-align:right;">100.00%</td>
                     </tr>
                 </tbody>
             </table>
+            </div>
             `;
             
             document.getElementById('preview-content').innerHTML = html;
@@ -481,7 +265,7 @@
         document.getElementById('form-adequacao').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const valorDesejado = parseFloat(document.getElementById('valor_desejado').value);
+            const valorDesejado = parseValorDesejado(document.getElementById('valor_desejado').value);
             const observacao = document.getElementById('observacao').value;
             
             if (!confirm(`Confirma a aplicação da adequação para R$ ${valorDesejado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}?\n\nEsta ação irá atualizar TODOS os itens do orçamento proporcionalmente.`)) {
@@ -501,14 +285,21 @@
                     observacao: observacao
                 })
             })
-            .then(response => response.json())
+            .then(async response => {
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    const msg = (data && (data.error || data.erro)) ? (data.error || data.erro) : 'Erro ao aplicar adequação.';
+                    throw new Error(msg);
+                }
+                return data;
+            })
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
                 if (data.sucesso) {
-                    alert(data.mensagem);
+                    alert(data.mensagem || 'Adequação aplicada com sucesso.');
                     window.location.reload();
                 } else {
-                    alert('Erro: ' + data.erro);
+                    alert('Erro: ' + (data.erro || 'Falha ao aplicar adequação.'));
                 }
             })
             .catch(error => {
@@ -517,5 +308,29 @@
             });
         });
     </script>
-</body>
-</html>
+
+<style>
+    #form-adequacao input,
+    #form-adequacao textarea {
+        background: #fff;
+        color: #111;
+        border: 1px solid rgba(0,0,0,.20);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 14px;
+        width: 100%;
+        outline: none;
+    }
+    #form-adequacao input:focus,
+    #form-adequacao textarea:focus {
+        border-color: rgba(91,140,255,.75);
+        box-shadow: 0 0 0 3px rgba(91,140,255,.18);
+    }
+    #form-adequacao label {
+        color: #111;
+        font-size: 12px;
+        font-weight: 800;
+        display: block;
+        margin-bottom: 6px;
+    }
+</style>
