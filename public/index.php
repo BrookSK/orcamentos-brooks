@@ -7,6 +7,22 @@ require __DIR__ . '/../app/bootstrap.php';
 use App\Controllers\ItemController;
 use App\Controllers\OrcamentoController;
 
+$uriPath = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+$uriPath = $uriPath !== '' ? rtrim($uriPath, '/') : '';
+
+if (!isset($_GET['route']) && $uriPath !== '') {
+    if (preg_match('#^/orcamentos/(\d+)$#', $uriPath, $m) === 1) {
+        $_GET['route'] = 'orcamentos/show';
+        $_GET['id'] = $m[1];
+    } elseif (preg_match('#^/orcamentos/(\d+)/adequacao$#', $uriPath, $m) === 1) {
+        $_GET['route'] = 'orcamentos/adequacao';
+        $_GET['id'] = $m[1];
+    } elseif (preg_match('#^/orcamentos/(\d+)/pdf$#', $uriPath, $m) === 1) {
+        $_GET['route'] = 'orcamentos/pdf';
+        $_GET['id'] = $m[1];
+    }
+}
+
 $route = (string)($_GET['route'] ?? 'orcamentos/index');
 $route = trim($route, '/');
 
