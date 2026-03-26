@@ -539,6 +539,15 @@ final class OrcamentoController
             ]);
             error_log('[orcamentos.show.error] id=' . $id . ' type=' . get_class($e) . ' message=' . $e->getMessage() . ' file=' . $e->getFile() . ':' . $e->getLine());
             http_response_code(500);
+            $debug = ((string)($_GET['debug'] ?? '') === '1') || ((string)getenv('APP_DEBUG') === '1');
+            if ($debug) {
+                header('Content-Type: text/plain; charset=utf-8');
+                echo "Exception: " . get_class($e) . "\n";
+                echo "Message: " . $e->getMessage() . "\n";
+                echo "File: " . $e->getFile() . ":" . $e->getLine() . "\n\n";
+                echo $e->getTraceAsString();
+                return;
+            }
             echo 'Erro interno ao abrir o orçamento.';
         }
     }
