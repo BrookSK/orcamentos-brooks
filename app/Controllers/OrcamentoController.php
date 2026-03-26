@@ -500,33 +500,46 @@ final class OrcamentoController
     {
         $id = (int)($_GET['id'] ?? 0);
         Logger::info('orcamentos.show', ['id' => $id]);
-        $orcamento = Orcamento::find($id);
-        if (!$orcamento) {
-            Logger::warning('orcamentos.show.not_found', ['id' => $id]);
-            $this->redirect('/?route=orcamentos/index');
-            return;
+
+        try {
+            $orcamento = Orcamento::find($id);
+            if (!$orcamento) {
+                Logger::warning('orcamentos.show.not_found', ['id' => $id]);
+                $this->redirect('/?route=orcamentos/index');
+                return;
+            }
+
+            $itens = OrcamentoItem::allByOrcamento($id);
+
+            $this->render('orcamentos/show', [
+                'orcamento' => $orcamento,
+                'itens' => $itens,
+                'grupos' => OrcamentoOpcao::namesByTipo('grupo'),
+                'categorias' => OrcamentoOpcao::namesByTipo('categoria'),
+                'unidades' => OrcamentoOpcao::namesByTipo('unidade'),
+                'item' => [
+                    'grupo' => 'SERVIÇOS PRELIMINARES',
+                    'categoria' => 'PROJETOS COMPLEMENTARES',
+                    'codigo' => '1.1',
+                    'descricao' => 'PROJETO DE INSTALAÇÕES ELÉTRICAS\n- Entrada de energia\n- Distribuição elétrica de baixa tensão',
+                    'quantidade' => '1,0',
+                    'unidade' => 'vb',
+                    'valor_unitario' => '0',
+                    'ordem' => '0',
+                ],
+                'errors' => [],
+            ]);
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.show.error', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+                'type' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            http_response_code(500);
+            echo 'Erro interno ao abrir o orçamento.';
         }
-
-        $itens = OrcamentoItem::allByOrcamento($id);
-
-        $this->render('orcamentos/show', [
-            'orcamento' => $orcamento,
-            'itens' => $itens,
-            'grupos' => OrcamentoOpcao::namesByTipo('grupo'),
-            'categorias' => OrcamentoOpcao::namesByTipo('categoria'),
-            'unidades' => OrcamentoOpcao::namesByTipo('unidade'),
-            'item' => [
-                'grupo' => 'SERVIÇOS PRELIMINARES',
-                'categoria' => 'PROJETOS COMPLEMENTARES',
-                'codigo' => '1.1',
-                'descricao' => 'PROJETO DE INSTALAÇÕES ELÉTRICAS\n- Entrada de energia\n- Distribuição elétrica de baixa tensão',
-                'quantidade' => '1,0',
-                'unidade' => 'vb',
-                'valor_unitario' => '0',
-                'ordem' => '0',
-            ],
-            'errors' => [],
-        ]);
     }
 
     public function itemStore(): void
