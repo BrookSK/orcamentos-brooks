@@ -18,6 +18,9 @@ declare(strict_types=1);
     <form method="post" action="/?route=orcamentos/itemUpdate">
         <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
         <input type="hidden" name="id" value="<?php echo (int)$item['id']; ?>">
+        <?php if (((string)($_GET['debug'] ?? '') === '1') || ((string)getenv('APP_DEBUG') === '1')) : ?>
+            <input type="hidden" name="debug" value="1">
+        <?php endif; ?>
 
         <div class="form" style="padding:0;">
             <div class="field">

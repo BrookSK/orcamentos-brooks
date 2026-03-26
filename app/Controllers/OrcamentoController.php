@@ -675,7 +675,34 @@ final class OrcamentoController
         }
 
         OrcamentoItem::update($id, $data);
-        Logger::info('orcamentos.itemUpdate.updated', ['orcamento_id' => $orcamentoId, 'item_id' => $id]);
+
+        $after = OrcamentoItem::find($id) ?: [];
+        Logger::info('orcamentos.itemUpdate.updated', [
+            'orcamento_id' => $orcamentoId,
+            'item_id' => $id,
+            'post_quantidade' => (string)($_POST['quantidade'] ?? ''),
+            'post_valor_unitario' => (string)($_POST['valor_unitario'] ?? ''),
+            'data_quantidade' => (float)($data['quantidade'] ?? 0),
+            'data_valor_unitario' => (float)($data['valor_unitario'] ?? 0),
+            'after_quantidade' => (float)($after['quantidade'] ?? 0),
+            'after_valor_unitario' => (float)($after['valor_unitario'] ?? 0),
+        ]);
+
+        $debug = ((string)($_GET['debug'] ?? '') === '1')
+            || ((string)($_POST['debug'] ?? '') === '1')
+            || ((string)getenv('APP_DEBUG') === '1');
+        if ($debug) {
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "itemUpdate debug\n";
+            echo "POST quantidade=" . (string)($_POST['quantidade'] ?? '') . "\n";
+            echo "POST valor_unitario=" . (string)($_POST['valor_unitario'] ?? '') . "\n";
+            echo "NORMALIZED quantidade=" . (string)((float)($data['quantidade'] ?? 0)) . "\n";
+            echo "NORMALIZED valor_unitario=" . (string)((float)($data['valor_unitario'] ?? 0)) . "\n";
+            echo "DB after quantidade=" . (string)((float)($after['quantidade'] ?? 0)) . "\n";
+            echo "DB after valor_unitario=" . (string)((float)($after['valor_unitario'] ?? 0)) . "\n";
+            return;
+        }
+
         $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
     }
 
