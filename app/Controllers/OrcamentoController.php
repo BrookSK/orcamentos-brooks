@@ -537,6 +537,7 @@ final class OrcamentoController
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
+            error_log('[orcamentos.show.error] id=' . $id . ' type=' . get_class($e) . ' message=' . $e->getMessage() . ' file=' . $e->getFile() . ':' . $e->getLine());
             http_response_code(500);
             echo 'Erro interno ao abrir o orçamento.';
         }
