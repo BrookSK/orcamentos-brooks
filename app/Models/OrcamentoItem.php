@@ -254,9 +254,22 @@ final class OrcamentoItem
         $out['valor_unitario'] = self::parsePtBrNumber((string)($data['valor_unitario'] ?? '0'));
         $out['quantidade'] = self::parsePtBrNumber((string)($data['quantidade'] ?? '0'));
         $out['custo_material'] = self::parsePtBrNumber((string)($data['custo_material'] ?? '0'));
-        t'ustr [ 
+        $out['custo_mao_obra'] = self::parsePtBrNumber((string)($data['custo_mao_obra'] ?? '0'));
+        $out['margem_lucro'] = self::parsePtBrNumber((string)($data['margem_lucro'] ?? '0'));
+        $out['desconto_item'] = self::parsePtBrNumber((string)($data['desconto_item'] ?? '0'));
 
-    {
+        $percentualRealizado = self::parsePtBrNumber((string)($data['percentual_realizado'] ?? '0'));
+        if ($percentualRealizado < 0) {
+            $percentualRealizado = 0;
+        }
+        if ($percentualRealizado > 100) {
+            $percentualRealizado = 100;
+        }
+        $out['percentual_realizado'] = $percentualRealizado;
+
+        return $out;
+    }
+
     public static function formatMoney(float $value): string
     {
         return number_format($value, 2, ',', '.');
