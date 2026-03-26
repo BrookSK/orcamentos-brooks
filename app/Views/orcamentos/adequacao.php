@@ -316,7 +316,7 @@
                     <button type="submit" class="btn btn-primary" id="btn-aplicar" disabled>
                         ✅ Aplicar Adequação
                     </button>
-                    <a href="/orcamentos/<?= $orcamento['id'] ?>" class="btn btn-secondary">
+                    <a href="/?route=orcamentos/show&id=<?= $orcamento['id'] ?>" class="btn btn-secondary">
                         ← Voltar
                     </a>
                 </div>
@@ -477,13 +477,14 @@
             
             document.getElementById('loading').style.display = 'block';
             
-            fetch(`/orcamentos/${orcamentoId}/adequacao/aplicar`, {
+            fetch(`/?route=orcamentos/adequacaoAplicar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ 
                     valor_desejado: valorDesejado,
+                    orcamento_id: orcamentoId,
                     observacao: observacao
                 })
             })

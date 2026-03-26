@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Logger;
 use App\Models\Orcamento;
+use App\Models\OrcamentoAdequacao;
 use App\Models\OrcamentoItem;
 use App\Models\OrcamentoOpcao;
 
@@ -852,10 +853,56 @@ final class OrcamentoController
         try {
             $preview = OrcamentoAdequacao::calcularPreview($orcamentoId, $valorDesejado);
             echo json_encode($preview);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Erro ao calcular preview: ' . $e->getMessage()]);
         }
+        exit;
+    }
+
+    public function adequacaoAplicar(): void
+    {
+        header('Content-Type: application/json');
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $valorDesejado = (float)($input['valor_desejado'] ?? 0);
+        $orcamentoId = (int)($input['orcamento_id'] ?? 0);
+        $observacao = (string)($input['observacao'] ?? '');
+
+        if ($valorDesejado <= 0 || $orcamentoId <= 0) {
+            http_response_code(400);
+            echo json_encode([
+                'sucesso' => false,
+                'erro' => 'Parâmetros inválidos',
+            ]);
+            exit;
+        }
+
+        Logger::info('orcamentos.adequacao.aplicar', [
+            'id' => $orcamentoId,
+            'valor_desejado' => $valorDesejado,
+        ]);
+
+        try {
+            $resultado = OrcamentoAdequacao::aplicarAdequacao($orcamentoId, $valorDesejado, $observacao);
+
+            echo json_encode([
+                'sucesso' => true,
+                'mensagem' => 'Adequação aplicada com sucesso.',
+                'resultado' => $resultado,
+            ]);
+        } catch (\Exception $e) {
+            Logger::error('orcamentos.adequacao.aplicar.error', [
+                'id' => $orcamentoId,
+                'message' => $e->getMessage(),
+            ]);
+            http_response_code(500);
+            echo json_encode([
+                'sucesso' => false,
+                'erro' => $e->getMessage(),
+            ]);
+        }
+
         exit;
     }
 
