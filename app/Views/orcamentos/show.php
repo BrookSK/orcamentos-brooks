@@ -174,7 +174,9 @@ function toggleAdicionarItem() {
                 <?php $subtotalCategoria = 0.0; ?>
                 <?php foreach ($rows as $row) : ?>
                     <?php
-                        $valorTotal = (float)($row['valor_total'] ?? 0);
+                        $quantidade = (float)($row['quantidade'] ?? 0);
+                        $valorUnitario = (float)($row['valor_unitario'] ?? 0);
+                        $valorTotal = round($quantidade * $valorUnitario, 2);
                         $subtotalCategoria += $valorTotal;
                         $totalGeral += $valorTotal;
                     ?>
