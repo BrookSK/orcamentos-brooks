@@ -89,12 +89,13 @@ final class OrcamentoItem
         $custoMaoObra = (float)($data['custo_mao_obra'] ?? 0);
         $margemLucro = (float)($data['margem_lucro'] ?? 0);
         $descontoItem = (float)($data['desconto_item'] ?? 0);
+        $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
         
         $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
 
         $stmt = $pdo->prepare(
-            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item) '
-            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :valor_cobranca, :margem_lucro, :desconto_item)'
+            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item, percentual_realizado) '
+            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado)'
         );
 
         $stmt->execute([
@@ -114,6 +115,7 @@ final class OrcamentoItem
             ':valor_cobranca' => $valorCobranca,
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
+            ':percentual_realizado' => $percentualRealizado,
         ]);
 
         return (int)$pdo->lastInsertId();
@@ -138,6 +140,13 @@ final class OrcamentoItem
         $custoMaoObra = (float)($data['custo_mao_obra'] ?? 0);
         $margemLucro = (float)($data['margem_lucro'] ?? 0);
         $descontoItem = (float)($data['desconto_item'] ?? 0);
+        $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
+        if ($percentualRealizado < 0) {
+            $percentualRealizado = 0;
+        }
+        if ($percentualRealizado > 100) {
+            $percentualRealizado = 100;
+        }
         
         $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
 
@@ -157,7 +166,8 @@ final class OrcamentoItem
             . ' custo_mao_obra = :custo_mao_obra,'
             . ' valor_cobranca = :valor_cobranca,'
             . ' margem_lucro = :margem_lucro,'
-            . ' desconto_item = :desconto_item'
+            . ' desconto_item = :desconto_item,'
+            . ' percentual_realizado = :percentual_realizado'
             . ' WHERE id = :id'
         );
 
@@ -178,6 +188,7 @@ final class OrcamentoItem
             ':valor_cobranca' => $valorCobranca,
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
+            ':percentual_realizado' => $percentualRealizado,
         ]);
     }
 
@@ -243,18 +254,9 @@ final class OrcamentoItem
         $out['valor_unitario'] = self::parsePtBrNumber((string)($data['valor_unitario'] ?? '0'));
         $out['quantidade'] = self::parsePtBrNumber((string)($data['quantidade'] ?? '0'));
         $out['custo_material'] = self::parsePtBrNumber((string)($data['custo_material'] ?? '0'));
-        $out['custo_mao_obra'] = self::parsePtBrNumber((string)($data['custo_mao_obra'] ?? '0'));
-        $out['margem_lucro'] = self::parsePtBrNumber((string)($data['margem_lucro'] ?? '0'));
-        $out['desconto_item'] = self::parsePtBrNumber((string)($data['desconto_item'] ?? '0'));
+        t'ustr [ 
 
-        return $out;
-    }
-
-    private static function calculateTotal(float $quantidade, float $valorUnitario): float
     {
-        return round($quantidade * $valorUnitario, 2);
-    }
-
     public static function formatMoney(float $value): string
     {
         return number_format($value, 2, ',', '.');
@@ -448,6 +450,39 @@ final class OrcamentoItem
             }
         }
         unset($row);
+        return $rows;
+    }
+
+    public static function getResumoPdfEtapas(int $orcamentoId): array
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT '
+            . 'grupo, '
+            . 'etapa, '
+            . 'SUM(valor_cobranca) as total_cobranca, '
+            . 'SUM(custo_material + custo_mao_obra) as custo_total '
+            . 'FROM orcamento_itens '
+            . 'WHERE orcamento_id = :id '
+            . 'GROUP BY etapa, grupo '
+            . 'ORDER BY MIN(ordem), etapa, grupo'
+        );, '
+            . 'CASE '
+            . '  WHEN SUM(valor_cobranca) > 0 THEN (SUM(valor_cobranca * percentual_realizado) / SUM(valor_cobranca)) '
+            . '  ELSE AVG(percentual_realizado) '
+            . 'END as percentual_realizado
+        $stmt->execute([':id' => $orcamentoId]);
+        $rows = $stmt->fetchAll();
+
+        foreach ($rows as &$row) {
+            $totalCobranca = (float)($row['total_cobranca'] ?? 0);
+            $custoTotal = (float)($row['custo_total'] ?? 0);
+            if ($totalCobranca <= 0 && $custoTotal > 0) {
+                $row['total_cobranca'] = $custoTotal;
+            }
+        }
+        unset($row);
+
         return $rows;
     }
 

@@ -614,6 +614,27 @@ final class OrcamentoController
         }
 
         $data = OrcamentoItem::normalize($_POST);
+
+        if (!array_key_exists('etapa', $_POST)) {
+            $data['etapa'] = (string)($existing['etapa'] ?? '');
+        }
+        if (!array_key_exists('custo_material', $_POST)) {
+            $data['custo_material'] = (float)($existing['custo_material'] ?? 0);
+        }
+        if (!array_key_exists('custo_mao_obra', $_POST)) {
+            $data['custo_mao_obra'] = (float)($existing['custo_mao_obra'] ?? 0);
+        }
+        if (!array_key_exists('margem_lucro', $_POST)) {
+            $data['margem_lucro'] = (float)($existing['margem_lucro'] ?? 0);
+        }
+        if (!array_key_exists('desconto_item', $_POST)) {
+            $data['desconto_item'] = (float)($existing['desconto_item'] ?? 0);
+        }
+
+        if (!array_key_exists('percentual_realizado', $_POST)) {
+            $data['percentual_realizado'] = (float)($existing['percentual_realizado'] ?? 0);
+        }
+
         $errors = OrcamentoItem::validate($data);
         if ($errors) {
             Logger::warning('orcamentos.itemUpdate.validation_failed', ['orcamento_id' => $orcamentoId, 'item_id' => $id, 'errors' => $errors]);

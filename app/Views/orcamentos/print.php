@@ -15,6 +15,11 @@ foreach ($itens as $it) {
 
 $totalGeral = 0.0;
 
+$orcamentoId = (int)($orcamento['id'] ?? 0);
+$resumoEtapas = $orcamentoId > 0 ? OrcamentoItem::getResumoPdfEtapas($orcamentoId) : [];
+$totaisGerais = $orcamentoId > 0 ? OrcamentoItem::getTotaisGerais($orcamentoId) : ['total_cobranca' => 0];
+$totalGeralCobranca = (float)($totaisGerais['total_cobranca'] ?? 0);
+
 $groupTotals = [];
 foreach ($grouped as $grupo => $cats) {
     $sum = 0.0;
@@ -183,25 +188,69 @@ if ($logoFile !== '') {
         <tr>
             <th style="width:40px">#</th>
             <th>DESCRIÇÃO</th>
+            <th style="width:140px">CATEGORIA</th>
             <th style="width:40px">R$</th>
             <th style="width:120px">TOTAL</th>
+            <th style="width:90px">% da etapa</th>
+            <th style="width:90px">% do total</th>
+            <th style="width:110px">Realizado % da etapa</th>
+            <th style="width:110px">Realizado % do total</th>
         </tr>
         </thead>
         <tbody>
         <?php $idx = 1; ?>
-        <?php foreach ($groupTotals as $g => $sum) : ?>
+        <?php
+            $totaisPorEtapa = [];
+            foreach ($resumoEtapas as $row) {
+                $etapaNome = (string)($row['etapa'] ?? '');
+                $valorLinha = (float)($row['total_cobranca'] ?? 0);
+                $totaisPorEtapa[$etapaNome] = ($totaisPorEtapa[$etapaNome] ?? 0.0) + $valorLinha;
+            }
+        ?>
+
+        <?php foreach ($resumoEtapas as $etapa) : ?>
+            <?php
+                $categoriaNome = (string)($etapa['etapa'] ?? '');
+                $descricaoNome = (string)($etapa['grupo'] ?? '');
+                $valorLinha = (float)($etapa['total_cobranca'] ?? 0);
+                $totalDaEtapa = (float)($totaisPorEtapa[$categoriaNome] ?? 0);
+
+                $percentualDaEtapa = $totalDaEtapa > 0 ? ($valorLinha / $totalDaEtapa) * 100 : 0;
+                $percentualDoTotal = $totalGeralCobranca > 0 ? ($valorLinha / $totalGeralCobranca) * 100 : 0;
+
+                $percentualRealizado = (float)($etapa['percentual_realizado'] ?? 0);
+                if ($percentualRealizado < 0) {
+                    $percentualRealizado = 0;
+                }
+                if ($percentualRealizado > 100) {
+                    $percentualRealizado = 100;
+                }
+                $valorRealizadoLinha = $valorLinha * ($percentualRealizado / 100);
+
+                $realizadoPercentualDaEtapa = $totalDaEtapa > 0 ? ($valorRealizadoLinha / $totalDaEtapa) * 100 : 0;
+                $realizadoPercentualDoTotal = $totalGeralCobranca > 0 ? ($valorRealizadoLinha / $totalGeralCobranca) * 100 : 0;
+            ?>
             <tr>
                 <td class="center"><?php echo (int)$idx; ?></td>
-                <td><?php echo htmlspecialchars((string)$g); ?></td>
+                <td><?php echo htmlspecialchars($descricaoNome); ?></td>
+                <td><?php echo htmlspecialchars($categoriaNome); ?></td>
                 <td class="center">R$</td>
-                <td class="num"><?php echo OrcamentoItem::formatMoney((float)$sum); ?></td>
+                <td class="num"><?php echo OrcamentoItem::formatMoney($valorLinha); ?></td>
+                <td class="num"><?php echo number_format($percentualDaEtapa, 2, ',', '.') . '%'; ?></td>
+                <td class="num"><?php echo number_format($percentualDoTotal, 2, ',', '.') . '%'; ?></td>
+                <td class="num"><?php echo number_format($realizadoPercentualDaEtapa, 2, ',', '.') . '%'; ?></td>
+                <td class="num"><?php echo number_format($realizadoPercentualDoTotal, 2, ',', '.') . '%'; ?></td>
             </tr>
             <?php $idx++; ?>
         <?php endforeach; ?>
         <tr class="total">
-            <td colspan="2"></td>
+            <td colspan="3"></td>
             <td class="center">R$</td>
-            <td class="num"><?php echo OrcamentoItem::formatMoney((float)$totalGeral); ?></td>
+            <td class="num"><?php echo OrcamentoItem::formatMoney((float)$totalGeralCobranca); ?></td>
+            <td class="num"></td>
+            <td class="num">100,00%</td>
+            <td class="num"></td>
+            <td class="num">100,00%</td>
         </tr>
         </tbody>
     </table>

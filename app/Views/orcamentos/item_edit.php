@@ -94,6 +94,11 @@ declare(strict_types=1);
                 <?php if (!empty($errors['valor_unitario'])) : ?><div class="error"><?php echo htmlspecialchars((string)$errors['valor_unitario']); ?></div><?php endif; ?>
             </div>
 
+            <div class="field">
+                <label>% realizado</label>
+                <input name="percentual_realizado" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['percentual_realizado'] ?? '0')); ?>">
+            </div>
+
             <div class="field" style="display:flex; justify-content:flex-end; align-items:flex-end;">
                 <button class="btn primary" type="submit">Salvar alterações</button>
             </div>
