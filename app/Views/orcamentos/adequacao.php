@@ -394,7 +394,14 @@
                     orcamento_id: orcamentoId
                 })
             })
-            .then(response => response.json())
+            .then(async response => {
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    const msg = (data && (data.error || data.erro)) ? (data.error || data.erro) : 'Erro ao calcular preview.';
+                    throw new Error(msg);
+                }
+                return data;
+            })
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
                 mostrarPreview(data);
@@ -407,6 +414,12 @@
         }
         
         function mostrarPreview(data) {
+            if (!data || !Array.isArray(data.etapas)) {
+                const msg = (data && (data.error || data.erro)) ? (data.error || data.erro) : 'Resposta inválida do servidor.';
+                alert('Erro ao calcular preview: ' + msg);
+                return;
+            }
+
             const diferenca = data.diferenca;
             const tipoAjuste = diferenca > 0 ? 'aumento' : 'redução';
             const classeDiferenca = diferenca > 0 ? 'valor-positivo' : 'valor-negativo';

@@ -841,6 +841,12 @@ final class OrcamentoController
         header('Content-Type: application/json');
         
         $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'JSON inválido']);
+            exit;
+        }
+
         $valorDesejado = (float)($input['valor_desejado'] ?? 0);
         $orcamentoId = (int)($input['orcamento_id'] ?? 0);
         
@@ -852,8 +858,19 @@ final class OrcamentoController
         
         try {
             $preview = OrcamentoAdequacao::calcularPreview($orcamentoId, $valorDesejado);
+            if (is_array($preview) && isset($preview['erro'])) {
+                http_response_code(400);
+                echo json_encode(['error' => (string)$preview['erro']]);
+                exit;
+            }
+
             echo json_encode($preview);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.adequacao.preview.error', [
+                'id' => $orcamentoId,
+                'message' => $e->getMessage(),
+                'type' => get_class($e),
+            ]);
             http_response_code(500);
             echo json_encode(['error' => 'Erro ao calcular preview: ' . $e->getMessage()]);
         }
@@ -865,6 +882,15 @@ final class OrcamentoController
         header('Content-Type: application/json');
 
         $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            http_response_code(400);
+            echo json_encode([
+                'sucesso' => false,
+                'erro' => 'JSON inválido',
+            ]);
+            exit;
+        }
+
         $valorDesejado = (float)($input['valor_desejado'] ?? 0);
         $orcamentoId = (int)($input['orcamento_id'] ?? 0);
         $observacao = (string)($input['observacao'] ?? '');
@@ -891,10 +917,11 @@ final class OrcamentoController
                 'mensagem' => 'Adequação aplicada com sucesso.',
                 'resultado' => $resultado,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Logger::error('orcamentos.adequacao.aplicar.error', [
                 'id' => $orcamentoId,
                 'message' => $e->getMessage(),
+                'type' => get_class($e),
             ]);
             http_response_code(500);
             echo json_encode([
