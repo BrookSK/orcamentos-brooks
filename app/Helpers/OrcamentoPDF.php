@@ -46,37 +46,37 @@ body { font-family: 'Outfit', sans-serif; color: var(--black); line-height: 1.3;
 .page { page-break-after: always; position: relative; width: 100%; min-height: 277mm; background: white; }
 
 /* ══ CAPA ══ */
-.page-cover { background: var(--navy); color: var(--white); overflow: hidden; }
-.page-cover::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 80% 20%, rgba(201,168,76,.07) 0%, transparent 60%), radial-gradient(ellipse 40% 60% at 10% 80%, rgba(13,17,23,.9) 0%, transparent 70%); pointer-events: none; }
-.accent-bar { position: absolute; left: 52px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, transparent 5%, var(--gold) 30%, var(--gold) 70%, transparent 95%); }
-.corner-tl, .corner-br { position: absolute; width: 30px; height: 30px; border-color: var(--gold); border-style: solid; opacity: .4; }
-.corner-tl { top: 24px; left: 24px; border-width: 1.5px 0 0 1.5px; }
-.corner-br { bottom: 20px; right: 24px; border-width: 0 1.5px 1.5px 0; }
-.logo-block { position: absolute; top: 44px; left: 80px; }
-.logo-block .brand { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; letter-spacing: .06em; color: var(--white); line-height: 1; }
-.logo-block .sub { font-size: 9px; letter-spacing: .28em; text-transform: uppercase; color: var(--gold); margin-top: 5px; font-weight: 300; }
-.top-meta { position: absolute; top: 48px; right: 56px; text-align: right; }
-.top-meta .label { font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-.top-meta .badge { display: inline-block; padding: 5px 14px; border: 1px solid var(--line); border-radius: 2px; font-size: 10px; letter-spacing: .12em; color: var(--gold2); font-weight: 500; }
-.top-rule { position: absolute; top: 128px; left: 52px; right: 56px; height: 1px; background: linear-gradient(to right, var(--gold), rgba(201,168,76,.1)); }
-.hero { position: absolute; top: 50%; left: 80px; right: 80px; transform: translateY(-52%); text-align: center; }
-.hero .eyebrow { font-size: 9.5px; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; font-weight: 400; }
-.hero .title { font-family: 'Cormorant Garamond', serif; font-size: 56px; font-weight: 300; line-height: 1.08; color: var(--white); letter-spacing: .01em; margin-bottom: 16px; }
-.hero .title strong { font-weight: 700; color: var(--gold2); display: block; }
-.hero .subtitle { font-size: 11px; letter-spacing: .18em; color: var(--muted); text-transform: uppercase; font-weight: 300; margin-bottom: 52px; }
-.ornament { display: flex; align-items: center; gap: 16px; justify-content: center; margin-bottom: 52px; }
-.ornament span { display: block; height: 1px; width: 70px; background: var(--line); }
-.ornament i { width: 6px; height: 6px; border: 1.5px solid var(--gold); transform: rotate(45deg); }
-.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid rgba(201,168,76,.15); border-radius: 3px; overflow: hidden; background: rgba(201,168,76,.1); }
-.info-cell { background: rgba(13,17,23,.8); padding: 20px 18px; text-align: left; }
-.info-cell .cell-label { font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; font-weight: 400; }
-.info-cell .cell-value { font-size: 13px; color: var(--white); font-weight: 500; line-height: 1.3; }
-.bottom-strip { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
-.bottom-meta { position: absolute; bottom: 24px; left: 80px; right: 56px; display: flex; justify-content: space-between; align-items: flex-end; }
-.bottom-meta .doc-ref { font-size: 9px; letter-spacing: .15em; color: var(--muted); font-weight: 300; }
+.page-cover { background: var(--white) !important; color: var(--black); overflow: hidden; position: relative; }
+.accent-bar { position: absolute; left: 30px; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, transparent 5%, var(--gold) 30%, var(--gold) 70%, transparent 95%); z-index: 2; opacity: .3; }
+.corner-tl, .corner-br { position: absolute; width: 24px; height: 24px; border-color: var(--gold); border-style: solid; opacity: .25; z-index: 2; }
+.corner-tl { top: 15px; left: 15px; border-width: 1px 0 0 1px; }
+.corner-br { bottom: 15px; right: 15px; border-width: 0 1px 1px 0; }
+.logo-block { position: absolute; top: 30px; left: 50px; z-index: 3; }
+.logo-block .brand { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 700; letter-spacing: .06em; color: var(--black); line-height: 1; }
+.logo-block .sub { font-size: 8px; letter-spacing: .26em; text-transform: uppercase; color: var(--gold); margin-top: 4px; font-weight: 400; }
+.top-meta { position: absolute; top: 32px; right: 40px; text-align: right; z-index: 3; }
+.top-meta .label { font-size: 8px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.top-meta .badge { display: inline-block; padding: 4px 12px; border: 1px solid var(--gold); border-radius: 2px; font-size: 9px; letter-spacing: .1em; color: var(--gold); font-weight: 600; }
+.top-rule { position: absolute; top: 100px; left: 30px; right: 40px; height: 1px; background: linear-gradient(to right, var(--gold), rgba(201,168,76,.2)); z-index: 2; }
+.hero { position: absolute; top: 50%; left: 50px; right: 50px; transform: translateY(-50%); text-align: center; z-index: 3; }
+.hero .eyebrow { font-size: 9px; letter-spacing: .28em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; font-weight: 500; }
+.hero .title { font-family: 'Cormorant Garamond', serif; font-size: 48px; font-weight: 300; line-height: 1.1; color: var(--black); letter-spacing: .01em; margin-bottom: 14px; }
+.hero .title strong { font-weight: 700; color: var(--gold); display: block; }
+.hero .subtitle { font-size: 10px; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; font-weight: 400; margin-bottom: 40px; }
+.ornament { display: flex; align-items: center; gap: 14px; justify-content: center; margin-bottom: 40px; }
+.ornament span { display: block; height: 1px; width: 60px; background: rgba(201,168,76,.3); }
+.ornament i { width: 5px; height: 5px; border: 1px solid var(--gold); transform: rotate(45deg); }
+.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid #ddd; border-radius: 2px; overflow: hidden; background: #f5f5f5; }
+.info-cell { background: var(--white); padding: 16px 14px; text-align: left; border-right: 1px solid #e8e8e8; }
+.info-cell:last-child { border-right: none; }
+.info-cell .cell-label { font-size: 7.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: 7px; font-weight: 600; }
+.info-cell .cell-value { font-size: 11px; color: var(--black); font-weight: 500; line-height: 1.3; }
+.bottom-strip { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); z-index: 2; }
+.bottom-meta { position: absolute; bottom: 18px; left: 50px; right: 40px; display: flex; justify-content: space-between; align-items: flex-end; z-index: 3; }
+.bottom-meta .doc-ref { font-size: 8px; letter-spacing: .14em; color: var(--muted); font-weight: 400; }
 .bottom-meta .revision { text-align: right; }
-.bottom-meta .revision span { display: block; font-size: 9px; letter-spacing: .12em; color: var(--muted); font-weight: 300; }
-.bottom-meta .revision strong { display: block; font-size: 10px; color: var(--gold2); letter-spacing: .1em; margin-top: 2px; }
+.bottom-meta .revision span { display: block; font-size: 8px; letter-spacing: .1em; color: var(--muted); font-weight: 400; }
+.bottom-meta .revision strong { display: block; font-size: 9px; color: var(--gold); letter-spacing: .08em; margin-top: 2px; font-weight: 600; }
 
 /* ══ HEADER PADRÃO ══ */
 .page-header { background: var(--navy); width: 100%; position: relative; overflow: hidden; }
