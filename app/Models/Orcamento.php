@@ -65,10 +65,10 @@ final class Orcamento
         $stmt = $pdo->prepare(
             'INSERT INTO orcamentos ('
             . ' numero_proposta, cliente_nome, arquiteto_nome, obra_nome, endereco_obra, local_obra, data, referencia, area_m2, contrato, tipo, prazo_dias, rev,'
-            . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, created_at, updated_at'
+            . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, capa_path_1, capa_path_2, capa_path_3, capa_path_4, created_at, updated_at'
             . ') VALUES ('
             . ' :numero_proposta, :cliente_nome, :arquiteto_nome, :obra_nome, :endereco_obra, :local_obra, :data, :referencia, :area_m2, :contrato, :tipo, :prazo_dias, :rev,'
-            . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :created_at, :updated_at'
+            . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :capa_path_1, :capa_path_2, :capa_path_3, :capa_path_4, :created_at, :updated_at'
             . ')'
         );
 
@@ -91,6 +91,10 @@ final class Orcamento
             ':empresa_telefone' => $data['empresa_telefone'] !== '' ? (string)$data['empresa_telefone'] : null,
             ':empresa_email' => $data['empresa_email'] !== '' ? (string)$data['empresa_email'] : null,
             ':logo_path' => $data['logo_path'] !== '' ? (string)$data['logo_path'] : null,
+            ':capa_path_1' => $data['capa_path_1'] !== '' ? (string)$data['capa_path_1'] : null,
+            ':capa_path_2' => $data['capa_path_2'] !== '' ? (string)$data['capa_path_2'] : null,
+            ':capa_path_3' => $data['capa_path_3'] !== '' ? (string)$data['capa_path_3'] : null,
+            ':capa_path_4' => $data['capa_path_4'] !== '' ? (string)$data['capa_path_4'] : null,
             ':created_at' => $now,
             ':updated_at' => $now,
         ]);
@@ -123,6 +127,10 @@ final class Orcamento
             . ' empresa_telefone = :empresa_telefone,'
             . ' empresa_email = :empresa_email,'
             . ' logo_path = :logo_path,'
+            . ' capa_path_1 = :capa_path_1,'
+            . ' capa_path_2 = :capa_path_2,'
+            . ' capa_path_3 = :capa_path_3,'
+            . ' capa_path_4 = :capa_path_4,'
             . ' updated_at = :updated_at'
             . ' WHERE id = :id'
         );
@@ -147,6 +155,10 @@ final class Orcamento
             ':empresa_telefone' => $data['empresa_telefone'] !== '' ? (string)$data['empresa_telefone'] : null,
             ':empresa_email' => $data['empresa_email'] !== '' ? (string)$data['empresa_email'] : null,
             ':logo_path' => $data['logo_path'] !== '' ? (string)$data['logo_path'] : null,
+            ':capa_path_1' => $data['capa_path_1'] !== '' ? (string)$data['capa_path_1'] : null,
+            ':capa_path_2' => $data['capa_path_2'] !== '' ? (string)$data['capa_path_2'] : null,
+            ':capa_path_3' => $data['capa_path_3'] !== '' ? (string)$data['capa_path_3'] : null,
+            ':capa_path_4' => $data['capa_path_4'] !== '' ? (string)$data['capa_path_4'] : null,
             ':updated_at' => $now,
         ]);
     }
@@ -193,6 +205,10 @@ final class Orcamento
             'empresa_telefone',
             'empresa_email',
             'logo_path',
+            'capa_path_1',
+            'capa_path_2',
+            'capa_path_3',
+            'capa_path_4',
         ];
 
         $out = [];
