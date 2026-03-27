@@ -859,14 +859,8 @@ final class OrcamentoController
             return;
         }
 
-        $itens = OrcamentoItem::allByOrcamento($id);
-
         if (class_exists('Dompdf\\Dompdf')) {
-            $html = $this->renderToString('orcamentos/print', [
-                'orcamento' => $orcamento,
-                'itens' => $itens,
-                'isPrint' => true,
-            ]);
+            $html = \App\Helpers\OrcamentoPDF::gerarHTML($id, $orcamento);
 
             $klass = 'Dompdf\\Dompdf';
             $dompdf = new $klass([
