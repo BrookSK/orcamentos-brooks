@@ -48,13 +48,13 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 
 /* HEADER PÁGINAS - SIMPLES COMO REFERÊNCIA */
 .page-header { margin-bottom: 15px; margin-top: 20px; }
-.page-header-info { font-size: 8pt; line-height: 1.5; margin-bottom: 10px; }
+.page-header-info { font-size: 8pt; line-height: 1.5; }
 .page-header-info div { margin-bottom: 2px; }
-.page-header-logo-container { text-align: center; margin: 15px 0; }
+.page-header-logo-container { text-align: center; margin: 0 0 15px 0; }
 .page-header-logo { display: inline-block; padding: 10px 20px; }
 .page-header-logo-text { font-size: 18pt; font-weight: bold; color: #2C3350; }
 .page-header-logo-sub { font-size: 8pt; color: #666; }
-.page-header-meta { position: absolute; top: 40px; right: 20px; text-align: right; font-size: 8pt; line-height: 1.6; }
+.page-header-meta { text-align: right; font-size: 8pt; line-height: 1.6; }
 .page-title { text-align: center; font-size: 14pt; font-weight: bold; color: #000; margin: 15px 0 5px 0; }
 .page-subtitle { text-align: center; font-size: 8pt; color: #2C3350; font-weight: bold; margin-bottom: 15px; }
 
@@ -199,22 +199,24 @@ HTML;
         
         return <<<HTML
 <div class="page-header">
-    <div class="page-header-info">
-        <div><strong>{$numeroProposta}</strong></div>
-        <div><strong>CLIENTE:</strong> {$clienteNome}</div>
-        <div><strong>ENDEREÇO:</strong> {$endereco} - {$local}</div>
-        <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
-    </div>
-    <div class="page-header-meta">
-        <div><strong>REVISÃO:</strong> {$rev}</div>
-        <div><strong>ÁREA:</strong> {$area} m²</div>
-        <div><strong>DATA:</strong> {$data}</div>
-    </div>
     <div class="page-header-logo-container">
         {$logoHtml}
     </div>
     <div class="page-title">{$tituloSecao}</div>
     <div class="page-subtitle">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>
+    <div style="display:flex;justify-content:space-between;margin-top:15px;font-size:8pt;">
+        <div class="page-header-info">
+            <div><strong>{$numeroProposta}</strong></div>
+            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
+            <div><strong>ENDEREÇO:</strong> {$endereco} - {$local}</div>
+            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
+        </div>
+        <div class="page-header-meta">
+            <div><strong>REVISÃO:</strong> {$rev}</div>
+            <div><strong>ÁREA:</strong> {$area} m²</div>
+            <div><strong>DATA:</strong> {$data}</div>
+        </div>
+    </div>
 </div>
 HTML;
     }
