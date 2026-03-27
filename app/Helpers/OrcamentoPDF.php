@@ -83,6 +83,7 @@ tfoot { display: table-footer-group; }
 /* TABELAS DETALHAMENTO */
 .banner-etapa { background: #2C3350; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; page-break-after: avoid; }
 .table-detalhes { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 7pt; margin-top: 10px; }
+.table-detalhes thead { display: table-header-group; }
 .table-detalhes thead th { background: #666; color: #FFF; padding: 5px 4px; text-align: center; font-weight: bold; font-size: 7pt; border: 1px solid #666; }
 .table-detalhes thead th.left { text-align: left; padding-left: 6px; }
 .table-detalhes thead th.right { text-align: right; padding-right: 6px; }
@@ -90,9 +91,10 @@ tfoot { display: table-footer-group; }
 .table-detalhes tbody td.center { text-align: center; }
 .table-detalhes tbody td.right { text-align: right; padding-right: 6px; }
 .table-detalhes tbody td.left { text-align: left; padding-left: 6px; }
-.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; margin-top: 10px; }
-.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; }
-.total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 20px 0 10px 0; }
+.table-detalhes tbody tr { page-break-inside: avoid; }
+.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; margin-top: 10px; page-break-inside: avoid; }
+.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; page-break-inside: avoid; }
+.total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 20px 0 10px 0; page-break-inside: avoid; }
 
 /* RODAPÉ */
 .page-footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #2C3350; font-size: 7pt; color: #999; display: flex; justify-content: flex-end; }
@@ -441,7 +443,7 @@ HTML;
         
         $totalGeral = array_sum(array_column($grupos, 'subtotal'));
         
-        $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA ORÇAMENTÁRIA');
+        $html = '<div class="no-page-break">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA ORÇAMENTÁRIA') . '</div>';
         
         foreach ($grupos as $grupo) {
             if (empty($grupo['itens'])) continue;
@@ -463,7 +465,6 @@ HTML;
         );
         
         $html .= '<div class="page-footer"><div>FOLHA: 4</div></div>';
-        $html .= '</div>';
         
         return $html;
     }
@@ -471,34 +472,21 @@ HTML;
     
     private static function gerarTabelaDetalhes(array $itens, float $subtotal, float $totalGeral): string
     {
-        $headerRow = '<tr>';
-        $headerRow .= '<th class="left" style="width:5%;">ITEM</th>';
-        $headerRow .= '<th class="left" style="width:25%;">DESCRIÇÃO</th>';
-        $headerRow .= '<th class="center" style="width:5%;">UNID</th>';
-        $headerRow .= '<th class="center" style="width:6%;">QUANT</th>';
-        $headerRow .= '<th class="right" style="width:10%;">VALOR UNIT MATERIAL</th>';
-        $headerRow .= '<th class="right" style="width:10%;">VALOR UNIT M.O</th>';
-        $headerRow .= '<th class="right" style="width:10%;">VALOR UNITÁRIO TOTAL</th>';
-        $headerRow .= '<th class="right" style="width:11%;">VALOR TOTAL</th>';
-        $headerRow .= '<th class="center" style="width:7%;">% ETAPA</th>';
-        $headerRow .= '<th class="center" style="width:7%;">% OBRA</th>';
-        $headerRow .= '<th class="center" style="width:4%;">% REALIZADO</th>';
-        $headerRow .= '</tr>';
+        $html = '<table class="table-detalhes"><thead><tr>';
+        $html .= '<th class="left" style="width:5%;">ITEM</th>';
+        $html .= '<th class="left" style="width:25%;">DESCRIÇÃO</th>';
+        $html .= '<th class="center" style="width:5%;">UNID</th>';
+        $html .= '<th class="center" style="width:6%;">QUANT</th>';
+        $html .= '<th class="right" style="width:10%;">VALOR UNIT MATERIAL</th>';
+        $html .= '<th class="right" style="width:10%;">VALOR UNIT M.O</th>';
+        $html .= '<th class="right" style="width:10%;">VALOR UNITÁRIO TOTAL</th>';
+        $html .= '<th class="right" style="width:11%;">VALOR TOTAL</th>';
+        $html .= '<th class="center" style="width:7%;">% ETAPA</th>';
+        $html .= '<th class="center" style="width:7%;">% OBRA</th>';
+        $html .= '<th class="center" style="width:4%;">% REALIZADO</th>';
+        $html .= '</tr></thead><tbody>';
         
-        $html = '<table class="table-detalhes">';
-        $html .= '<thead>' . $headerRow . '</thead>';
-        $html .= '<tbody>';
-        
-        $contador = 0;
         foreach ($itens as $item) {
-            // A cada 15 linhas, fechar a tabela e abrir uma nova com header
-            if ($contador > 0 && $contador % 15 === 0) {
-                $html .= '</tbody></table>';
-                $html .= '<table class="table-detalhes" style="margin-top:0;">';
-                $html .= '<thead>' . $headerRow . '</thead>';
-                $html .= '<tbody>';
-            }
-            
             $quantidade = (float)$item['quantidade'];
             $valorTotal = (float)$item['valor_cobranca'];
             $custoMaterial = (float)($item['custo_material'] ?? 0);
@@ -526,8 +514,6 @@ HTML;
             $html .= '<td class="center">' . number_format($pctObra, 2, ',', '.') . '%</td>';
             $html .= '<td class="center">' . number_format($pctRealizadoEfetivo, 2, ',', '.') . '%</td>';
             $html .= '</tr>';
-            
-            $contador++;
         }
         
         $html .= '</tbody></table>';
