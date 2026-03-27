@@ -4,1242 +4,561 @@ declare(strict_types=1);
 
 namespace App\Helpers;
 
-use App\Models\OrcamentoItem;
-use App\Models\OrcamentoCor;
-
 final class OrcamentoPDF
 {
-    /**
-     * Gera HTML completo para exportação em PDF
-     * Estrutura: Capa → Resumo (3 páginas) → Apresentação → Expertise → Objeto → Detalhamento Completo
-     */
     public static function gerarHTML(int $orcamentoId, array $orcamento): string
     {
         $html = self::gerarCabecalhoHTML();
-        $html .= self::gerarPaginaApresentacao($orcamento);
-        $html .= self::gerarPaginaResumoExecutivo($orcamentoId, $orcamento);
-        $html .= self::gerarPaginaApresentacaoInstitucional();
-        $html .= self::gerarPaginaExpertise();
-        $html .= self::gerarPaginaObjetoProposta();
+        $html .= self::gerarPaginaCapa($orcamento);
+        $html .= self::gerarPaginasResumo($orcamentoId, $orcamento);
+        $html .= self::gerarPaginasInstitucionais();
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarRodapeHTML();
-        
         return $html;
     }
     
-    /**
-     * Gera cabeçalho HTML com estilos CSS modernos - Layout Brooks Construtora
-     */
     private static function gerarCabecalhoHTML(): string
     {
         return <<<'HTML'
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proposta Orçamentária - Brooks Construtora</title>
-    <style>
-        @page {
-            margin: 0;
-            size: A4;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', 'Helvetica', sans-serif;
-            color: #333;
-            line-height: 1.4;
-        }
-        
-        .page {
-            page-break-after: always;
-            position: relative;
-            width: 210mm;
-            min-height: 297mm;
-            background: white;
-        }
-        
-        /* HEADER PADRÃO - Todas as páginas exceto capa */
-        .page-header {
-            background: #1a1a2e;
-            padding: 15px 20mm;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
-        
-        .header-left {
-            font-size: 10px;
-            line-height: 1.4;
-        }
-        
-        .header-logo {
-            text-align: center;
-        }
-        
-        .header-logo-text {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #fff;
-        }
-        
-        .header-logo-sub {
-            font-size: 9px;
-            letter-spacing: 1px;
-            color: #c92a2a;
-        }
-        
-        .header-right {
-            font-size: 10px;
-            text-align: right;
-            line-height: 1.4;
-        }
-        
-        .page-content {
-            padding: 20mm;
-        }
-        
-        /* PÁGINA DE CAPA */
-        .page-cover {
-            background: #1a1a2e;
-            color: white;
-            padding: 0;
-        }
-        
-        .cover-header {
-            padding: 30px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        
-        .cover-logo {
-            flex: 1;
-        }
-        
-        .cover-logo-text {
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: 3px;
-            color: #fff;
-        }
-        
-        .cover-logo-sub {
-            font-size: 11px;
-            letter-spacing: 1.5px;
-            color: #c92a2a;
-            margin-top: 5px;
-        }
-        
-        .cover-info-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px 20px;
-            border-radius: 5px;
-            font-size: 11px;
-            line-height: 1.6;
-            text-align: right;
-        }
-        
-        .cover-body {
-            padding: 80px 40px;
-            text-align: center;
-        }
-        
-        .cover-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-            color: #c92a2a;
-        }
-        
-        .cover-subtitle {
-            font-size: 20px;
-            font-weight: 400;
-            margin-bottom: 60px;
-            color: #fff;
-        }
-        
-        /* PLANILHA RESUMO - Estilo dos prints */
-        .resumo-title {
-            text-align: center;
-            margin: 30px 0 10px 0;
-        }
-        
-        .resumo-title h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 5px;
-        }
-        
-        .resumo-title h3 {
-            font-size: 14px;
-            font-weight: 400;
-            color: #c92a2a;
-        }
-        
-        .table-resumo-clean {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 11px;
-        }
-        
-        .table-resumo-clean th {
-            background: #4a4a4a;
-            color: white;
-            padding: 12px 10px;
-            text-align: left;
-            font-weight: 600;
-            border: 1px solid #333;
-        }
-        
-        .table-resumo-clean td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            background: white;
-        }
-        
-        .table-resumo-clean .subtotal-row {
-            background: #c92a2a;
-            color: white;
-            font-weight: 700;
-        }
-        
-        .table-resumo-clean .total-row {
-            background: #1a1a2e;
-            color: white;
-            font-weight: 700;
-            font-size: 12px;
-        }
-        
-        .text-right {
-            text-align: right;
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .page-number {
-            position: absolute;
-            bottom: 15mm;
-            right: 20mm;
-            font-size: 10px;
-            color: #666;
-        }
-        
-        /* TABELAS DE ÁREAS */
-        .table-areas {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 30px 0;
-            font-size: 11px;
-        }
-        
-        .table-areas th {
-            background: #f0f0f0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            font-weight: 600;
-            text-align: center;
-        }
-        
-        .table-areas td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: center;
-        }
-        
-        .table-areas .total-row {
-            background: #e0e0e0;
-            font-weight: 700;
-        }
-        
-        /* DETALHAMENTO COMPLETO */
-        .section-title {
-            font-size: 28px;
-            color: #1a1a2e;
-            text-align: center;
-            margin: 40px 0 30px 0;
-            padding: 20px;
-            border-bottom: 4px solid #c92a2a;
-        }
-        
-        .etapa-section {
-            margin: 30px 0;
-            page-break-inside: avoid;
-        }
-        
-        .etapa-header {
-            background: #1a1a2e;
-            padding: 15px 20px;
-            margin-bottom: 15px;
-        }
-        
-        .etapa-title {
-            font-size: 18px;
-            color: white;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        
-        .table-itens {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .table-itens th {
-            background: #4a4a4a;
-            color: white;
-            padding: 10px 8px;
-            text-align: left;
-            font-weight: 600;
-            border: 1px solid #333;
-        }
-        
-        .table-itens td {
-            padding: 8px;
-            border: 1px solid #ddd;
-            background: white;
-        }
-        
-        .table-itens tr:nth-child(even) td {
-            background: #f9f9f9;
-        }
-        
-        .resumo-etapa {
-            background: #c92a2a;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-        
-        .total-final {
-            background: #1a1a2e;
-            color: white;
-            padding: 30px;
-            text-align: center;
-            margin: 40px 0;
-            border-radius: 5px;
-        }
-        
-        .total-final h2 {
-            font-size: 20px;
-            margin-bottom: 15px;
-            letter-spacing: 1px;
-        }
-        
-        .total-final-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #c92a2a;
-            margin: 10px 0;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta Orçamentária - Brooks Construtora</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+--navy: #0d1117;
+--navy2: #131b26;
+--navy3: #1a2233;
+--gold: #c9a84c;
+--gold2: #e8c97a;
+--white: #ffffff;
+--black: #1a1a1a;
+--muted: #666666;
+--line: rgba(201,168,76,0.3);
+--row-alt: #f9f9f9;
+}
+@page { margin: 0; size: A4; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Outfit', sans-serif; color: var(--black); line-height: 1.4; background: var(--white); }
+.page { page-break-after: always; position: relative; width: 210mm; min-height: 297mm; background: white; }
+
+/* ══ CAPA ══ */
+.page-cover { background: var(--navy); color: var(--white); overflow: hidden; }
+.page-cover::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 80% 20%, rgba(201,168,76,.07) 0%, transparent 60%), radial-gradient(ellipse 40% 60% at 10% 80%, rgba(13,17,23,.9) 0%, transparent 70%); pointer-events: none; }
+.accent-bar { position: absolute; left: 52px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, transparent 5%, var(--gold) 30%, var(--gold) 70%, transparent 95%); }
+.corner-tl, .corner-br { position: absolute; width: 30px; height: 30px; border-color: var(--gold); border-style: solid; opacity: .4; }
+.corner-tl { top: 24px; left: 24px; border-width: 1.5px 0 0 1.5px; }
+.corner-br { bottom: 20px; right: 24px; border-width: 0 1.5px 1.5px 0; }
+.logo-block { position: absolute; top: 44px; left: 80px; }
+.logo-block .brand { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; letter-spacing: .06em; color: var(--white); line-height: 1; }
+.logo-block .sub { font-size: 9px; letter-spacing: .28em; text-transform: uppercase; color: var(--gold); margin-top: 5px; font-weight: 300; }
+.top-meta { position: absolute; top: 48px; right: 56px; text-align: right; }
+.top-meta .label { font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.top-meta .badge { display: inline-block; padding: 5px 14px; border: 1px solid var(--line); border-radius: 2px; font-size: 10px; letter-spacing: .12em; color: var(--gold2); font-weight: 500; }
+.top-rule { position: absolute; top: 128px; left: 52px; right: 56px; height: 1px; background: linear-gradient(to right, var(--gold), rgba(201,168,76,.1)); }
+.hero { position: absolute; top: 50%; left: 80px; right: 80px; transform: translateY(-52%); text-align: center; }
+.hero .eyebrow { font-size: 9.5px; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; font-weight: 400; }
+.hero .title { font-family: 'Cormorant Garamond', serif; font-size: 56px; font-weight: 300; line-height: 1.08; color: var(--white); letter-spacing: .01em; margin-bottom: 16px; }
+.hero .title strong { font-weight: 700; color: var(--gold2); display: block; }
+.hero .subtitle { font-size: 11px; letter-spacing: .18em; color: var(--muted); text-transform: uppercase; font-weight: 300; margin-bottom: 52px; }
+.ornament { display: flex; align-items: center; gap: 16px; justify-content: center; margin-bottom: 52px; }
+.ornament span { display: block; height: 1px; width: 70px; background: var(--line); }
+.ornament i { width: 6px; height: 6px; border: 1.5px solid var(--gold); transform: rotate(45deg); }
+.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid rgba(201,168,76,.15); border-radius: 3px; overflow: hidden; background: rgba(201,168,76,.1); }
+.info-cell { background: rgba(13,17,23,.8); padding: 20px 18px; text-align: left; }
+.info-cell .cell-label { font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; font-weight: 400; }
+.info-cell .cell-value { font-size: 13px; color: var(--white); font-weight: 500; line-height: 1.3; }
+.bottom-strip { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
+.bottom-meta { position: absolute; bottom: 24px; left: 80px; right: 56px; display: flex; justify-content: space-between; align-items: flex-end; }
+.bottom-meta .doc-ref { font-size: 9px; letter-spacing: .15em; color: var(--muted); font-weight: 300; }
+.bottom-meta .revision { text-align: right; }
+.bottom-meta .revision span { display: block; font-size: 9px; letter-spacing: .12em; color: var(--muted); font-weight: 300; }
+.bottom-meta .revision strong { display: block; font-size: 10px; color: var(--gold2); letter-spacing: .1em; margin-top: 2px; }
+
+/* ══ HEADER PADRÃO ══ */
+.page-header { background: var(--navy); width: 100%; position: relative; overflow: hidden; }
+.page-header::before { content: ''; display: block; height: 4px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
+.page-header::after { content: ''; position: absolute; top: 0; right: 0; width: 300px; height: 100%; background: radial-gradient(ellipse at 80% 50%, rgba(201,168,76,.06) 0%, transparent 70%); pointer-events: none; }
+.header-inner { display: flex; align-items: stretch; min-height: 80px; }
+.header-project { flex: 1; padding: 18px 28px; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.header-project .doc-code { font-size: 8.5px; letter-spacing: .25em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 4px; }
+.proj-row { display: flex; align-items: baseline; gap: 6px; }
+.proj-row .lbl { font-size: 7.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); font-weight: 400; min-width: 76px; }
+.proj-row .val { font-size: 10.5px; color: var(--white); font-weight: 400; }
+.header-logo { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px 40px; border-right: 1px solid var(--line); gap: 4px; }
+.header-logo .brand { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 700; letter-spacing: .1em; color: var(--white); line-height: 1; }
+.header-logo .sub { font-size: 7px; letter-spacing: .32em; text-transform: uppercase; color: var(--gold); font-weight: 300; }
+.header-meta { display: flex; flex-direction: column; justify-content: center; padding: 18px 28px; gap: 5px; }
+.meta-row { display: flex; align-items: baseline; gap: 6px; }
+.meta-row .lbl { font-size: 7.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); font-weight: 400; min-width: 48px; }
+.meta-row .val { font-size: 10.5px; color: var(--white); font-weight: 500; }
+.meta-row .val.highlight { color: var(--gold2); }
+.header-rule { height: 1px; background: linear-gradient(to right, var(--gold), rgba(201,168,76,.1) 70%, transparent); }
+
+/* ══ TABELAS RESUMO ══ */
+.resumo-title { text-align: center; margin: 30px 0 20px 0; }
+.resumo-title h2 { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+.resumo-title h3 { font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); font-weight: 400; }
+.table-resumo-clean { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10px; }
+.table-resumo-clean th { background: var(--navy); color: var(--white); padding: 12px 10px; text-align: left; font-weight: 500; border: none; letter-spacing: .08em; }
+.table-resumo-clean td { padding: 10px; border: 1px solid #e0e0e0; background: white; }
+.table-resumo-clean .subtotal-row { background: var(--gold); color: var(--navy); font-weight: 600; }
+.table-resumo-clean .total-row { background: var(--navy); color: var(--white); font-weight: 600; font-size: 11px; }
+.table-areas { width: 100%; border-collapse: collapse; margin: 30px 0; font-size: 10px; }
+.table-areas th { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; font-weight: 500; text-align: center; }
+.table-areas td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+.table-areas .total-row { background: var(--navy); color: var(--white); font-weight: 600; }
+.page-number { position: absolute; bottom: 15mm; right: 20mm; font-size: 9px; color: #999; letter-spacing: .1em; }
+
+/* ══ DETALHAMENTO ══ */
+.page-detalhamento { background: var(--white); }
+.section-title { padding: 22px 28px 14px; display: flex; align-items: center; gap: 16px; }
+.section-title h2 { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 400; color: var(--black); letter-spacing: .04em; }
+.section-title .badge { font-size: 8px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 2px; }
+.etapa-section { margin: 25px 0; page-break-inside: avoid; }
+.etapa-header { padding: 18px 28px 12px; }
+.etapa-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--gold); font-weight: 600; letter-spacing: .06em; }
+.table-wrap { padding: 0 20px 28px; }
+.table-itens { width: 100%; border-collapse: collapse; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; }
+.table-itens thead tr { background: var(--navy); }
+.table-itens thead th { padding: 11px 12px; font-size: 7.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--white); font-weight: 500; border-bottom: 1px solid var(--navy); white-space: nowrap; }
+.table-itens thead th:first-child { text-align: left; padding-left: 16px; }
+.table-itens thead th:nth-child(2) { text-align: left; min-width: 200px; }
+.table-itens thead th:nth-child(n+3) { text-align: right; }
+.table-itens tbody tr { border-bottom: 1px solid #e0e0e0; transition: background .15s; }
+.table-itens tbody tr:nth-child(even) { background: var(--row-alt); }
+.table-itens tbody tr:hover { background: rgba(201,168,76,.08); }
+.table-itens td { padding: 10px 12px; font-size: 10px; color: var(--black); vertical-align: middle; line-height: 1.4; }
+.table-itens td:first-child { font-size: 9px; color: var(--muted); letter-spacing: .06em; font-weight: 500; padding-left: 16px; }
+.table-itens td:nth-child(2) { font-size: 10px; color: var(--black); font-weight: 400; }
+.table-itens td:nth-child(3), .table-itens td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.table-itens td:nth-child(5) { text-align: right; color: var(--muted); }
+.col-total { text-align: right; font-weight: 600; font-size: 10.5px; color: var(--gold) !important; font-variant-numeric: tabular-nums; }
+.col-pct { text-align: right; font-size: 9px; color: var(--muted); }
+.col-realizado { text-align: right; }
+.pct-pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 8.5px; font-weight: 600; background: rgba(76,175,122,.12); color: #4caf7a; letter-spacing: .05em; }
+.pct-pill.zero { background: rgba(122,138,154,.1); color: var(--muted); }
+.resumo-etapa { background: var(--gold); color: var(--navy); padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; margin: 20px 0; }
+.total-final { background: var(--navy); color: var(--white); padding: 30px; text-align: center; margin: 30px 20px; border-radius: 4px; border: 1px solid var(--navy); }
+.total-final h2 { font-family: 'Cormorant Garamond', serif; font-size: 22px; margin-bottom: 12px; letter-spacing: .05em; font-weight: 600; }
+.total-final-value { font-size: 32px; font-weight: 700; color: var(--gold2); margin: 8px 0; }
+.page-footer { background: var(--navy); border-top: 1px solid var(--navy); }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; padding: 11px 28px; }
+.footer-inner .f-left { font-size: 7.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+.footer-inner .f-center { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: .12em; }
+.footer-inner .f-right { font-size: 7.5px; letter-spacing: .12em; color: var(--muted); }
+.footer-gold-bar { height: 3px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
+.page-footer { background: var(--navy); border-top: 1px solid var(--line); }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; padding: 11px 28px; }
+.footer-inner .f-left { font-size: 7.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+.footer-inner .f-center { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: .12em; }
+.footer-inner .f-right { font-size: 7.5px; letter-spacing: .12em; color: var(--muted); }
+.footer-gold-bar { height: 3px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
+</style>
 </head>
 <body>
 HTML;
     }
+
     
-    /**
-     * Gera página de capa/apresentação - Estilo Brooks Construtora
-     */
-    private static function gerarPaginaApresentacao(array $orcamento): string
+    private static function gerarPaginaCapa(array $orcamento): string
     {
-        $numeroProposta = htmlspecialchars((string)($orcamento['numero_proposta'] ?? ''));
-        $clienteNome = htmlspecialchars((string)($orcamento['cliente_nome'] ?? ''));
-        $endereco = htmlspecialchars((string)($orcamento['endereco_obra'] ?? ''));
+        $numeroProposta = (string)($orcamento['numero_proposta'] ?? '');
+        $clienteNome = (string)($orcamento['cliente_nome'] ?? '');
+        $endereco = (string)($orcamento['endereco_obra'] ?? '');
+        $local = (string)($orcamento['local_obra'] ?? '');
         $area = (string)($orcamento['area_m2'] ?? '');
         $prazo = (string)($orcamento['prazo_dias'] ?? '');
         $prazomeses = $prazo ? round((int)$prazo / 30) : '';
-        $rev = htmlspecialchars((string)($orcamento['rev'] ?? 'R00'));
+        $rev = (string)($orcamento['rev'] ?? 'R00');
         $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
         
         return <<<HTML
 <div class="page page-cover">
-    <div class="cover-header">
-        <div class="cover-logo">
-            <div class="cover-logo-text">BROOKS</div>
-            <div class="cover-logo-sub">CONSTRUTORA</div>
-        </div>
-        <div class="cover-info-box">
-            <div><strong>REVISÃO:</strong> {$rev}</div>
-            <div><strong>ÁREA:</strong> {$area}m²</div>
-            <div><strong>DATA:</strong> {$data}</div>
-        </div>
-    </div>
-    
-    <div class="cover-body">
-        <div class="cover-title">PLANILHA RESUMO</div>
-        <div class="cover-subtitle">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>
-        
-        <div style="margin-top: 80px; font-size: 12px; line-height: 1.8;">
-            <div><strong>{$numeroProposta}</strong></div>
-            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
-            <div><strong>ENDEREÇO:</strong> {$endereco}</div>
-            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
-        </div>
-    </div>
+<div class="accent-bar"></div>
+<div class="corner-tl"></div>
+<div class="corner-br"></div>
+<div class="logo-block">
+<div class="brand">BROOKS</div>
+<div class="sub">Construtora</div>
+</div>
+<div class="top-meta">
+<div class="label">Documento Técnico</div>
+<div class="badge">{$numeroProposta}</div>
+</div>
+<div class="top-rule"></div>
+<div class="hero">
+<div class="eyebrow">Planilha de Orçamento Executivo</div>
+<div class="title">Planilha<br/><strong>Resumo</strong></div>
+<div class="subtitle">Etapa Cinza (Bruta) + Acabamentos &nbsp;|&nbsp; Administração</div>
+<div class="ornament"><span></span><i></i><span></span></div>
+<div class="info-grid">
+<div class="info-cell">
+<div class="cell-label">Cliente</div>
+<div class="cell-value">{$clienteNome}</div>
+</div>
+<div class="info-cell">
+<div class="cell-label">Endereço</div>
+<div class="cell-value">{$endereco}<br/>{$local}</div>
+</div>
+<div class="info-cell">
+<div class="cell-label">Prazo de Obra</div>
+<div class="cell-value">{$prazomeses} meses</div>
+</div>
+</div>
+</div>
+<div class="bottom-meta">
+<div class="doc-ref">DOCUMENTO CONFIDENCIAL — USO RESTRITO</div>
+<div class="revision">
+<span>Área total &nbsp;{$area} m²</span>
+<strong>REV. {$rev} &nbsp;·&nbsp; {$data}</strong>
+</div>
+</div>
+<div class="bottom-strip"></div>
 </div>
 HTML;
     }
+
     
-    /**
-     * Gera página de Resumo Executivo - Estilo Planilha Resumo (como nos prints)
-     */
-    private static function gerarPaginaResumoExecutivo(int $orcamentoId, array $orcamento): string
+    private static function gerarHeaderPadrao(array $orcamento): string
+    {
+        $numeroProposta = (string)($orcamento['numero_proposta'] ?? '');
+        $clienteNome = (string)($orcamento['cliente_nome'] ?? '');
+        $endereco = (string)($orcamento['endereco_obra'] ?? '');
+        $local = (string)($orcamento['local_obra'] ?? '');
+        $prazo = (string)($orcamento['prazo_dias'] ?? '');
+        $prazomeses = $prazo ? round((int)$prazo / 30) : '';
+        $area = (string)($orcamento['area_m2'] ?? '');
+        $rev = (string)($orcamento['rev'] ?? 'R00');
+        $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
+        
+        return <<<HTML
+<header class="page-header">
+<div class="header-inner">
+<div class="header-project">
+<div class="doc-code">{$numeroProposta}</div>
+<div class="proj-row"><span class="lbl">Cliente</span><span class="val">{$clienteNome}</span></div>
+<div class="proj-row"><span class="lbl">Endereço</span><span class="val">{$endereco} – {$local}</span></div>
+<div class="proj-row"><span class="lbl">Prazo</span><span class="val">{$prazomeses} meses</span></div>
+</div>
+<div class="header-logo">
+<div class="brand">BROOKS</div>
+<div class="sub">Construtora</div>
+</div>
+<div class="header-meta">
+<div class="meta-row"><span class="lbl">Revisão</span><span class="val highlight">{$rev}</span></div>
+<div class="meta-row"><span class="lbl">Área</span><span class="val">{$area} m²</span></div>
+<div class="meta-row"><span class="lbl">Data</span><span class="val">{$data}</span></div>
+</div>
+</div>
+<div class="header-rule"></div>
+</header>
+HTML;
+    }
+
+    
+    private static function gerarPaginasResumo(int $orcamentoId, array $orcamento): string
     {
         $pdo = \App\Core\Database::pdo();
-        
-        // Buscar itens agrupados por código principal
         $stmt = $pdo->prepare(
             'SELECT codigo, grupo, SUM(valor_cobranca) as valor_total '
-            . 'FROM orcamento_itens '
-            . 'WHERE orcamento_id = :id '
+            . 'FROM orcamento_itens WHERE orcamento_id = :id '
             . 'GROUP BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), grupo '
             . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED)'
         );
         $stmt->execute([':id' => $orcamentoId]);
         $itensAgrupados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         
-        // Calcular totais por etapa
-        $totalCinza = 0;
-        $totalAcabamentos = 0;
-        $totalGerenciamento = 0;
-        $totalAdm = 0;
-        
-        $itensCinza = [];
-        $itensAcabamentos = [];
-        $itensGerenciamento = [];
-        $itensAdm = [];
+        $totalCinza = 0; $totalAcabamentos = 0; $totalGerenciamento = 0; $totalAdm = 0;
+        $itensCinza = []; $itensAcabamentos = []; $itensGerenciamento = []; $itensAdm = [];
         
         foreach ($itensAgrupados as $item) {
             $codigoNum = (int)explode('.', $item['codigo'])[0];
             $valor = (float)$item['valor_total'];
-            
-            if ($codigoNum >= 1 && $codigoNum <= 17) {
-                $itensCinza[] = $item;
-                $totalCinza += $valor;
-            } elseif ($codigoNum >= 18 && $codigoNum <= 41) {
-                $itensAcabamentos[] = $item;
-                $totalAcabamentos += $valor;
-            } elseif ($codigoNum === 42) {
-                $itensGerenciamento[] = $item;
-                $totalGerenciamento += $valor;
-            } else {
-                $itensAdm[] = $item;
-                $totalAdm += $valor;
-            }
+            if ($codigoNum >= 1 && $codigoNum <= 17) { $itensCinza[] = $item; $totalCinza += $valor; }
+            elseif ($codigoNum >= 18 && $codigoNum <= 41) { $itensAcabamentos[] = $item; $totalAcabamentos += $valor; }
+            elseif ($codigoNum === 42) { $itensGerenciamento[] = $item; $totalGerenciamento += $valor; }
+            else { $itensAdm[] = $item; $totalAdm += $valor; }
         }
         
         $totalGeral = $totalCinza + $totalAcabamentos + $totalGerenciamento + $totalAdm;
-        
-        $numeroProposta = htmlspecialchars((string)($orcamento['numero_proposta'] ?? ''));
-        $clienteNome = htmlspecialchars((string)($orcamento['cliente_nome'] ?? ''));
-        $endereco = htmlspecialchars((string)($orcamento['endereco_obra'] ?? ''));
-        $prazo = (string)($orcamento['prazo_dias'] ?? '');
-        $prazomeses = $prazo ? round((int)$prazo / 30) : '';
         $area = (string)($orcamento['area_m2'] ?? '');
-        $rev = htmlspecialchars((string)($orcamento['rev'] ?? 'R00'));
-        $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
         
-        // PÁGINA 1 - ETAPA CINZA
-        $html = <<<HTML
-<div class="page">
-    <div class="page-header">
-        <div class="header-left">
-            <div><strong>{$numeroProposta}</strong></div>
-            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
-            <div><strong>ENDEREÇO:</strong> {$endereco}</div>
-            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
-        </div>
-        <div class="header-logo">
-            <div class="header-logo-text">BROOKS</div>
-            <div class="header-logo-sub">CONSTRUTORA</div>
-        </div>
-        <div class="header-right">
-            <div><strong>REVISÃO:</strong> {$rev}</div>
-            <div><strong>ÁREA:</strong> {$area}m²</div>
-            <div><strong>DATA:</strong> {$data}</div>
-        </div>
-    </div>
-    
-    <div class="page-content">
-        <div class="resumo-title">
-            <h2>PLANILHA RESUMO</h2>
-            <h3>ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</h3>
-        </div>
-        
-        <table class="table-resumo-clean">
-            <thead>
-                <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 65%;">ETAPA CINZA</th>
-                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
-                    <th style="width: 10%; text-align: right;">%</th>
-                </tr>
-            </thead>
-            <tbody>
-HTML;
+        $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento) . '<div class="page-content">';
+        $html .= '<div class="resumo-title"><h2>Planilha Resumo</h2><h3>Etapa Cinza (Bruta) + Acabamentos | Administração</h3></div>';
+        $html .= '<table class="table-resumo-clean"><thead><tr>';
+        $html .= '<th style="width:5%;">#</th><th style="width:65%;">ETAPA CINZA</th>';
+        $html .= '<th style="width:20%;text-align:right;">VALOR TOTAL</th><th style="width:10%;text-align:right;">%</th>';
+        $html .= '</tr></thead><tbody>';
         
         $numero = 1;
         foreach ($itensCinza as $item) {
             $valor = (float)$item['valor_total'];
             $pct = $totalCinza > 0 ? ($valor / $totalCinza) * 100 : 0;
-            
-            $html .= sprintf(
-                '<tr>'
-                . '<td style="text-align: center;">%d</td>'
-                . '<td>%s</td>'
-                . '<td style="text-align: right;">%s</td>'
-                . '<td style="text-align: right;">%.2f%%</td>'
-                . '</tr>',
-                $numero++,
-                htmlspecialchars($item['grupo']),
-                self::formatarValor($valor),
-                $pct
-            );
+            $html .= sprintf('<tr><td style="text-align:center;">%d</td><td>%s</td><td style="text-align:right;">%s</td><td style="text-align:right;">%.2f%%</td></tr>',
+                $numero++, htmlspecialchars($item['grupo']), self::formatarValor($valor), $pct);
         }
         
         $pctCinza = $totalGeral > 0 ? ($totalCinza / $totalGeral) * 100 : 0;
+        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:20px;">SUBTOTAL - ETAPA CINZA</td><td style="text-align:right;">R$ %s</td><td style="text-align:right;">%.2f%%</td></tr>',
+            self::formatarValor($totalCinza), $pctCinza);
         
-        $html .= sprintf(
-            '<tr class="subtotal-row">'
-            . '<td colspan="2" style="text-align: left; padding-left: 20px;">SUBTOTAL - ETAPA CINZA</td>'
-            . '<td style="text-align: right;">R$ %s</td>'
-            . '<td style="text-align: right;">%.2f%%</td>'
-            . '</tr>',
-            self::formatarValor($totalCinza),
-            $pctCinza
-        );
+        $html .= '</tbody></table></div><div class="page-number">FOLHA: 1</div></div>';
+
         
-        $html .= <<<HTML
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="page-number">FOLHA: 1</div>
-</div>
-HTML;
-        
-        // PÁGINA 2 - ETAPA ACABAMENTOS
-        $html .= <<<HTML
-<div class="page">
-    <div class="page-header">
-        <div class="header-left">
-            <div><strong>{$numeroProposta}</strong></div>
-            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
-            <div><strong>ENDEREÇO:</strong> {$endereco}</div>
-            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
-        </div>
-        <div class="header-logo">
-            <div class="header-logo-text">BROOKS</div>
-            <div class="header-logo-sub">CONSTRUTORA</div>
-        </div>
-        <div class="header-right">
-            <div><strong>REVISÃO:</strong> {$rev}</div>
-            <div><strong>ÁREA:</strong> {$area}m²</div>
-            <div><strong>DATA:</strong> {$data}</div>
-        </div>
-    </div>
-    
-    <div class="page-content">
-        <div class="resumo-title">
-            <h2>PLANILHA RESUMO</h2>
-            <h3>ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</h3>
-        </div>
-        
-        <table class="table-resumo-clean">
-            <thead>
-                <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 65%;">ETAPA DE ACABAMENTOS</th>
-                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
-                    <th style="width: 10%; text-align: right;">%</th>
-                </tr>
-            </thead>
-            <tbody>
-HTML;
+        $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento) . '<div class="page-content">';
+        $html .= '<div class="resumo-title"><h2>Planilha Resumo</h2><h3>Etapa Cinza (Bruta) + Acabamentos | Administração</h3></div>';
+        $html .= '<table class="table-resumo-clean"><thead><tr>';
+        $html .= '<th style="width:5%;">#</th><th style="width:65%;">ETAPA DE ACABAMENTOS</th>';
+        $html .= '<th style="width:20%;text-align:right;">VALOR TOTAL</th><th style="width:10%;text-align:right;">%</th>';
+        $html .= '</tr></thead><tbody>';
         
         $numero = 18;
         foreach ($itensAcabamentos as $item) {
             $valor = (float)$item['valor_total'];
             $pct = $totalAcabamentos > 0 ? ($valor / $totalAcabamentos) * 100 : 0;
-            
-            $html .= sprintf(
-                '<tr>'
-                . '<td style="text-align: center;">%d</td>'
-                . '<td>%s</td>'
-                . '<td style="text-align: right;">%s</td>'
-                . '<td style="text-align: right;">%.2f%%</td>'
-                . '</tr>',
-                $numero++,
-                htmlspecialchars($item['grupo']),
-                self::formatarValor($valor),
-                $pct
-            );
+            $html .= sprintf('<tr><td style="text-align:center;">%d</td><td>%s</td><td style="text-align:right;">%s</td><td style="text-align:right;">%.2f%%</td></tr>',
+                $numero++, htmlspecialchars($item['grupo']), self::formatarValor($valor), $pct);
         }
         
         $pctAcabamentos = $totalGeral > 0 ? ($totalAcabamentos / $totalGeral) * 100 : 0;
+        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:20px;">SUBTOTAL - ETAPA ACABAMENTOS</td><td style="text-align:right;">R$ %s</td><td style="text-align:right;">%.2f%%</td></tr>',
+            self::formatarValor($totalAcabamentos), $pctAcabamentos);
         
-        $html .= sprintf(
-            '<tr class="subtotal-row">'
-            . '<td colspan="2" style="text-align: left; padding-left: 20px;">SUBTOTAL - ETAPA ACABAMENTOS</td>'
-            . '<td style="text-align: right;">R$ %s</td>'
-            . '<td style="text-align: right;">%.2f%%</td>'
-            . '</tr>',
-            self::formatarValor($totalAcabamentos),
-            $pctAcabamentos
-        );
+        $html .= '</tbody></table></div><div class="page-number">FOLHA: 2</div></div>';
+
         
-        $html .= <<<HTML
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="page-number">FOLHA: 2</div>
-</div>
-HTML;
-        
-        // PÁGINA 3 - GERENCIAMENTO + ADM + TOTAL + ÁREAS
         $pctGerenciamento = $totalGeral > 0 ? ($totalGerenciamento / $totalGeral) * 100 : 0;
         $pctAdm = $totalGeral > 0 ? ($totalAdm / $totalGeral) * 100 : 0;
         
-        $html .= <<<HTML
-<div class="page">
-    <div class="page-header">
-        <div class="header-left">
-            <div><strong>{$numeroProposta}</strong></div>
-            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
-            <div><strong>ENDEREÇO:</strong> {$endereco}</div>
-            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
-        </div>
-        <div class="header-logo">
-            <div class="header-logo-text">BROOKS</div>
-            <div class="header-logo-sub">CONSTRUTORA</div>
-        </div>
-        <div class="header-right">
-            <div><strong>REVISÃO:</strong> {$rev}</div>
-            <div><strong>ÁREA:</strong> {$area}m²</div>
-            <div><strong>DATA:</strong> {$data}</div>
-        </div>
-    </div>
-    
-    <div class="page-content">
-        <div class="resumo-title">
-            <h2>PLANILHA RESUMO</h2>
-            <h3>ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</h3>
-        </div>
+        $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento) . '<div class="page-content">';
+        $html .= '<div class="resumo-title"><h2>Planilha Resumo</h2><h3>Etapa Cinza (Bruta) + Acabamentos | Administração</h3></div>';
         
-        <table class="table-resumo-clean">
-            <thead>
-                <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 65%;">ETAPA DE GERENCIAMENTO</th>
-                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
-                    <th style="width: 10%; text-align: right;">%</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="text-align: center;">42</td>
-                    <td>EQUIPE DE OBRA</td>
-                    <td style="text-align: right;">{self::formatarValor($totalGerenciamento)}</td>
-                    <td style="text-align: right;">100,00%</td>
-                </tr>
-                <tr class="subtotal-row">
-                    <td colspan="2" style="text-align: left; padding-left: 20px;">SUBTOTAL - ETAPA DE GERENCIAMENTO</td>
-                    <td style="text-align: right;">R$ {self::formatarValor($totalGerenciamento)}</td>
-                    <td style="text-align: right;">{sprintf('%.2f%%', $pctGerenciamento)}</td>
-                </tr>
-            </tbody>
-        </table>
+        $html .= '<table class="table-resumo-clean"><thead><tr>';
+        $html .= '<th style="width:5%;">#</th><th style="width:65%;">ETAPA DE GERENCIAMENTO</th>';
+        $html .= '<th style="width:20%;text-align:right;">VALOR TOTAL</th><th style="width:10%;text-align:right;">%</th>';
+        $html .= '</tr></thead><tbody>';
+        $html .= sprintf('<tr><td style="text-align:center;">42</td><td>EQUIPE DE OBRA</td><td style="text-align:right;">%s</td><td style="text-align:right;">100,00%%</td></tr>',
+            self::formatarValor($totalGerenciamento));
+        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:20px;">SUBTOTAL - ETAPA DE GERENCIAMENTO</td><td style="text-align:right;">R$ %s</td><td style="text-align:right;">%.2f%%</td></tr>',
+            self::formatarValor($totalGerenciamento), $pctGerenciamento);
+        $html .= '</tbody></table>';
         
-        <table class="table-resumo-clean" style="margin-top: 30px;">
-            <thead>
-                <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 65%;">TAXA DE ADMINISTRAÇÃO + IMPOSTOS</th>
-                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
-                    <th style="width: 10%; text-align: right;">%</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="text-align: center;">43</td>
-                    <td>TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td>
-                    <td style="text-align: right;">{self::formatarValor($totalAdm)}</td>
-                    <td style="text-align: right;">100,00%</td>
-                </tr>
-                <tr class="subtotal-row">
-                    <td colspan="2" style="text-align: left; padding-left: 20px;">SUBTOTAL - TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td>
-                    <td style="text-align: right;">R$ {self::formatarValor($totalAdm)}</td>
-                    <td style="text-align: right;">{sprintf('%.2f%%', $pctAdm)}</td>
-                </tr>
-            </tbody>
-        </table>
+        $html .= '<table class="table-resumo-clean" style="margin-top:30px;"><thead><tr>';
+        $html .= '<th style="width:5%;">#</th><th style="width:65%;">TAXA DE ADMINISTRAÇÃO + IMPOSTOS</th>';
+        $html .= '<th style="width:20%;text-align:right;">VALOR TOTAL</th><th style="width:10%;text-align:right;">%</th>';
+        $html .= '</tr></thead><tbody>';
+        $html .= sprintf('<tr><td style="text-align:center;">43</td><td>TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td><td style="text-align:right;">%s</td><td style="text-align:right;">100,00%%</td></tr>',
+            self::formatarValor($totalAdm));
+        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:20px;">SUBTOTAL - TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td><td style="text-align:right;">R$ %s</td><td style="text-align:right;">%.2f%%</td></tr>',
+            self::formatarValor($totalAdm), $pctAdm);
+        $html .= '</tbody></table>';
         
-        <table class="table-resumo-clean" style="margin-top: 30px;">
-            <tbody>
-                <tr class="total-row">
-                    <td colspan="2" style="text-align: left; padding-left: 20px; font-size: 14px;">VALOR TOTAL GERAL + TAXA DE ADMINISTRAÇÃO + IMPOSTOS:</td>
-                    <td style="text-align: right; font-size: 14px;">R$ {self::formatarValor($totalGeral)}</td>
-                    <td style="text-align: right; font-size: 14px;">100,00%</td>
-                </tr>
-            </tbody>
-        </table>
+        $html .= '<table class="table-resumo-clean" style="margin-top:30px;"><tbody>';
+        $html .= sprintf('<tr class="total-row"><td colspan="2" style="padding-left:20px;font-size:13px;">VALOR TOTAL GERAL + TAXA DE ADMINISTRAÇÃO + IMPOSTOS:</td><td style="text-align:right;font-size:13px;">R$ %s</td><td style="text-align:right;font-size:13px;">100,00%%</td></tr>',
+            self::formatarValor($totalGeral));
+        $html .= '</tbody></table>';
+
         
-        <table class="table-areas">
-            <thead>
-                <tr>
-                    <th>ÁREAS</th>
-                    <th>m2</th>
-                    <th>FATOR</th>
-                    <th>m2 x FATOR</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>ÁREA INTERNA</td>
-                    <td>344,10</td>
-                    <td>1</td>
-                    <td>344,10</td>
-                </tr>
-                <tr>
-                    <td>VARANDA COBERTA</td>
-                    <td>103,94</td>
-                    <td>1</td>
-                    <td>103,94</td>
-                </tr>
-                <tr>
-                    <td>ABRIGO AUTOS</td>
-                    <td>47,52</td>
-                    <td>1</td>
-                    <td>47,52</td>
-                </tr>
-                <tr>
-                    <td>ÁREA DESCOBERTA</td>
-                    <td>139,79</td>
-                    <td>1</td>
-                    <td>139,79</td>
-                </tr>
-                <tr>
-                    <td>PISCINA</td>
-                    <td>87,62</td>
-                    <td>1</td>
-                    <td>87,62</td>
-                </tr>
-                <tr class="total-row">
-                    <td colspan="3"><strong>ÁREA TOTAL:</strong></td>
-                    <td><strong>{$area}</strong></td>
-                </tr>
-            </tbody>
-        </table>
+        $html .= '<table class="table-areas"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
+        $html .= '<tr><td>ÁREA INTERNA</td><td>344,10</td><td>1</td><td>344,10</td></tr>';
+        $html .= '<tr><td>VARANDA COBERTA</td><td>103,94</td><td>1</td><td>103,94</td></tr>';
+        $html .= '<tr><td>ABRIGO AUTOS</td><td>47,52</td><td>1</td><td>47,52</td></tr>';
+        $html .= '<tr><td>ÁREA DESCOBERTA</td><td>139,79</td><td>1</td><td>139,79</td></tr>';
+        $html .= '<tr><td>PISCINA</td><td>87,62</td><td>1</td><td>87,62</td></tr>';
+        $html .= sprintf('<tr class="total-row"><td colspan="3"><strong>ÁREA TOTAL:</strong></td><td><strong>%s</strong></td></tr>', $area);
+        $html .= '</tbody></table>';
         
-        <table class="table-areas" style="margin-top: 30px;">
-            <thead>
-                <tr>
-                    <th>ETAPAS</th>
-                    <th>PREÇO</th>
-                    <th>M2</th>
-                    <th>PREÇO / m2</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>ETAPA BRUTA (CINZA)</td>
-                    <td>R$ {self::formatarValor($totalCinza)}</td>
-                    <td>{$area}</td>
-                    <td>R$ {self::formatarValor($totalCinza / (float)$area)}</td>
-                </tr>
-                <tr>
-                    <td>ETAPA ACABAMENTOS</td>
-                    <td>R$ {self::formatarValor($totalAcabamentos)}</td>
-                    <td>{$area}</td>
-                    <td>R$ {self::formatarValor($totalAcabamentos / (float)$area)}</td>
-                </tr>
-                <tr>
-                    <td>GERENCIAMENTO / INDIRETOS / IMPOSTOS</td>
-                    <td>R$ {self::formatarValor($totalGerenciamento + $totalAdm)}</td>
-                    <td>{$area}</td>
-                    <td>R$ {self::formatarValor(($totalGerenciamento + $totalAdm) / (float)$area)}</td>
-                </tr>
-                <tr class="total-row">
-                    <td><strong>TOTAL GERAL:</strong></td>
-                    <td><strong>R$ {self::formatarValor($totalGeral)}</strong></td>
-                    <td><strong>{$area}</strong></td>
-                    <td><strong>R$ {self::formatarValor($totalGeral / (float)$area)}</strong></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="page-number">FOLHA: 3</div>
-</div>
-HTML;
+        $html .= '<table class="table-areas" style="margin-top:30px;"><thead><tr><th>ETAPAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
+        $html .= sprintf('<tr><td>ETAPA BRUTA (CINZA)</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
+            self::formatarValor($totalCinza), $area, self::formatarValor($totalCinza / (float)$area));
+        $html .= sprintf('<tr><td>ETAPA ACABAMENTOS</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
+            self::formatarValor($totalAcabamentos), $area, self::formatarValor($totalAcabamentos / (float)$area));
+        $html .= sprintf('<tr><td>GERENCIAMENTO / INDIRETOS / IMPOSTOS</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
+            self::formatarValor($totalGerenciamento + $totalAdm), $area, self::formatarValor(($totalGerenciamento + $totalAdm) / (float)$area));
+        $html .= sprintf('<tr class="total-row"><td><strong>TOTAL GERAL:</strong></td><td><strong>R$ %s</strong></td><td><strong>%s</strong></td><td><strong>R$ %s</strong></td></tr>',
+            self::formatarValor($totalGeral), $area, self::formatarValor($totalGeral / (float)$area));
+        $html .= '</tbody></table>';
+        
+        $html .= '</div><div class="page-number">FOLHA: 3</div></div>';
         
         return $html;
     }
+
     
-    /**
-     * Gera página "Prezados" com texto de apresentação - Brooks Construtora
-     */
-    private static function gerarPaginaApresentacaoInstitucional(): string
+    private static function gerarPaginasInstitucionais(): string
     {
         return <<<'HTML'
 <div class="page">
-    <div class="page-header">
-        <div class="header-left">
-            <div><strong>BROOKS CONSTRUTORA</strong></div>
-            <div>Engenharia e Construção Civil</div>
-        </div>
-        <div class="header-logo">
-            <div class="header-logo-text">BROOKS</div>
-            <div class="header-logo-sub">CONSTRUTORA</div>
-        </div>
-        <div class="header-right">
-            <div>Tel: (11) 3063-2263</div>
-            <div>contato@brooks.com.br</div>
-        </div>
-    </div>
-    
-    <div class="page-content">
-        <h1 style="font-size: 24px; color: #1a1a2e; margin-bottom: 20px; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Prezados</h1>
-        
-        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 20px; color: #444;">
-            Agradecemos imensamente o seu contato! Temos certeza de que esta proposta trará soluções inovadoras e valor para o 
-            seu projeto. Nas próximas páginas, apresentamos nossa empresa, detalhamos os serviços oferecidos, nossos valores e 
-            observações importantes. Estamos à sua inteira disposição para qualquer esclarecimento ou para darmos o próximo passo.
-        </p>
-        
-        <p style="font-weight: 600; color: #1a1a2e; margin-top: 15px; font-size: 12px;">Atenciosamente, <strong>BROOKS CONSTRUTORA</strong>.</p>
-        
-        <h2 style="font-size: 20px; color: #1a1a2e; margin: 40px 0 20px 0; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Apresentação Institucional</h2>
-        
-        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 15px; color: #444;">
-            A <strong>Brooks Construtora</strong> é uma empresa especializada na execução de obras civis, reformas integrais e retrofit de imóveis 
-            residenciais, corporativos e comerciais de médio porte.
-        </p>
-        
-        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 15px; color: #444;">
-            Atuamos no segmento de construção civil por meio da execução completa de sistemas construtivos, contemplando:
-        </p>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; font-size: 11px;">
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Demolições técnicas</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Infraestrutura para automação</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Alvenaria estrutural e de vedação</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Infraestrutura para climatização</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Impermeabilizações</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Cálculo estrutural e reforços</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Instalação de básicos e revestimentos</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Coberturas e fundações</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Execução de meia esquadria</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Pinturas técnicas e acabamentos</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Pisos e sistemas em drywall</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Logística e descarte de entulho</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Instalações elétricas e hidráulicas</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Instalação de louças e metais</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Suprimentos e materiais de obra</div>
-        </div>
-    </div>
-    
-    <div class="page-number">Página 4</div>
+<header class="page-header">
+<div class="header-inner">
+<div class="header-project">
+<div class="doc-code">BROOKS CONSTRUTORA</div>
+<div class="proj-row"><span class="val">Engenharia e Construção Civil</span></div>
+</div>
+<div class="header-logo">
+<div class="brand">BROOKS</div>
+<div class="sub">Construtora</div>
+</div>
+<div class="header-meta">
+<div class="meta-row"><span class="val">Tel: (11) 3063-2263</span></div>
+<div class="meta-row"><span class="val">contato@brooks.com.br</span></div>
+</div>
+</div>
+<div class="header-rule"></div>
+</header>
+<div class="page-content">
+<h1 style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--navy);margin-bottom:20px;border-bottom:2px solid var(--gold);padding-bottom:12px;">Prezados</h1>
+<p style="font-size:11px;line-height:1.8;text-align:justify;margin-bottom:18px;color:#555;">
+Agradecemos imensamente o seu contato! Temos certeza de que esta proposta trará soluções inovadoras e valor para o seu projeto. Nas próximas páginas, apresentamos nossa empresa, detalhamos os serviços oferecidos, nossos valores e observações importantes. Estamos à sua inteira disposição para qualquer esclarecimento ou para darmos o próximo passo.
+</p>
+<p style="font-weight:600;color:var(--navy);margin-top:15px;font-size:11px;">Atenciosamente, <strong>BROOKS CONSTRUTORA</strong>.</p>
+<h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--navy);margin:35px 0 18px 0;border-bottom:2px solid var(--gold);padding-bottom:10px;">Apresentação Institucional</h2>
+<p style="font-size:11px;line-height:1.8;text-align:justify;margin-bottom:14px;color:#555;">
+A <strong>Brooks Construtora</strong> é uma empresa especializada na execução de obras civis, reformas integrais e retrofit de imóveis residenciais, corporativos e comerciais de médio porte.
+</p>
+<p style="font-size:11px;line-height:1.8;text-align:justify;margin-bottom:14px;color:#555;">
+Atuamos no segmento de construção civil por meio da execução completa de sistemas construtivos, contemplando:
+</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;font-size:10px;">
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Demolições técnicas</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Infraestrutura para automação</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Alvenaria estrutural e de vedação</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Infraestrutura para climatização</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Impermeabilizações</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Cálculo estrutural e reforços</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Instalação de básicos e revestimentos</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Coberturas e fundações</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Execução de meia esquadria</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Pinturas técnicas e acabamentos</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Pisos e sistemas em drywall</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Logística e descarte de entulho</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Instalações elétricas e hidráulicas</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Instalação de louças e metais</div>
+<div style="padding-left:12px;position:relative;color:#666;"><span style="position:absolute;left:0;color:var(--gold);font-weight:bold;">•</span> Suprimentos e materiais de obra</div>
+</div>
+</div>
+<div class="page-number">Página 4</div>
 </div>
 HTML;
+        return $html;
     }
+
     
-    /**
-     * Gera página "Nossa Expertise" - Brooks Construtora
-     */
-    private static function gerarPaginaExpertise(): string
-    {
-        return <<<'HTML'
-<div class="page">
-    <div class="page-header">
-        <div class="header-left">
-            <div><strong>BROOKS CONSTRUTORA</strong></div>
-            <div>Engenharia e Construção Civil</div>
-        </div>
-        <div class="header-logo">
-            <div class="header-logo-text">BROOKS</div>
-            <div class="header-logo-sub">CONSTRUTORA</div>
-        </div>
-        <div class="header-right">
-            <div>Tel: (11) 3063-2263</div>
-            <div>contato@brooks.com.br</div>
-        </div>
-    </div>
-    
-    <div class="page-content">
-        <h1 style="font-size: 24px; color: #1a1a2e; margin-bottom: 20px; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Nossa Expertise</h1>
-        
-        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 15px; color: #444;">
-            Contamos com equipes especializadas de alta performance, coordenadas por engenheiro civil responsável técnico, 
-            garantindo conformidade normativa, controle de qualidade de processos e cumprimento rigoroso de prazos.
-        </p>
-        
-        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 25px; color: #444;">
-            Possuímos centenas de obras entregues ao longo de quase uma década, mantendo parcerias consolidadas com escritórios 
-            de arquitetura e fornecedores premium na cidade de São Paulo.
-        </p>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 25px;">
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; border-left: 4px solid #c92a2a;">
-                <h3 style="font-size: 16px; color: #1a1a2e; margin-bottom: 12px;">Reconhecimento</h3>
-                <p style="font-size: 11px; line-height: 1.6; color: #555;">
-                    Nossos empreendimentos já foram publicados em veículos como <strong>Casa Vogue, Casa e Jardim, Diário do 
-                    Arquiteto, De.cor.ar</strong>, entre outras mídias especializadas.
-                </p>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; border-left: 4px solid #c92a2a;">
-                <h3 style="font-size: 16px; color: #1a1a2e; margin-bottom: 12px;">Compromisso</h3>
-                <p style="font-size: 11px; line-height: 1.6; color: #555;">
-                    Nossa prioridade permanece focada na excelência técnica, ética profissional, transparência contratual e 
-                    satisfação integral do cliente.
-                </p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="page-number">Página 5</div>
-</div>
-HTML;
-    }
-    
-    /**
-     * Gera página "Objeto da Proposta" - Brooks Construtora
-     */
-    private static function gerarPaginaObjetoProposta(): string
-    {
-        return <<<'HTML'
-<div class="page">
-    <div class="page-header">
-        <div class="header-left">
-            <div><strong>BROOKS CONSTRUTORA</strong></div>
-            <div>Engenharia e Construção Civil</div>
-        </div>
-        <div class="header-logo">
-            <div class="header-logo-text">BROOKS</div>
-            <div class="header-logo-sub">CONSTRUTORA</div>
-        </div>
-        <div class="header-right">
-            <div>Tel: (11) 3063-2263</div>
-            <div>contato@brooks.com.br</div>
-        </div>
-    </div>
-    
-    <div class="page-content">
-        <h1 style="font-size: 24px; color: #1a1a2e; margin-bottom: 20px; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Objeto da Proposta</h1>
-        
-        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 15px; color: #444;">
-            A presente proposta tem como objeto a prestação de serviços de obra civil, incluindo:
-        </p>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0;">
-            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 5px; padding: 15px;">
-                <h3 style="font-size: 14px; color: #1a1a2e; margin-bottom: 8px;">Execução Técnica</h3>
-                <p style="font-size: 11px; color: #666;">Execução técnica integral dos serviços descritos nas etapas seguintes.</p>
-            </div>
-            
-            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 5px; padding: 15px;">
-                <h3 style="font-size: 14px; color: #1a1a2e; margin-bottom: 8px;">Documentação</h3>
-                <p style="font-size: 11px; color: #666;">Emissão de ART de execução</p>
-            </div>
-            
-            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 5px; padding: 15px;">
-                <h3 style="font-size: 14px; color: #1a1a2e; margin-bottom: 8px;">Proteção</h3>
-                <p style="font-size: 11px; color: #666;">Seguro de obra</p>
-            </div>
-            
-            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 5px; padding: 15px;">
-                <h3 style="font-size: 14px; color: #1a1a2e; margin-bottom: 8px;">Gestão</h3>
-                <p style="font-size: 11px; color: #666;">Coordenação operacional</p>
-            </div>
-        </div>
-        
-        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin: 25px 0 15px 0; color: #444;">
-            Todos os serviços serão executados exclusivamente conforme os descritivos técnicos desta proposta.
-        </p>
-        
-        <h2 style="font-size: 20px; color: #1a1a2e; margin: 35px 0 20px 0; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Notas Técnicas Gerais</h2>
-        
-        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 12px 0; border-radius: 3px;">
-            <h4 style="font-size: 12px; color: #856404; margin-bottom: 8px; font-weight: 600;">⚠️ Nota 1 – Sistemas especiais</h4>
-            <p style="font-size: 11px; color: #856404; line-height: 1.5;">
-                Não estão inclusos: <strong>Pressurização, Aquecimento, Automação, Energia Fotovoltaica, Bombeamento, Piscinas, 
-                Sistemas gerais, Cisternas, Sistemas complexos correlatos</strong>.
-            </p>
-            <p style="font-size: 11px; color: #856404; line-height: 1.5; margin-top: 8px;">
-                Todos os itens não relacionados aos sistemas propostos de engenharia especializada contratados pelo cliente.
-            </p>
-        </div>
-        
-        <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 15px; margin: 12px 0; border-radius: 3px;">
-            <h4 style="font-size: 12px; color: #0c5460; margin-bottom: 8px; font-weight: 600;">ℹ️ Nota 2 – Compatibilização</h4>
-            <p style="font-size: 11px; color: #0c5460; line-height: 1.5;">
-                O orçamento foi elaborado com base no projeto arquitetônico fornecido. Limitações físicas, centurianas, 
-                condominiais ou pré-existências poderão gerar imobilidades técnicas, adaptações executivas, revisões 
-                orçamentárias.
-            </p>
-            <p style="font-size: 11px; color: #0c5460; line-height: 1.5; margin-top: 8px;">
-                A compatibilização entre arquitetura, engenharia e execução é indispensável.
-            </p>
-        </div>
-    </div>
-    
-    <div class="page-number">Página 6</div>
-</div>
-HTML;
-    }
-    
-    /**
-     * Resolve o grupo de etapa de um item pelo prefixo numérico do código.
-     * Retorna uma das 4 chaves fixas: 'cinza', 'acabamentos', 'gerenciamento', 'adm_impostos'
-     */
     private static function resolverGrupoEtapa(string $codigo): string
     {
         $numero = (int)explode('.', trim($codigo))[0];
-
-        if ($numero >= 1 && $numero <= 17) {
-            return 'cinza';
-        }
-        if ($numero >= 18 && $numero <= 41) {
-            return 'acabamentos';
-        }
-        if ($numero === 42) {
-            return 'gerenciamento';
-        }
+        if ($numero >= 1 && $numero <= 17) return 'cinza';
+        if ($numero >= 18 && $numero <= 41) return 'acabamentos';
+        if ($numero === 42) return 'gerenciamento';
         return 'adm_impostos';
     }
-
-    /**
-     * Gera páginas de detalhamento completo — planilha orçamentária agrupada por etapa.
-     *
-     * Regras:
-     * - Cada item aparece UMA única vez (deduplicado por id).
-     * - Agrupamento fixo: Cinza (1–17) | Acabamentos (18–41) | Gerenciamento (42) | Adm+Impostos (43+)
-     * - % etapa  = valor_item / subtotal_da_etapa
-     * - % total  = valor_item / total_geral
-     * - total_geral = soma dos 4 subtotais
-     */
+    
     private static function gerarPaginaDetalhamento(int $orcamentoId, array $orcamento): string
     {
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
             'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado '
-            . 'FROM orcamento_itens '
-            . 'WHERE orcamento_id = :id '
-            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), '
-            . 'CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED), id'
+            . 'FROM orcamento_itens WHERE orcamento_id = :id '
+            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED), id'
         );
         $stmt->execute([':id' => $orcamentoId]);
         $todosItens = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        // Agrupa por etapa, deduplicando por id
+        
         $grupos = [
-            'cinza'         => ['label' => 'ETAPA CINZA',                     'itens' => [], 'subtotal' => 0.0],
-            'acabamentos'   => ['label' => 'ETAPA ACABAMENTOS',               'itens' => [], 'subtotal' => 0.0],
-            'gerenciamento' => ['label' => 'ETAPA GERENCIAMENTO',             'itens' => [], 'subtotal' => 0.0],
-            'adm_impostos'  => ['label' => 'TAXA DE ADMINISTRAÇÃO + IMPOSTOS', 'itens' => [], 'subtotal' => 0.0],
+            'cinza' => ['label' => 'ETAPA CINZA', 'itens' => [], 'subtotal' => 0.0],
+            'acabamentos' => ['label' => 'ETAPA ACABAMENTOS', 'itens' => [], 'subtotal' => 0.0],
+            'gerenciamento' => ['label' => 'ETAPA GERENCIAMENTO', 'itens' => [], 'subtotal' => 0.0],
+            'adm_impostos' => ['label' => 'TAXA DE ADMINISTRAÇÃO + IMPOSTOS', 'itens' => [], 'subtotal' => 0.0],
         ];
-
-
+        
         $idsVistos = [];
         foreach ($todosItens as $item) {
-            if (isset($idsVistos[$item['id']])) {
-                continue; // garante que cada item aparece só uma vez
-            }
+            if (isset($idsVistos[$item['id']])) continue;
             $idsVistos[$item['id']] = true;
-
             $chave = self::resolverGrupoEtapa((string)$item['codigo']);
-            $grupos[$chave]['itens'][]   = $item;
+            $grupos[$chave]['itens'][] = $item;
             $grupos[$chave]['subtotal'] += (float)$item['valor_cobranca'];
         }
-
-        // total_geral = soma dos 4 subtotais (nunca soma direta de itens)
+        
         $totalGeral = array_sum(array_column($grupos, 'subtotal'));
-
-        // Validação: soma dos subtotais == total_geral
-        assert(abs(array_sum(array_column($grupos, 'subtotal')) - $totalGeral) < 0.01,
-            'Soma dos subtotais difere do total geral');
-
-        $html  = '<div class="page">';
-        $html .= '<div class="page-header">';
-        $html .= '<div class="header-left">';
-        $html .= '<div><strong>BROOKS CONSTRUTORA</strong></div>';
-        $html .= '<div>Engenharia e Construção Civil</div>';
-        $html .= '</div>';
-        $html .= '<div class="header-logo">';
-        $html .= '<div class="header-logo-text">BROOKS</div>';
-        $html .= '<div class="header-logo-sub">CONSTRUTORA</div>';
-        $html .= '</div>';
-        $html .= '<div class="header-right">';
-        $html .= '<div>Tel: (11) 3063-2263</div>';
-        $html .= '<div>contato@brooks.com.br</div>';
-        $html .= '</div>';
-        $html .= '</div>';
-        $html .= '<div class="page-content">';
-        $html .= '<h1 class="section-title">Detalhamento Completo</h1>';
-
-        $paginaAtual = 7;
-
+        
+        $html = '<div class="page page-detalhamento">' . self::gerarHeaderPadrao($orcamento);
+        $html .= '<div class="section-title"><h2>Detalhamento Completo</h2><span class="badge">Planilha de Insumos</span></div>';
+        
         foreach ($grupos as $grupo) {
-            if (empty($grupo['itens'])) {
-                continue;
-            }
-
-            $subtotal        = $grupo['subtotal'];
-            $pctDoTotal      = $totalGeral > 0 ? ($subtotal / $totalGeral) * 100 : 0.0;
-
+            if (empty($grupo['itens'])) continue;
+            $subtotal = $grupo['subtotal'];
+            $pctDoTotal = $totalGeral > 0 ? ($subtotal / $totalGeral) * 100 : 0.0;
+            
             $html .= '<div class="etapa-section">';
-            $html .= sprintf(
-                '<div class="etapa-header"><h2 class="etapa-title">%s</h2></div>',
-                htmlspecialchars($grupo['label'])
-            );
-
+            $html .= sprintf('<div class="etapa-header"><h2 class="etapa-title">%s</h2></div>', htmlspecialchars($grupo['label']));
+            $html .= '<div class="table-wrap">';
             $html .= self::gerarTabelaItens($grupo['itens'], $subtotal, $totalGeral);
-
-
-            $html .= sprintf(
-                '<div class="resumo-etapa">'
-                . '<span>SUBTOTAL — %s</span>'
-                . '<div>'
-                . '<span style="margin-right: 20px;"><strong>R$ %s</strong></span>'
-                . '<span style="font-size: 13px; opacity: 0.85;">%.2f%% do total</span>'
-                . '</div>'
-                . '</div>',
-                htmlspecialchars($grupo['label']),
-                self::formatarValor($subtotal),
-                $pctDoTotal
-            );
-
-            $html .= '</div>'; // etapa-section
+            $html .= '</div>';
+            $html .= sprintf('<div class="resumo-etapa"><span>SUBTOTAL — %s</span><div><span style="margin-right:20px;"><strong>R$ %s</strong></span><span style="font-size:10px;opacity:.85;">%.2f%% do total</span></div></div>',
+                htmlspecialchars($grupo['label']), self::formatarValor($subtotal), $pctDoTotal);
+            $html .= '</div>';
         }
-
-        // Total Final
-        $html .= sprintf(
-            '<div class="total-final">'
-            . '<h2>VALOR TOTAL GERAL DO PROJETO</h2>'
-            . '<div class="total-final-value">R$ %s</div>'
-            . '<div style="font-size: 14px; opacity: 0.9;">100,00%%</div>'
-            . '</div>',
-            self::formatarValor($totalGeral)
-        );
-
-        $html .= '</div>'; // page-content
-        $html .= sprintf('<div class="page-number">Página %d</div>', $paginaAtual);
-        $html .= '</div>'; // page
-
+        
+        $html .= sprintf('<div class="total-final"><h2>VALOR TOTAL GERAL DO PROJETO</h2><div class="total-final-value">R$ %s</div><div style="font-size:11px;opacity:.9;">100,00%%</div></div>',
+            self::formatarValor($totalGeral));
+        
+        $html .= '<footer class="page-footer"><div class="footer-inner">';
+        $html .= '<span class="f-left">Documento Confidencial — Uso Restrito</span>';
+        $html .= '<span class="f-center">BROOKS</span>';
+        $rev = (string)($orcamento['rev'] ?? 'R00');
+        $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
+        $html .= sprintf('<span class="f-right">Rev. %s · %s</span>', $rev, $data);
+        $html .= '</div><div class="footer-gold-bar"></div></footer>';
+        
+        $html .= '<div class="page-number">Página 7</div></div>';
         return $html;
     }
 
-    /**
-     * Gera tabela de itens de uma etapa.
-     * Colunas: CÓDIGO | DESCRIÇÃO | QUANT. | UNID | VALOR UNIT. | VALOR TOTAL | % ETAPA | % TOTAL | % REALIZADO
-     *
-     * @param array $itens      Itens da etapa (sem duplicatas)
-     * @param float $subtotal   Subtotal da etapa — denominador de % etapa
-     * @param float $totalGeral Total geral do orçamento — denominador de % total
-     */
+    
     private static function gerarTabelaItens(array $itens, float $subtotal, float $totalGeral): string
     {
-        $html  = '<table class="table-itens">';
-        $html .= '<thead><tr>';
-        $html .= '<th style="width: 6%;">Código</th>';
-        $html .= '<th style="width: 32%;">Descrição</th>';
-        $html .= '<th style="width: 7%; text-align: center;">Quant.</th>';
-        $html .= '<th style="width: 5%; text-align: center;">Unid</th>';
-        $html .= '<th style="width: 12%; text-align: right;">Valor Unit.</th>';
-        $html .= '<th style="width: 12%; text-align: right;">Valor Total</th>';
-        $html .= '<th style="width: 8%; text-align: right;">% Etapa</th>';
-        $html .= '<th style="width: 8%; text-align: right;">% Total</th>';
-        $html .= '<th style="width: 10%; text-align: right;">% Realizado</th>';
+        $html = '<table class="table-itens"><thead><tr>';
+        $html .= '<th>Código</th><th>Descrição</th><th>Quant.</th><th>Unid</th>';
+        $html .= '<th>Valor Unit.</th><th>Valor Total</th><th>% Etapa</th><th>% Total</th><th>% Realizado</th>';
         $html .= '</tr></thead><tbody>';
-
-        $somaPctEtapa = 0.0;
-
+        
         foreach ($itens as $item) {
-            $quantidade    = (float)$item['quantidade'];
-            $valorTotal    = (float)$item['valor_cobranca'];
+            $quantidade = (float)$item['quantidade'];
+            $valorTotal = (float)$item['valor_cobranca'];
             $valorUnitario = $quantidade > 0 ? $valorTotal / $quantidade : (float)$item['valor_unitario'];
-
-            // % etapa = valor_item / subtotal_da_etapa (denominador correto)
             $pctEtapa = $subtotal > 0 ? ($valorTotal / $subtotal) * 100 : 0.0;
-            // % total = valor_item / total_geral
             $pctTotal = $totalGeral > 0 ? ($valorTotal / $totalGeral) * 100 : 0.0;
-            
-            // % realizado: 0-100% onde 100% = % total do item
             $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
             $pctRealizadoEfetivo = ($percentualRealizado / 100) * $pctTotal;
-
-            $somaPctEtapa += $pctEtapa;
-
+            
+            $pillClass = $pctRealizadoEfetivo > 0 ? 'pct-pill' : 'pct-pill zero';
+            
             $html .= sprintf(
-                '<tr>'
-                . '<td>%s</td>'
-                . '<td>%s</td>'
-                . '<td style="text-align: center;">%s</td>'
-                . '<td style="text-align: center;">%s</td>'
-                . '<td style="text-align: right;">R$ %s</td>'
-                . '<td style="text-align: right;"><strong>R$ %s</strong></td>'
-                . '<td style="text-align: right;">%.2f%%</td>'
-                . '<td style="text-align: right;">%.2f%%</td>'
-                . '<td style="text-align: right;">%.2f%%</td>'
-                . '</tr>',
-                htmlspecialchars($item['codigo']),
-                htmlspecialchars($item['descricao']),
-                number_format($quantidade, 3, ',', '.'),
-                htmlspecialchars($item['unidade']),
-                self::formatarValor($valorUnitario),
-                self::formatarValor($valorTotal),
-                $pctEtapa,
-                $pctTotal,
-                $pctRealizadoEfetivo
+                '<tr><td>%s</td><td>%s</td><td class="col-pct">%s</td><td class="col-pct">%s</td>'
+                . '<td class="col-pct">R$ %s</td><td class="col-total">R$ %s</td>'
+                . '<td class="col-pct">%.2f%%</td><td class="col-pct">%.2f%%</td>'
+                . '<td class="col-realizado"><span class="%s">%.2f%%</span></td></tr>',
+                htmlspecialchars($item['codigo']), htmlspecialchars($item['descricao']),
+                number_format($quantidade, 3, ',', '.'), htmlspecialchars($item['unidade']),
+                self::formatarValor($valorUnitario), self::formatarValor($valorTotal),
+                $pctEtapa, $pctTotal, $pillClass, $pctRealizadoEfetivo
             );
         }
-
-
-        // Validação: soma de % etapa deve ser ~100%
-        assert(
-            $subtotal == 0.0 || abs($somaPctEtapa - 100.0) < 0.1,
-            sprintf('Soma de %% etapa = %.4f%% (esperado ~100%%)', $somaPctEtapa)
-        );
-
+        
         $html .= '</tbody></table>';
-
         return $html;
     }
     
-    /**
-     * Gera rodapé HTML
-     */
     private static function gerarRodapeHTML(): string
     {
         return '</body></html>';
     }
     
-    /**
-     * Formata valor monetário
-     */
     private static function formatarValor(float $valor): string
     {
         return number_format($valor, 2, ',', '.');
