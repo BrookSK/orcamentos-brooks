@@ -36,11 +36,11 @@ final class OrcamentoPDF
 }
 @page { margin: 18mm; size: A4; }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Helvetica, Arial, sans-serif; color: var(--black); line-height: 1.4; background: var(--white); font-size: 8pt; }
-.page { page-break-after: always; position: relative; width: 100%; background: white; }
+body { font-family: Helvetica, Arial, sans-serif; color: var(--black); line-height: 1.4; background: #FFFFFF; font-size: 8pt; }
+.page { page-break-after: always; position: relative; width: 100%; background: #FFFFFF; }
 
 /* ══ CAPA ══ */
-.page-cover { background: var(--navy); color: var(--white); min-height: 277mm; position: relative; }
+.page-cover { background: var(--navy); color: var(--white); min-height: 277mm; position: relative; display: flex; flex-direction: column; }
 .logo-cover { position: absolute; top: 40px; left: 40px; }
 .logo-cover .brand { font-size: 36pt; font-weight: bold; letter-spacing: .05em; color: var(--white); }
 .logo-cover .sub { font-size: 10pt; letter-spacing: .2em; text-transform: uppercase; color: var(--white); margin-top: 6px; }
@@ -49,7 +49,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: var(--black); line-heig
 .cover-meta .badge { display: inline-block; padding: 5px 14px; background: var(--gold); border-radius: 2px; font-size: 10pt; letter-spacing: .08em; color: var(--white); font-weight: bold; }
 .cover-line { position: absolute; top: 120px; left: 40px; right: 40px; height: 2px; background: var(--gold); }
 .cover-title { position: absolute; top: 180px; left: 40px; right: 40px; text-align: center; }
-.cover-title h1 { font-size: 32pt; font-weight: normal; color: var(--white); margin-bottom: 8px; }
+.cover-title h1 { font-size: 32pt; font-weight: normal; color: var(--white); margin-bottom: 8px; line-height: 1.2; }
 .cover-title h1 strong { font-weight: bold; color: var(--gold); }
 .cover-title .subtitle { font-size: 9pt; letter-spacing: .12em; color: var(--gray-light); text-transform: uppercase; margin-top: 12px; }
 .cover-info { position: absolute; top: 340px; left: 60px; right: 60px; }
@@ -75,34 +75,37 @@ body { font-family: Helvetica, Arial, sans-serif; color: var(--black); line-heig
 /* ══ TABELAS RESUMO ══ */
 .page-content { padding: 10px 0; }
 .table-resumo { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 8pt; }
-.table-resumo thead th { background: var(--navy); color: var(--white); padding: 6px 8px; text-align: left; font-weight: bold; border: none; text-transform: uppercase; font-size: 7pt; letter-spacing: .05em; }
+.table-resumo thead th { background: var(--navy); color: var(--white); padding: 8px 10px; text-align: left; font-weight: bold; border: none; text-transform: uppercase; font-size: 7pt; letter-spacing: .05em; }
 .table-resumo thead th.col-right { text-align: right; padding-right: 12px; }
 .table-resumo thead th.col-center { text-align: center; }
-.table-resumo tbody td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; }
+.table-resumo tbody td { padding: 6px 10px; border-bottom: 1px solid #e0e0e0; }
 .table-resumo tbody tr:nth-child(even) td { background: var(--gray-light); }
-.table-resumo .subtotal-row td { background: var(--gold) !important; color: var(--white); font-weight: bold; padding: 8px; border-top: 2px solid var(--gold); }
-.table-resumo .total-row td { background: var(--red) !important; color: var(--white); font-weight: bold; padding: 10px 8px; font-size: 9pt; }
+.table-resumo tbody tr:nth-child(odd) td { background: #FFFFFF; }
+.table-resumo .subtotal-row td { background: var(--gold) !important; color: var(--white); font-weight: bold; padding: 10px; border-top: 2px solid var(--gold); }
+.table-resumo .total-row td { background: var(--red) !important; color: var(--white); font-weight: bold; padding: 12px 10px; font-size: 9pt; }
 .table-areas { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 8pt; }
-.table-areas thead th { background: var(--navy); color: var(--white); padding: 6px 8px; font-weight: bold; text-align: center; font-size: 7pt; text-transform: uppercase; }
-.table-areas tbody td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; text-align: center; }
+.table-areas thead th { background: var(--navy); color: var(--white); padding: 8px 10px; font-weight: bold; text-align: center; font-size: 7pt; text-transform: uppercase; }
+.table-areas tbody td { padding: 6px 10px; border-bottom: 1px solid #e0e0e0; text-align: center; }
 .table-areas tbody tr:nth-child(even) td { background: var(--gray-light); }
-.table-areas .total-row td { background: var(--gold); color: var(--white); font-weight: bold; padding: 8px; }
+.table-areas tbody tr:nth-child(odd) td { background: #FFFFFF; }
+.table-areas .total-row td { background: var(--gold); color: var(--white); font-weight: bold; padding: 10px; }
 
 /* ══ DETALHAMENTO ══ */
 .banner-secao { background: var(--navy); color: var(--white); padding: 10px 20px; font-weight: bold; font-size: 10pt; text-transform: uppercase; letter-spacing: .06em; border-left: 4px solid var(--gold); margin: 16px 0 8px 0; }
-.table-detalhes { width: 100%; border-collapse: collapse; font-size: 7pt; margin-bottom: 12px; }
-.table-detalhes thead th { background: var(--navy); color: var(--white); padding: 6px 5px; font-weight: bold; text-transform: uppercase; font-size: 6.5pt; letter-spacing: .04em; border-bottom: 1px solid var(--navy); }
-.table-detalhes thead th.col-left { text-align: left; padding-left: 8px; }
-.table-detalhes thead th.col-right { text-align: right; padding-right: 8px; }
+.table-detalhes { width: 100%; border-collapse: collapse; font-size: 6.5pt; margin-bottom: 12px; }
+.table-detalhes thead th { background: var(--navy); color: var(--white); padding: 5px 4px; font-weight: bold; text-transform: uppercase; font-size: 6pt; letter-spacing: .03em; border-bottom: 1px solid var(--navy); }
+.table-detalhes thead th.col-left { text-align: left; padding-left: 6px; }
+.table-detalhes thead th.col-right { text-align: right; padding-right: 6px; }
 .table-detalhes thead th.col-center { text-align: center; }
 .table-detalhes tbody tr { border-bottom: 1px solid #e8e8e8; }
+.table-detalhes tbody tr:nth-child(odd) { background: #FFFFFF; }
 .table-detalhes tbody tr:nth-child(even) { background: var(--gray-light); }
-.table-detalhes tbody td { padding: 5px 5px; vertical-align: middle; }
-.table-detalhes tbody td.col-codigo { text-align: left; padding-left: 8px; color: var(--muted); font-size: 7pt; }
+.table-detalhes tbody td { padding: 4px 4px; vertical-align: middle; }
+.table-detalhes tbody td.col-codigo { text-align: left; padding-left: 6px; color: var(--muted); font-size: 6.5pt; }
 .table-detalhes tbody td.col-desc { text-align: left; color: var(--black); }
-.table-detalhes tbody td.col-num { text-align: right; padding-right: 8px; font-variant-numeric: tabular-nums; }
+.table-detalhes tbody td.col-num { text-align: right; padding-right: 6px; font-variant-numeric: tabular-nums; }
 .table-detalhes tbody td.col-center { text-align: center; }
-.table-detalhes tbody td.col-total { text-align: right; padding-right: 8px; font-weight: bold; color: var(--gold); font-variant-numeric: tabular-nums; }
+.table-detalhes tbody td.col-total { text-align: right; padding-right: 6px; font-weight: bold; color: var(--gold); font-variant-numeric: tabular-nums; }
 .subtotal-etapa { background: var(--gold); color: var(--white); padding: 8px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 8px 0; }
 .total-geral-box { background: var(--red); color: var(--white); padding: 16px; text-align: center; margin: 20px 0; }
 .total-geral-box h2 { font-size: 12pt; font-weight: bold; margin-bottom: 8px; }
@@ -122,55 +125,63 @@ HTML;
     
     private static function gerarPaginaCapa(array $orcamento): string
     {
-        $numeroProposta = (string)($orcamento['numero_proposta'] ?? '');
-        $clienteNome = (string)($orcamento['cliente_nome'] ?? '');
-        $endereco = (string)($orcamento['endereco_obra'] ?? '');
-        $local = (string)($orcamento['local_obra'] ?? '');
-        $area = (string)($orcamento['area_m2'] ?? '');
+        $numeroProposta = htmlspecialchars((string)($orcamento['numero_proposta'] ?? ''));
+        $clienteNome = htmlspecialchars((string)($orcamento['cliente_nome'] ?? ''));
+        $endereco = htmlspecialchars((string)($orcamento['endereco_obra'] ?? ''));
+        $local = htmlspecialchars((string)($orcamento['local_obra'] ?? ''));
+        $area = htmlspecialchars((string)($orcamento['area_m2'] ?? ''));
         $prazo = (string)($orcamento['prazo_dias'] ?? '');
         $prazomeses = $prazo ? round((int)$prazo / 30) : '';
-        $rev = (string)($orcamento['rev'] ?? 'R00');
+        $rev = htmlspecialchars((string)($orcamento['rev'] ?? 'R00'));
         $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
         
         return <<<HTML
 <div class="page page-cover">
-<div class="logo-cover">
-<div class="brand">BROOKS</div>
-<div class="sub">CONSTRUTORA</div>
-</div>
-<div class="cover-meta">
-<div class="label">DOCUMENTO TÉCNICO</div>
-<div class="badge">{$numeroProposta}</div>
-</div>
-<div class="cover-line"></div>
-<div class="cover-title">
-<h1>PLANILHA<br/><strong>RESUMO</strong></h1>
-<div class="subtitle">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>
-</div>
-<div class="cover-info">
-<div class="cover-info-grid">
-<div class="cover-info-item">
-<div class="label">CLIENTE</div>
-<div class="value">{$clienteNome}</div>
-</div>
-<div class="cover-info-item">
-<div class="label">ENDEREÇO</div>
-<div class="value">{$endereco}<br/>{$local}</div>
-</div>
-<div class="cover-info-item">
-<div class="label">PRAZO DE OBRA</div>
-<div class="value">{$prazomeses} meses</div>
-</div>
-<div class="cover-info-item">
-<div class="label">ÁREA TOTAL</div>
-<div class="value">{$area} m²</div>
-</div>
-</div>
-</div>
-<div class="cover-bottom">
-<div class="left">DOCUMENTO CONFIDENCIAL — USO RESTRITO</div>
-<div class="right">REV. {$rev} · {$data}</div>
-</div>
+    <div class="logo-cover">
+        <div class="brand">BROOKS</div>
+        <div class="sub">CONSTRUTORA</div>
+    </div>
+    <div class="cover-meta">
+        <div class="label">DOCUMENTO TÉCNICO</div>
+        <div class="badge">{$numeroProposta}</div>
+    </div>
+    <div class="cover-line"></div>
+    <div class="cover-title">
+        <h1>PLANILHA<br/>ORÇAMENTÁRIA</h1>
+        <div class="subtitle">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>
+    </div>
+    <div class="cover-info">
+        <div class="cover-info-grid">
+            <div class="cover-info-item">
+                <div class="label">CLIENTE</div>
+                <div class="value">{$clienteNome}</div>
+            </div>
+            <div class="cover-info-item">
+                <div class="label">REVISÃO</div>
+                <div class="value">{$rev}</div>
+            </div>
+            <div class="cover-info-item">
+                <div class="label">ENDEREÇO</div>
+                <div class="value">{$endereco}<br/>{$local}</div>
+            </div>
+            <div class="cover-info-item">
+                <div class="label">DATA</div>
+                <div class="value">{$data}</div>
+            </div>
+            <div class="cover-info-item">
+                <div class="label">PRAZO DE OBRA</div>
+                <div class="value">{$prazomeses} meses</div>
+            </div>
+            <div class="cover-info-item">
+                <div class="label">ÁREA TOTAL</div>
+                <div class="value">{$area} m²</div>
+            </div>
+        </div>
+    </div>
+    <div class="cover-bottom">
+        <div class="left">DOCUMENTO CONFIDENCIAL — USO RESTRITO</div>
+        <div class="right">REV. {$rev} · {$data}</div>
+    </div>
 </div>
 HTML;
     }
@@ -346,7 +357,7 @@ HTML;
     {
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado '
+            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado, custo_material, custo_mao_obra '
             . 'FROM orcamento_itens WHERE orcamento_id = :id '
             . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED), id'
         );
@@ -399,22 +410,27 @@ HTML;
     private static function gerarTabelaDetalhes(array $itens, float $subtotal, float $totalGeral): string
     {
         $html = '<table class="table-detalhes"><thead><tr>';
-        $html .= '<th class="col-left" style="width:7%;">CÓDIGO</th>';
-        $html .= '<th class="col-left" style="width:30%;">DESCRIÇÃO</th>';
-        $html .= '<th class="col-center" style="width:7%;">QUANT.</th>';
-        $html .= '<th class="col-center" style="width:6%;">UNID</th>';
-        $html .= '<th class="col-right" style="width:12%;">VALOR UNIT.</th>';
-        $html .= '<th class="col-right" style="width:13%;">VALOR TOTAL</th>';
-        $html .= '<th class="col-center" style="width:8%;">% ETAPA</th>';
-        $html .= '<th class="col-center" style="width:8%;">% TOTAL</th>';
-        $html .= '<th class="col-center" style="width:9%;">% REALIZADO</th>';
+        $html .= '<th class="col-left" style="width:6%;">ITEM</th>';
+        $html .= '<th class="col-left" style="width:28%;">DESCRIÇÃO</th>';
+        $html .= '<th class="col-center" style="width:5%;">UNID</th>';
+        $html .= '<th class="col-center" style="width:6%;">QUANT</th>';
+        $html .= '<th class="col-right" style="width:11%;">VALOR UNIT MATERIAL</th>';
+        $html .= '<th class="col-right" style="width:11%;">VALOR UNIT M.O</th>';
+        $html .= '<th class="col-right" style="width:11%;">VALOR UNITÁRIO TOTAL</th>';
+        $html .= '<th class="col-right" style="width:11%;">VALOR TOTAL</th>';
+        $html .= '<th class="col-center" style="width:11%;">% REALIZADO</th>';
         $html .= '</tr></thead><tbody>';
         
         foreach ($itens as $item) {
             $quantidade = (float)$item['quantidade'];
             $valorTotal = (float)$item['valor_cobranca'];
-            $valorUnitario = $quantidade > 0 ? $valorTotal / $quantidade : (float)$item['valor_unitario'];
-            $pctEtapa = $subtotal > 0 ? ($valorTotal / $subtotal) * 100 : 0.0;
+            $custoMaterial = (float)($item['custo_material'] ?? 0);
+            $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
+            
+            $valorUnitMaterial = $quantidade > 0 ? $custoMaterial / $quantidade : 0;
+            $valorUnitMaoObra = $quantidade > 0 ? $custoMaoObra / $quantidade : 0;
+            $valorUnitTotal = $quantidade > 0 ? $valorTotal / $quantidade : (float)$item['valor_unitario'];
+            
             $pctTotal = $totalGeral > 0 ? ($valorTotal / $totalGeral) * 100 : 0.0;
             $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
             $pctRealizadoEfetivo = ($percentualRealizado / 100) * $pctTotal;
@@ -422,12 +438,12 @@ HTML;
             $html .= '<tr>';
             $html .= '<td class="col-codigo">' . htmlspecialchars((string)$item['codigo']) . '</td>';
             $html .= '<td class="col-desc">' . htmlspecialchars((string)$item['descricao']) . '</td>';
-            $html .= '<td class="col-center">' . number_format($quantidade, 2, ',', '.') . '</td>';
             $html .= '<td class="col-center">' . htmlspecialchars((string)$item['unidade']) . '</td>';
-            $html .= '<td class="col-num">R$ ' . self::formatarValor($valorUnitario) . '</td>';
+            $html .= '<td class="col-center">' . number_format($quantidade, 2, ',', '.') . '</td>';
+            $html .= '<td class="col-num">R$ ' . self::formatarValor($valorUnitMaterial) . '</td>';
+            $html .= '<td class="col-num">R$ ' . self::formatarValor($valorUnitMaoObra) . '</td>';
+            $html .= '<td class="col-num">R$ ' . self::formatarValor($valorUnitTotal) . '</td>';
             $html .= '<td class="col-total">R$ ' . self::formatarValor($valorTotal) . '</td>';
-            $html .= '<td class="col-center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
-            $html .= '<td class="col-center">' . number_format($pctTotal, 2, ',', '.') . '%</td>';
             $html .= '<td class="col-center">' . number_format($pctRealizadoEfetivo, 2, ',', '.') . '%</td>';
             $html .= '</tr>';
         }
