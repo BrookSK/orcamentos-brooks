@@ -89,6 +89,35 @@ declare(strict_types=1);
             </div>
 
             <div class="field full">
+                <label>Capas Personalizadas (até 4 imagens A4)</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+                    <div>
+                        <label style="font-size:12px;color:#999;">Capa 1</label>
+                        <input type="file" name="capa_1" accept="image/*">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:#999;">Capa 2</label>
+                        <input type="file" name="capa_2" accept="image/*">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:#999;">Capa 3</label>
+                        <input type="file" name="capa_3" accept="image/*">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:#999;">Capa 4</label>
+                        <input type="file" name="capa_4" accept="image/*">
+                    </div>
+                </div>
+                <div class="muted" style="font-size:12px;margin-top:8px;">Faça upload de até 4 imagens tamanho A4 para usar como capas do PDF exportado.</div>
+            </div>
+
+            <div class="field full">
+                <label>Capa Personalizada (Imagem A4)</label>
+                <input type="file" name="capa" accept="image/*">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Faça upload de uma imagem tamanho A4 para usar como capa do PDF exportado.</div>
+            </div>
+
+            <div class="field full">
                 <label>
                     <input type="checkbox" name="use_template_items" value="1" <?php echo !empty($use_template_items) ? 'checked' : ''; ?>>
                     Criar com itens do template

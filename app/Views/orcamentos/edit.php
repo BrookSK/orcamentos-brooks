@@ -94,6 +94,24 @@ declare(strict_types=1);
                 <?php endif; ?>
             </div>
 
+            <div class="field full">
+                <label>Capas Personalizadas (até 4 imagens A4)</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+                    <?php for ($i = 1; $i <= 4; $i++) : ?>
+                        <div>
+                            <label style="font-size:12px;color:#999;">Capa <?php echo $i; ?></label>
+                            <input type="file" name="capa_<?php echo $i; ?>" accept="image/*">
+                            <?php if (!empty($orcamento['capa_path_' . $i])) : ?>
+                                <div style="margin-top:4px;">
+                                    <img src="<?php echo htmlspecialchars((string)$orcamento['capa_path_' . $i]); ?>" style="max-width:100%;max-height:140px;" alt="Capa <?php echo $i; ?>">
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endfor; ?>
+                </div>
+                <div class="muted" style="font-size:12px;margin-top:8px;">Faça upload de até 4 imagens tamanho A4 para usar como capas do PDF exportado.</div>
+            </div>
+
             <div class="field full" style="display:flex; justify-content:flex-end; gap:8px; flex-direction:row; align-items:center;">
                 <a class="btn" href="/?route=orcamentos/show&id=<?php echo (int)($orcamento['id'] ?? 0); ?>">Cancelar</a>
                 <button class="btn primary" type="submit">Atualizar</button>

@@ -9,6 +9,15 @@ final class OrcamentoPDF
     public static function gerarHTML(int $orcamentoId, array $orcamento): string
     {
         $html = self::gerarCabecalhoHTML();
+        
+        // Exibir até 4 capas personalizadas
+        for ($i = 1; $i <= 4; $i++) {
+            $capaPath = (string)($orcamento['capa_path_' . $i] ?? '');
+            if (!empty($capaPath)) {
+                $html .= self::gerarCapaPersonalizada($capaPath);
+            }
+        }
+        
         $html .= self::gerarPaginasResumo($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarRodapeHTML();
@@ -107,6 +116,28 @@ tfoot { display: table-footer-group; }
 </style>
 </head>
 <body>
+HTML;
+    }
+
+    private static function gerarCapaPersonalizada(string $capaPath): string
+    {
+        // Converter caminho relativo para absoluto
+        $absolutePath = __DIR__ . '/../../' . ltrim($capaPath, '/');
+        
+        if (!file_exists($absolutePath)) {
+            return '';
+        }
+        
+        // Converter imagem para base64
+        $imageData = base64_encode(file_get_contents($absolutePath));
+        $ext = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
+        $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
+        $base64Src = 'data:' . $mimeType . ';base64,' . $imageData;
+        
+        return <<<HTML
+<div class="page" style="padding:0;margin:0;display:flex;align-items:center;justify-content:center;">
+    <img src="{$base64Src}" style="width:100%;height:100%;object-fit:contain;" alt="Capa">
+</div>
 HTML;
     }
 

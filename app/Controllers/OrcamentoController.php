@@ -60,8 +60,12 @@ final class OrcamentoController
         Logger::info('orcamentos.store.start');
         $data = Orcamento::normalize($_POST);
         
-        // Inicializar logo_path vazio
+        // Inicializar logo_path e capa_path vazios
         $data['logo_path'] = '';
+        $data['capa_path_1'] = '';
+        $data['capa_path_2'] = '';
+        $data['capa_path_3'] = '';
+        $data['capa_path_4'] = '';
         
         // Processar upload de logo
         if (!empty($_FILES['logo']['tmp_name'])) {
@@ -75,6 +79,23 @@ final class OrcamentoController
             if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetPath)) {
                 $data['logo_path'] = '/public/uploads/logos/' . $filename;
                 Logger::info('orcamentos.store.logo_uploaded', ['path' => $data['logo_path']]);
+            }
+        }
+        
+        // Processar upload de capas (até 4)
+        for ($i = 1; $i <= 4; $i++) {
+            if (!empty($_FILES['capa_' . $i]['tmp_name'])) {
+                $uploadDir = __DIR__ . '/../../public/uploads/capas/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $ext = pathinfo($_FILES['capa_' . $i]['name'], PATHINFO_EXTENSION);
+                $filename = bin2hex(random_bytes(8)) . '.' . $ext;
+                $targetPath = $uploadDir . $filename;
+                if (move_uploaded_file($_FILES['capa_' . $i]['tmp_name'], $targetPath)) {
+                    $data['capa_path_' . $i] = '/public/uploads/capas/' . $filename;
+                    Logger::info('orcamentos.store.capa_uploaded', ['index' => $i, 'path' => $data['capa_path_' . $i]]);
+                }
             }
         }
         
@@ -488,6 +509,10 @@ final class OrcamentoController
         $data = Orcamento::normalize($_POST);
 
         $data['logo_path'] = (string)($existing['logo_path'] ?? '');
+        $data['capa_path_1'] = (string)($existing['capa_path_1'] ?? '');
+        $data['capa_path_2'] = (string)($existing['capa_path_2'] ?? '');
+        $data['capa_path_3'] = (string)($existing['capa_path_3'] ?? '');
+        $data['capa_path_4'] = (string)($existing['capa_path_4'] ?? '');
         
         // Processar upload de logo
         if (!empty($_FILES['logo']['tmp_name'])) {
@@ -510,6 +535,30 @@ final class OrcamentoController
                 Logger::info('orcamentos.update.logo_uploaded', ['id' => $id, 'path' => $data['logo_path'], 'file_exists' => file_exists($targetPath)]);
             } else {
                 Logger::error('orcamentos.update.logo_upload_failed', ['id' => $id, 'tmp_name' => $_FILES['logo']['tmp_name'], 'target' => $targetPath]);
+            }
+        }
+        
+        // Processar upload de capas (até 4)
+        for ($i = 1; $i <= 4; $i++) {
+            if (!empty($_FILES['capa_' . $i]['tmp_name'])) {
+                $uploadDir = __DIR__ . '/../../public/uploads/capas/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $ext = pathinfo($_FILES['capa_' . $i]['name'], PATHINFO_EXTENSION);
+                $filename = bin2hex(random_bytes(8)) . '.' . $ext;
+                $targetPath = $uploadDir . $filename;
+                if (move_uploaded_file($_FILES['capa_' . $i]['tmp_name'], $targetPath)) {
+                    // Remover capa antiga se existir
+                    if (!empty($existing['capa_path_' . $i])) {
+                        $oldPath = __DIR__ . '/../../' . ltrim($existing['capa_path_' . $i], '/');
+                        if (file_exists($oldPath)) {
+                            @unlink($oldPath);
+                        }
+                    }
+                    $data['capa_path_' . $i] = '/public/uploads/capas/' . $filename;
+                    Logger::info('orcamentos.update.capa_uploaded', ['id' => $id, 'index' => $i, 'path' => $data['capa_path_' . $i]]);
+                }
             }
         }
 
