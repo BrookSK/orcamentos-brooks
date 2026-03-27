@@ -9,7 +9,6 @@ final class OrcamentoPDF
     public static function gerarHTML(int $orcamentoId, array $orcamento): string
     {
         $html = self::gerarCabecalhoHTML();
-        $html .= self::gerarPaginaCapa($orcamento);
         $html .= self::gerarPaginasResumo($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarRodapeHTML();
@@ -31,7 +30,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 .page { page-break-after: always; background: #FFF; padding: 20px; }
 
 /* CAPA */
-.capa { background: #FFF; }
+.capa { background: #FFF; padding-top: 30px; }
 .capa-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
 .capa-logo { font-size: 28pt; font-weight: bold; color: #2C3350; }
 .capa-logo-sub { font-size: 9pt; color: #666; letter-spacing: 0.1em; }
@@ -40,7 +39,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 .capa-meta-value { color: #2C3350; font-weight: bold; font-size: 10pt; margin-top: 2px; }
 .capa-title { text-align: center; margin: 60px 0 40px 0; }
 .capa-title h1 { font-size: 32pt; font-weight: normal; color: #2C3350; line-height: 1.2; }
-.capa-title-sub { font-size: 9pt; color: #CC1F2D; margin-top: 10px; font-weight: bold; }
+.capa-title-sub { font-size: 9pt; color: #2C3350; margin-top: 10px; font-weight: bold; }
 .capa-info { margin: 40px 0; }
 .capa-info-item { margin-bottom: 20px; }
 .capa-info-label { font-size: 7pt; color: #999; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
@@ -48,26 +47,26 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 .capa-footer { margin-top: 100px; padding-top: 12px; border-top: 1px solid #CCC; font-size: 7pt; color: #666; display: flex; justify-content: space-between; }
 
 /* HEADER PÁGINAS - SIMPLES COMO REFERÊNCIA */
-.page-header { margin-bottom: 15px; }
+.page-header { margin-bottom: 15px; margin-top: 20px; }
 .page-header-info { font-size: 8pt; line-height: 1.5; margin-bottom: 10px; }
 .page-header-info div { margin-bottom: 2px; }
 .page-header-logo-container { text-align: center; margin: 15px 0; }
 .page-header-logo { display: inline-block; padding: 10px 20px; }
-.page-header-logo-text { font-size: 18pt; font-weight: bold; color: #CC1F2D; }
+.page-header-logo-text { font-size: 18pt; font-weight: bold; color: #2C3350; }
 .page-header-logo-sub { font-size: 8pt; color: #666; }
-.page-header-meta { position: absolute; top: 20px; right: 20px; text-align: right; font-size: 8pt; line-height: 1.6; }
+.page-header-meta { position: absolute; top: 40px; right: 20px; text-align: right; font-size: 8pt; line-height: 1.6; }
 .page-title { text-align: center; font-size: 14pt; font-weight: bold; color: #000; margin: 15px 0 5px 0; }
-.page-subtitle { text-align: center; font-size: 8pt; color: #CC1F2D; font-weight: bold; margin-bottom: 15px; }
+.page-subtitle { text-align: center; font-size: 8pt; color: #2C3350; font-weight: bold; margin-bottom: 15px; }
 
 /* TABELAS RESUMO */
-.etapa-header { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 10px 0 0 0; text-align: center; }
+.etapa-header { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; }
 .table-resumo { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 8pt; }
 .table-resumo thead th { background: #666; color: #FFF; padding: 6px 8px; text-align: center; font-weight: bold; font-size: 8pt; border: 1px solid #666; }
 .table-resumo thead th.left { text-align: left; }
 .table-resumo tbody td { padding: 5px 8px; border: 1px solid #CCC; background: #FFF; }
 .table-resumo tbody td.center { text-align: center; }
 .table-resumo tbody td.right { text-align: right; }
-.table-resumo .subtotal-row td { background: #CC1F2D !important; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #CC1F2D; }
+.table-resumo .subtotal-row td { background: #2C3350 !important; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #2C3350; }
 .table-resumo .total-row td { background: #000 !important; color: #FFF; font-weight: bold; padding: 10px 8px; font-size: 9pt; border: 1px solid #000; }
 
 /* TABELAS ÁREAS */
@@ -77,7 +76,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 .table-areas .total-row td { background: #666; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #666; }
 
 /* TABELAS DETALHAMENTO */
-.banner-etapa { background: #CC1F2D; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 10px 0 0 0; text-align: center; }
+.banner-etapa { background: #2C3350; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; }
 .table-detalhes { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 7pt; }
 .table-detalhes thead th { background: #666; color: #FFF; padding: 5px 4px; text-align: center; font-weight: bold; font-size: 7pt; border: 1px solid #666; }
 .table-detalhes thead th.left { text-align: left; padding-left: 6px; }
@@ -86,12 +85,12 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 .table-detalhes tbody td.center { text-align: center; }
 .table-detalhes tbody td.right { text-align: right; padding-right: 6px; }
 .table-detalhes tbody td.left { text-align: left; padding-left: 6px; }
-.subtotal-item { background: #CC1F2D; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; }
+.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; }
 .subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 0; }
 .total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 10px 0; }
 
 /* RODAPÉ */
-.page-footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #CC1F2D; font-size: 7pt; color: #999; display: flex; justify-content: flex-end; }
+.page-footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #2C3350; font-size: 7pt; color: #999; display: flex; justify-content: flex-end; }
 </style>
 </head>
 <body>
@@ -175,6 +174,14 @@ HTML;
         $prazomeses = $prazo ? round((int)$prazo / 30) : '';
         $rev = htmlspecialchars((string)($orcamento['rev'] ?? 'R00'));
         $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
+        $logoPath = (string)($orcamento['logo_path'] ?? '');
+        
+        $logoHtml = '';
+        if (!empty($logoPath)) {
+            $logoHtml = '<img src="' . htmlspecialchars($logoPath) . '" style="max-width:180px;max-height:60px;" alt="Logo">';
+        } else {
+            $logoHtml = '<div class="page-header-logo"><div class="page-header-logo-text">BROOKS</div><div class="page-header-logo-sub">CONSTRUTORA</div></div>';
+        }
         
         return <<<HTML
 <div class="page-header">
@@ -190,10 +197,7 @@ HTML;
         <div><strong>DATA:</strong> {$data}</div>
     </div>
     <div class="page-header-logo-container">
-        <div class="page-header-logo">
-            <div class="page-header-logo-text">BROOKS</div>
-            <div class="page-header-logo-sub">CONSTRUTORA</div>
-        </div>
+        {$logoHtml}
     </div>
     <div class="page-title">{$tituloSecao}</div>
     <div class="page-subtitle">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>

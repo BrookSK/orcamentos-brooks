@@ -83,6 +83,12 @@ declare(strict_types=1);
             </div>
 
             <div class="field full">
+                <label>Logo da Empresa (PNG)</label>
+                <input type="file" name="logo" accept="image/png">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Faça upload de uma logo em PNG para substituir o texto "BROOKS CONSTRUTORA" no PDF.</div>
+            </div>
+
+            <div class="field full">
                 <label>
                     <input type="checkbox" name="use_template_items" value="1" <?php echo !empty($use_template_items) ? 'checked' : ''; ?>>
                     Criar com itens do template

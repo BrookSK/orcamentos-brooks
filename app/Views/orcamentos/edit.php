@@ -83,6 +83,17 @@ declare(strict_types=1);
                 <input name="empresa_email" value="<?php echo htmlspecialchars((string)($orcamento['empresa_email'] ?? '')); ?>">
             </div>
 
+            <div class="field full">
+                <label>Logo da Empresa (PNG)</label>
+                <input type="file" name="logo" accept="image/png">
+                <?php if (!empty($orcamento['logo_path'])) : ?>
+                    <div style="margin-top:8px;">
+                        <img src="<?php echo htmlspecialchars((string)$orcamento['logo_path']); ?>" style="max-width:200px;max-height:80px;" alt="Logo atual">
+                        <div class="muted" style="font-size:12px;margin-top:4px;">Logo atual. Faça upload de uma nova para substituir.</div>
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <div class="field full" style="display:flex; justify-content:flex-end; gap:8px; flex-direction:row; align-items:center;">
                 <a class="btn" href="/?route=orcamentos/show&id=<?php echo (int)($orcamento['id'] ?? 0); ?>">Cancelar</a>
                 <button class="btn primary" type="submit">Atualizar</button>

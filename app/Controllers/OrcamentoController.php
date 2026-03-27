@@ -59,6 +59,22 @@ final class OrcamentoController
     {
         Logger::info('orcamentos.store.start');
         $data = Orcamento::normalize($_POST);
+        
+        // Processar upload de logo
+        if (!empty($_FILES['logo']['tmp_name'])) {
+            $uploadDir = __DIR__ . '/../../public/uploads/logos/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $ext = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+            $filename = bin2hex(random_bytes(8)) . '.' . $ext;
+            $targetPath = $uploadDir . $filename;
+            if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetPath)) {
+                $data['logo_path'] = '/public/uploads/logos/' . $filename;
+                Logger::info('orcamentos.store.logo_uploaded', ['path' => $data['logo_path']]);
+            }
+        }
+        
         $errors = Orcamento::validate($data);
 
         $templateItemsInput = $_POST['template_items'] ?? null;
@@ -469,6 +485,28 @@ final class OrcamentoController
         $data = Orcamento::normalize($_POST);
 
         $data['logo_path'] = (string)($existing['logo_path'] ?? '');
+        
+        // Processar upload de logo
+        if (!empty($_FILES['logo']['tmp_name'])) {
+            $uploadDir = __DIR__ . '/../../public/uploads/logos/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $ext = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+            $filename = bin2hex(random_bytes(8)) . '.' . $ext;
+            $targetPath = $uploadDir . $filename;
+            if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetPath)) {
+                // Remover logo antiga se existir
+                if (!empty($existing['logo_path'])) {
+                    $oldPath = __DIR__ . '/../../' . ltrim($existing['logo_path'], '/');
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
+                }
+                $data['logo_path'] = '/public/uploads/logos/' . $filename;
+                Logger::info('orcamentos.update.logo_uploaded', ['path' => $data['logo_path']]);
+            }
+        }
 
         $errors = Orcamento::validate($data);
         if ($errors) {
