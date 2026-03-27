@@ -68,10 +68,14 @@ tfoot { display: table-footer-group; }
 .table-resumo { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 8pt; margin-top: 10px; }
 .table-resumo thead th { background: #666; color: #FFF; padding: 6px 8px; text-align: center; font-weight: bold; font-size: 8pt; border: 1px solid #666; }
 .table-resumo thead th.left { text-align: left; }
+.table-resumo tbody tr { page-break-inside: avoid; }
+.table-resumo tbody tr:nth-last-child(-n+2) { page-break-after: avoid; }
 .table-resumo tbody td { padding: 5px 8px; border: 1px solid #CCC; background: #FFF; }
 .table-resumo tbody td.center { text-align: center; }
 .table-resumo tbody td.right { text-align: right; }
+.table-resumo .subtotal-row { page-break-before: avoid; page-break-inside: avoid; }
 .table-resumo .subtotal-row td { background: #2C3350 !important; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #2C3350; }
+.table-resumo .total-row { page-break-before: avoid; page-break-inside: avoid; }
 .table-resumo .total-row td { background: #000 !important; color: #FFF; font-weight: bold; padding: 10px 8px; font-size: 9pt; border: 1px solid #000; }
 
 /* TABELAS ÁREAS */
@@ -93,9 +97,10 @@ tfoot { display: table-footer-group; }
 .table-detalhes tbody td.right { text-align: right; padding-right: 6px; }
 .table-detalhes tbody td.left { text-align: left; padding-left: 6px; }
 .table-detalhes tbody tr { page-break-inside: avoid; }
-.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; margin-top: 10px; page-break-inside: avoid; }
-.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; page-break-inside: avoid; page-break-after: always; }
-.total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 20px 0 10px 0; page-break-inside: avoid; }
+.table-detalhes tbody tr:nth-last-child(-n+3) { page-break-after: avoid; }
+.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; margin-top: 10px; page-break-inside: avoid; page-break-before: avoid; }
+.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; page-break-inside: avoid; page-break-before: avoid; page-break-after: always; }
+.total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 20px 0 10px 0; page-break-inside: avoid; page-break-before: avoid; }
 
 /* RODAPÉ */
 .page-footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #2C3350; font-size: 7pt; color: #999; display: flex; justify-content: flex-end; }
