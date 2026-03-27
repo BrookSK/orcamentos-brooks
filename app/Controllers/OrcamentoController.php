@@ -915,7 +915,10 @@ final class OrcamentoController
                 $dompdf->render();
 
                 header('Content-Type: application/pdf');
-                header('Content-Disposition: inline; filename="orcamento-' . $id . '.pdf"');
+                $nomeArquivo = $orcamento['numero_proposta'] ?? 'orcamento-' . $id;
+                $nomeArquivo = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nomeArquivo);
+                $dataExportacao = date('Y-m-d');
+                header('Content-Disposition: inline; filename="' . $nomeArquivo . '_' . $dataExportacao . '.pdf"');
                 echo $dompdf->output();
                 return;
             } catch (\Throwable $e) {
