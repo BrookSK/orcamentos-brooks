@@ -60,7 +60,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 
 /* TABELAS RESUMO */
 .etapa-header { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; }
-.table-resumo { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 8pt; }
+.table-resumo { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 8pt; margin-top: 10px; }
 .table-resumo thead th { background: #666; color: #FFF; padding: 6px 8px; text-align: center; font-weight: bold; font-size: 8pt; border: 1px solid #666; }
 .table-resumo thead th.left { text-align: left; }
 .table-resumo tbody td { padding: 5px 8px; border: 1px solid #CCC; background: #FFF; }
@@ -70,14 +70,14 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 .table-resumo .total-row td { background: #000 !important; color: #FFF; font-weight: bold; padding: 10px 8px; font-size: 9pt; border: 1px solid #000; }
 
 /* TABELAS ÁREAS */
-.table-areas { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 8pt; }
+.table-areas { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 8pt; margin-top: 20px; }
 .table-areas thead th { background: #666; color: #FFF; padding: 6px 8px; font-weight: bold; text-align: center; font-size: 8pt; border: 1px solid #666; }
 .table-areas tbody td { padding: 5px 8px; border: 1px solid #CCC; text-align: center; background: #FFF; }
 .table-areas .total-row td { background: #666; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #666; }
 
 /* TABELAS DETALHAMENTO */
 .banner-etapa { background: #2C3350; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; }
-.table-detalhes { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 7pt; }
+.table-detalhes { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 7pt; margin-top: 10px; }
 .table-detalhes thead th { background: #666; color: #FFF; padding: 5px 4px; text-align: center; font-weight: bold; font-size: 7pt; border: 1px solid #666; }
 .table-detalhes thead th.left { text-align: left; padding-left: 6px; }
 .table-detalhes thead th.right { text-align: right; padding-right: 6px; }
@@ -85,9 +85,9 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 .table-detalhes tbody td.center { text-align: center; }
 .table-detalhes tbody td.right { text-align: right; padding-right: 6px; }
 .table-detalhes tbody td.left { text-align: left; padding-left: 6px; }
-.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; }
-.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 0; }
-.total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 10px 0; }
+.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; margin-top: 10px; }
+.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; }
+.total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 20px 0 10px 0; }
 
 /* RODAPÉ */
 .page-footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #2C3350; font-size: 7pt; color: #999; display: flex; justify-content: flex-end; }
