@@ -363,13 +363,13 @@ HTML;
      */
     private static function gerarPaginaApresentacao(array $orcamento): string
     {
-        $numeroProposta = htmlspecialchars($orcamento['numero_proposta'] ?? '');
-        $clienteNome = htmlspecialchars($orcamento['cliente_nome'] ?? '');
-        $endereco = htmlspecialchars($orcamento['endereco_obra'] ?? '');
-        $area = htmlspecialchars($orcamento['area_m2'] ?? '');
-        $prazo = htmlspecialchars($orcamento['prazo_dias'] ?? '');
+        $numeroProposta = htmlspecialchars((string)($orcamento['numero_proposta'] ?? ''));
+        $clienteNome = htmlspecialchars((string)($orcamento['cliente_nome'] ?? ''));
+        $endereco = htmlspecialchars((string)($orcamento['endereco_obra'] ?? ''));
+        $area = (string)($orcamento['area_m2'] ?? '');
+        $prazo = (string)($orcamento['prazo_dias'] ?? '');
         $prazomeses = $prazo ? round((int)$prazo / 30) : '';
-        $rev = htmlspecialchars($orcamento['rev'] ?? 'R00');
+        $rev = htmlspecialchars((string)($orcamento['rev'] ?? 'R00'));
         $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
         
         return <<<HTML
@@ -451,13 +451,13 @@ HTML;
         
         $totalGeral = $totalCinza + $totalAcabamentos + $totalGerenciamento + $totalAdm;
         
-        $numeroProposta = htmlspecialchars($orcamento['numero_proposta'] ?? '');
-        $clienteNome = htmlspecialchars($orcamento['cliente_nome'] ?? '');
-        $endereco = htmlspecialchars($orcamento['endereco_obra'] ?? '');
-        $prazo = htmlspecialchars($orcamento['prazo_dias'] ?? '');
+        $numeroProposta = htmlspecialchars((string)($orcamento['numero_proposta'] ?? ''));
+        $clienteNome = htmlspecialchars((string)($orcamento['cliente_nome'] ?? ''));
+        $endereco = htmlspecialchars((string)($orcamento['endereco_obra'] ?? ''));
+        $prazo = (string)($orcamento['prazo_dias'] ?? '');
         $prazomeses = $prazo ? round((int)$prazo / 30) : '';
-        $area = htmlspecialchars($orcamento['area_m2'] ?? '');
-        $rev = htmlspecialchars($orcamento['rev'] ?? 'R00');
+        $area = (string)($orcamento['area_m2'] ?? '');
+        $rev = htmlspecialchars((string)($orcamento['rev'] ?? 'R00'));
         $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
         
         // PÁGINA 1 - ETAPA CINZA
