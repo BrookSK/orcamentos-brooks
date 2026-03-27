@@ -795,127 +795,172 @@ HTML;
     /**
      * Gera páginas de detalhamento completo
      */
+    /**
+     * Resolve o grupo de etapa de um item pelo prefixo numérico do código.
+     * Retorna uma das 4 chaves fixas: 'cinza', 'acabamentos', 'gerenciamento', 'adm_impostos'
+     */
+    private static function resolverGrupoEtapa(string $codigo): string
+    {
+        $numero = (int)explode('.', trim($codigo))[0];
+
+        if ($numero >= 1 && $numero <= 17) {
+            return 'cinza';
+        }
+        if ($numero >= 18 && $numero <= 41) {
+            return 'acabamentos';
+        }
+        if ($numero === 42) {
+            return 'gerenciamento';
+        }
+        return 'adm_impostos';
+    }
+
+    /**
+     * Gera páginas de detalhamento completo — planilha orçamentária agrupada por etapa.
+     *
+     * Regras:
+     * - Cada item aparece UMA única vez (deduplicado por id).
+     * - Agrupamento fixo: Cinza (1–17) | Acabamentos (18–41) | Gerenciamento (42) | Adm+Impostos (43+)
+     * - % etapa  = valor_item / subtotal_da_etapa
+     * - % total  = valor_item / total_geral
+     * - total_geral = soma dos 4 subtotais
+     */
     private static function gerarPaginaDetalhamento(int $orcamentoId, array $orcamento): string
     {
-        $resumoEtapas = OrcamentoItem::getResumoEtapas($orcamentoId);
-        $totaisGerais = OrcamentoItem::getTotaisGerais($orcamentoId);
-        
-        $html = '<div class="page">';
-        $html .= '<h1 class="section-title">Detalhamento Completo</h1>';
-        
-        $paginaAtual = 6;
-        
-        foreach ($resumoEtapas as $etapa) {
-            $corInfo = OrcamentoCor::getCorPorEtapa($etapa['etapa']);
-            $itensAgrupados = OrcamentoItem::getItensAgrupadosPorFinalidade($orcamentoId, $etapa['etapa']);
-            
-            $html .= sprintf(
-                '<div class="etapa-section">'
-                . '<div class="etapa-header" style="background: %s;">'
-                . '<h2 class="etapa-title">%s %s</h2>'
-                . '</div>'
-                . '<div class="grupo-section">',
-                $corInfo['cor'],
-                $corInfo['icone'] ?? '',
-                htmlspecialchars($etapa['etapa'])
-            );
-            
-            foreach ($itensAgrupados as $grupoNome => $grupo) {
-                $html .= sprintf('<h3 class="grupo-title">▶ %s</h3>', htmlspecialchars($grupoNome));
-                
-                // Materiais
-                if (!empty($grupo['material'])) {
-                    $html .= '<h4 class="categoria-title">📦 MATERIAL / CUSTO PREVISTO</h4>';
-                    $html .= self::gerarTabelaItens($grupo['material'], 'material');
-                }
-                
-                // Mão de Obra
-                if (!empty($grupo['mao_obra'])) {
-                    $html .= '<h4 class="categoria-title mao-obra">👷 MÃO DE OBRA / CUSTO EFETIVO</h4>';
-                    $html .= self::gerarTabelaItens($grupo['mao_obra'], 'mao_obra');
-                }
-                
-                // Resumo do grupo
-                $html .= sprintf(
-                    '<div class="resumo-grupo">'
-                    . '<span class="color-material">📦 Material: R$ %s</span>'
-                    . '<span class="color-mao-obra">👷 M.O: R$ %s</span>'
-                    . '<span><strong>Total: R$ %s</strong></span>'
-                    . '</div>',
-                    self::formatarValor($grupo['total_material']),
-                    self::formatarValor($grupo['total_mao_obra']),
-                    self::formatarValor($grupo['total_geral'])
-                );
+        $pdo = \App\Core\Database::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado '
+            . 'FROM orcamento_itens '
+            . 'WHERE orcamento_id = :id '
+            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), '
+            . 'CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED), id'
+        );
+        $stmt->execute([':id' => $orcamentoId]);
+        $todosItens = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Agrupa por etapa, deduplicando por id
+        $grupos = [
+            'cinza'         => ['label' => 'ETAPA CINZA',                     'itens' => [], 'subtotal' => 0.0],
+            'acabamentos'   => ['label' => 'ETAPA ACABAMENTOS',               'itens' => [], 'subtotal' => 0.0],
+            'gerenciamento' => ['label' => 'ETAPA GERENCIAMENTO',             'itens' => [], 'subtotal' => 0.0],
+            'adm_impostos'  => ['label' => 'TAXA DE ADMINISTRAÇÃO + IMPOSTOS', 'itens' => [], 'subtotal' => 0.0],
+        ];
+
+        $idsVistos = [];
+        foreach ($todosItens as $item) {
+            if (isset($idsVistos[$item['id']])) {
+                continue; // garante que cada item aparece só uma vez
             }
-            
-            $html .= '</div>';
-            
-            // Resumo da etapa
+            $idsVistos[$item['id']] = true;
+
+            $chave = self::resolverGrupoEtapa((string)$item['codigo']);
+            $grupos[$chave]['itens'][]   = $item;
+            $grupos[$chave]['subtotal'] += (float)$item['valor_cobranca'];
+        }
+
+        // total_geral = soma dos 4 subtotais (nunca soma direta de itens)
+        $totalGeral = array_sum(array_column($grupos, 'subtotal'));
+
+        // Validação: soma dos subtotais == total_geral
+        assert(abs(array_sum(array_column($grupos, 'subtotal')) - $totalGeral) < 0.01,
+            'Soma dos subtotais difere do total geral');
+
+        $html  = '<div class="page">';
+        $html .= '<h1 class="section-title">Detalhamento Completo</h1>';
+
+        $paginaAtual = 6;
+
+        foreach ($grupos as $grupo) {
+            if (empty($grupo['itens'])) {
+                continue;
+            }
+
+            $subtotal        = $grupo['subtotal'];
+            $pctDoTotal      = $totalGeral > 0 ? ($subtotal / $totalGeral) * 100 : 0.0;
+
+            $html .= '<div class="etapa-section">';
+            $html .= sprintf(
+                '<div class="etapa-header"><h2 class="etapa-title">%s</h2></div>',
+                htmlspecialchars($grupo['label'])
+            );
+
+            $html .= self::gerarTabelaItens($grupo['itens'], $subtotal, $totalGeral);
+
             $html .= sprintf(
                 '<div class="resumo-etapa">'
                 . '<span>SUBTOTAL — %s</span>'
                 . '<div>'
-                . '<span class="color-material" style="margin-right: 20px;">📦 Material: R$ %s</span>'
-                . '<span class="color-mao-obra" style="margin-right: 20px;">👷 M.O: R$ %s</span>'
-                . '<span style="font-size: 16px;">Total: R$ %s</span>'
+                . '<span style="margin-right: 20px;"><strong>R$ %s</strong></span>'
+                . '<span style="font-size: 13px; opacity: 0.85;">%.2f%% do total</span>'
                 . '</div>'
                 . '</div>',
-                htmlspecialchars($etapa['etapa']),
-                self::formatarValor((float)$etapa['total_material']),
-                self::formatarValor((float)$etapa['total_mao_obra']),
-                self::formatarValor((float)$etapa['total_cobranca'])
+                htmlspecialchars($grupo['label']),
+                self::formatarValor($subtotal),
+                $pctDoTotal
             );
-            
-            $html .= '</div>';
-            
-            // Nova página para próxima etapa
+
+            $html .= '</div>'; // etapa-section
+
             $html .= sprintf('</div><div class="page"><div class="page-number">Página %d</div>', $paginaAtual++);
         }
-        
+
         // Total Final
         $html .= sprintf(
             '<div class="total-final">'
             . '<h2>VALOR TOTAL GERAL DO PROJETO</h2>'
-            . '<div style="display: flex; justify-content: center; gap: 40px; margin: 20px 0;">'
-            . '<div><div style="font-size: 14px; opacity: 0.9;">Custo Previsto (Material)</div><div style="font-size: 22px; font-weight: bold;">R$ %s</div></div>'
-            . '<div><div style="font-size: 14px; opacity: 0.9;">Custo Efetivo (M.O)</div><div style="font-size: 22px; font-weight: bold;">R$ %s</div></div>'
-            . '</div>'
             . '<div class="total-final-value">R$ %s</div>'
+            . '<div style="font-size: 14px; opacity: 0.9;">100,00%%</div>'
             . '</div>',
-            self::formatarValor((float)$totaisGerais['total_material']),
-            self::formatarValor((float)$totaisGerais['total_mao_obra']),
-            self::formatarValor((float)$totaisGerais['total_cobranca'])
+            self::formatarValor($totalGeral)
         );
-        
+
         $html .= '</div>';
-        
+
         return $html;
     }
-    
+
     /**
-     * Gera tabela de itens (material ou mão de obra)
+     * Gera tabela de itens de uma etapa.
+     * Colunas: CÓDIGO | DESCRIÇÃO | QUANT. | UNID | VALOR UNIT. | VALOR TOTAL | % ETAPA | % TOTAL | % REALIZADO
+     *
+     * @param array $itens      Itens da etapa (sem duplicatas)
+     * @param float $subtotal   Subtotal da etapa — denominador de % etapa
+     * @param float $totalGeral Total geral do orçamento — denominador de % total
      */
-    private static function gerarTabelaItens(array $itens, string $tipo): string
+    private static function gerarTabelaItens(array $itens, float $subtotal, float $totalGeral): string
     {
-        $html = '<table class="table-itens">';
+        $html  = '<table class="table-itens">';
         $html .= '<thead><tr>';
-        $html .= '<th style="width: 8%;">Código</th>';
-        $html .= '<th style="width: 42%;">Descrição</th>';
-        $html .= '<th style="width: 10%; text-align: center;">Qtd</th>';
-        $html .= '<th style="width: 8%; text-align: center;">Un.</th>';
-        $html .= '<th style="width: 16%; text-align: right;">Vr. Unit.</th>';
-        $html .= '<th style="width: 16%; text-align: right;">Vr. Total</th>';
+        $html .= '<th style="width: 6%;">Código</th>';
+        $html .= '<th style="width: 32%;">Descrição</th>';
+        $html .= '<th style="width: 7%; text-align: center;">Quant.</th>';
+        $html .= '<th style="width: 5%; text-align: center;">Unid</th>';
+        $html .= '<th style="width: 12%; text-align: right;">Valor Unit.</th>';
+        $html .= '<th style="width: 12%; text-align: right;">Valor Total</th>';
+        $html .= '<th style="width: 8%; text-align: right;">% Etapa</th>';
+        $html .= '<th style="width: 8%; text-align: right;">% Total</th>';
+        $html .= '<th style="width: 10%; text-align: right;">% Realizado</th>';
         $html .= '</tr></thead><tbody>';
-        
+
+        $somaPctEtapa = 0.0;
+
         foreach ($itens as $item) {
-            $quantidade = (float)$item['quantidade'];
-            $valorUnitario = $tipo === 'material' 
-                ? (float)$item['custo_material'] / max($quantidade, 1)
-                : (float)$item['custo_mao_obra'] / max($quantidade, 1);
-            $valorTotal = $tipo === 'material' 
-                ? (float)$item['custo_material']
-                : (float)$item['custo_mao_obra'];
+            $quantidade    = (float)$item['quantidade'];
+            $valorTotal    = (float)$item['valor_cobranca'];
+            $valorUnitario = $quantidade > 0 ? $valorTotal / $quantidade : (float)$item['valor_unitario'];
+
+            // % etapa = valor_item / subtotal_da_etapa (denominador correto)
+            $pctEtapa = $subtotal > 0 ? ($valorTotal / $subtotal) * 100 : 0.0;
+            // % total = valor_item / total_geral
+            $pctTotal = $totalGeral > 0 ? ($valorTotal / $totalGeral) * 100 : 0.0;
             
+            // % realizado: 0-100% onde 100% = % total do item
+            // Se item tem 5% do total e está 100% realizado, contribui 5% para o total realizado
+            $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+            $pctRealizadoEfetivo = ($percentualRealizado / 100) * $pctTotal;
+
+            $somaPctEtapa += $pctEtapa;
+
             $html .= sprintf(
                 '<tr>'
                 . '<td>%s</td>'
@@ -924,18 +969,30 @@ HTML;
                 . '<td style="text-align: center;">%s</td>'
                 . '<td style="text-align: right;">R$ %s</td>'
                 . '<td style="text-align: right;"><strong>R$ %s</strong></td>'
+                . '<td style="text-align: right;">%.2f%%</td>'
+                . '<td style="text-align: right;">%.2f%%</td>'
+                . '<td style="text-align: right;">%.2f%%</td>'
                 . '</tr>',
                 htmlspecialchars($item['codigo']),
                 htmlspecialchars($item['descricao']),
                 number_format($quantidade, 3, ',', '.'),
                 htmlspecialchars($item['unidade']),
                 self::formatarValor($valorUnitario),
-                self::formatarValor($valorTotal)
+                self::formatarValor($valorTotal),
+                $pctEtapa,
+                $pctTotal,
+                $pctRealizadoEfetivo
             );
         }
-        
+
+        // Validação: soma de % etapa deve ser ~100%
+        assert(
+            $subtotal == 0.0 || abs($somaPctEtapa - 100.0) < 0.1,
+            sprintf('Soma de %% etapa = %.4f%% (esperado ~100%%)', $somaPctEtapa)
+        );
+
         $html .= '</tbody></table>';
-        
+
         return $html;
     }
     
