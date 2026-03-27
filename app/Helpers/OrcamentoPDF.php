@@ -332,3 +332,117 @@ HTML;
         return $html;
     }
 
+    
+    private static function resolverGrupoEtapa(string $codigo): string
+    {
+        $numero = (int)explode('.', trim($codigo))[0];
+        if ($numero >= 1 && $numero <= 17) return 'cinza';
+        if ($numero >= 18 && $numero <= 41) return 'acabamentos';
+        if ($numero === 42) return 'gerenciamento';
+        return 'adm_impostos';
+    }
+    
+    private static function gerarPaginaDetalhamento(int $orcamentoId, array $orcamento): string
+    {
+        $pdo = \App\Core\Database::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado '
+            . 'FROM orcamento_itens WHERE orcamento_id = :id '
+            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED), id'
+        );
+        $stmt->execute([':id' => $orcamentoId]);
+        $todosItens = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        
+        $grupos = [
+            'cinza' => ['label' => 'ETAPA CINZA', 'itens' => [], 'subtotal' => 0.0],
+            'acabamentos' => ['label' => 'ETAPA ACABAMENTOS', 'itens' => [], 'subtotal' => 0.0],
+            'gerenciamento' => ['label' => 'ETAPA GERENCIAMENTO', 'itens' => [], 'subtotal' => 0.0],
+            'adm_impostos' => ['label' => 'TAXA DE ADMINISTRAÇÃO + IMPOSTOS', 'itens' => [], 'subtotal' => 0.0],
+        ];
+        
+        $idsVistos = [];
+        foreach ($todosItens as $item) {
+            if (isset($idsVistos[$item['id']])) continue;
+            $idsVistos[$item['id']] = true;
+            $chave = self::resolverGrupoEtapa((string)$item['codigo']);
+            $grupos[$chave]['itens'][] = $item;
+            $grupos[$chave]['subtotal'] += (float)$item['valor_cobranca'];
+        }
+        
+        $totalGeral = array_sum(array_column($grupos, 'subtotal'));
+        
+        $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA ORÇAMENTÁRIA');
+        $html .= '<div class="page-content">';
+        
+        foreach ($grupos as $grupo) {
+            if (empty($grupo['itens'])) continue;
+            $subtotal = $grupo['subtotal'];
+            $pctDoTotal = $totalGeral > 0 ? ($subtotal / $totalGeral) * 100 : 0.0;
+            
+            $html .= sprintf('<div class="banner-secao">%s</div>', htmlspecialchars((string)$grupo['label']));
+            $html .= self::gerarTabelaDetalhes($grupo['itens'], $subtotal, $totalGeral);
+            $html .= sprintf('<div class="subtotal-etapa">SUBTOTAL — %s: R$ %s (%s%% do total)</div>',
+                htmlspecialchars((string)$grupo['label']), self::formatarValor($subtotal), number_format($pctDoTotal, 2, ',', '.'));
+        }
+        
+        $html .= sprintf('<div class="total-geral-box"><h2>VALOR TOTAL GERAL DO PROJETO</h2><div class="valor">R$ %s</div><div style="font-size:9pt;margin-top:4px;">100,00%%</div></div>',
+            self::formatarValor($totalGeral));
+        
+        $html .= '</div>';
+        $html .= '<div class="page-footer"><div class="footer-content"><span class="footer-left"></span><span class="footer-right">FOLHA: 4</span></div></div>';
+        $html .= '</div>';
+        
+        return $html;
+    }
+
+    
+    private static function gerarTabelaDetalhes(array $itens, float $subtotal, float $totalGeral): string
+    {
+        $html = '<table class="table-detalhes"><thead><tr>';
+        $html .= '<th class="col-left" style="width:7%;">CÓDIGO</th>';
+        $html .= '<th class="col-left" style="width:30%;">DESCRIÇÃO</th>';
+        $html .= '<th class="col-center" style="width:7%;">QUANT.</th>';
+        $html .= '<th class="col-center" style="width:6%;">UNID</th>';
+        $html .= '<th class="col-right" style="width:12%;">VALOR UNIT.</th>';
+        $html .= '<th class="col-right" style="width:13%;">VALOR TOTAL</th>';
+        $html .= '<th class="col-center" style="width:8%;">% ETAPA</th>';
+        $html .= '<th class="col-center" style="width:8%;">% TOTAL</th>';
+        $html .= '<th class="col-center" style="width:9%;">% REALIZADO</th>';
+        $html .= '</tr></thead><tbody>';
+        
+        foreach ($itens as $item) {
+            $quantidade = (float)$item['quantidade'];
+            $valorTotal = (float)$item['valor_cobranca'];
+            $valorUnitario = $quantidade > 0 ? $valorTotal / $quantidade : (float)$item['valor_unitario'];
+            $pctEtapa = $subtotal > 0 ? ($valorTotal / $subtotal) * 100 : 0.0;
+            $pctTotal = $totalGeral > 0 ? ($valorTotal / $totalGeral) * 100 : 0.0;
+            $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+            $pctRealizadoEfetivo = ($percentualRealizado / 100) * $pctTotal;
+            
+            $html .= '<tr>';
+            $html .= '<td class="col-codigo">' . htmlspecialchars((string)$item['codigo']) . '</td>';
+            $html .= '<td class="col-desc">' . htmlspecialchars((string)$item['descricao']) . '</td>';
+            $html .= '<td class="col-center">' . number_format($quantidade, 2, ',', '.') . '</td>';
+            $html .= '<td class="col-center">' . htmlspecialchars((string)$item['unidade']) . '</td>';
+            $html .= '<td class="col-num">R$ ' . self::formatarValor($valorUnitario) . '</td>';
+            $html .= '<td class="col-total">R$ ' . self::formatarValor($valorTotal) . '</td>';
+            $html .= '<td class="col-center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
+            $html .= '<td class="col-center">' . number_format($pctTotal, 2, ',', '.') . '%</td>';
+            $html .= '<td class="col-center">' . number_format($pctRealizadoEfetivo, 2, ',', '.') . '%</td>';
+            $html .= '</tr>';
+        }
+        
+        $html .= '</tbody></table>';
+        return $html;
+    }
+    
+    private static function gerarRodapeHTML(): string
+    {
+        return '</body></html>';
+    }
+    
+    private static function formatarValor(float $valor): string
+    {
+        return number_format($valor, 2, ',', '.');
+    }
+}
