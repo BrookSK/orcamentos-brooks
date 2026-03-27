@@ -27,7 +27,12 @@ final class OrcamentoPDF
 @page { margin: 15mm; size: A4; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3; background: #FFF; font-size: 9pt; }
+table { page-break-inside: auto; }
+tr { page-break-inside: avoid; page-break-after: auto; }
+thead { display: table-header-group; }
+tfoot { display: table-footer-group; }
 .page { page-break-after: always; background: #FFF; padding: 20px; }
+.no-page-break { page-break-after: avoid; }
 
 /* CAPA */
 .capa { background: #FFF; padding-top: 30px; }
@@ -60,46 +65,34 @@ body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.3;
 
 /* TABELAS RESUMO */
 .etapa-header { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; page-break-after: avoid; }
-.table-resumo { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 8pt; margin-top: 10px; page-break-inside: auto; }
-.table-resumo thead { display: table-header-group; page-break-inside: avoid; page-break-after: avoid; }
+.table-resumo { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 8pt; margin-top: 10px; }
 .table-resumo thead th { background: #666; color: #FFF; padding: 6px 8px; text-align: center; font-weight: bold; font-size: 8pt; border: 1px solid #666; }
 .table-resumo thead th.left { text-align: left; }
-.table-resumo tbody { display: table-row-group; }
-.table-resumo tbody tr { page-break-inside: avoid; page-break-after: auto; }
 .table-resumo tbody td { padding: 5px 8px; border: 1px solid #CCC; background: #FFF; }
 .table-resumo tbody td.center { text-align: center; }
 .table-resumo tbody td.right { text-align: right; }
-.table-resumo .subtotal-row { page-break-inside: avoid; }
 .table-resumo .subtotal-row td { background: #2C3350 !important; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #2C3350; }
-.table-resumo .total-row { page-break-inside: avoid; }
 .table-resumo .total-row td { background: #000 !important; color: #FFF; font-weight: bold; padding: 10px 8px; font-size: 9pt; border: 1px solid #000; }
 
 /* TABELAS ÁREAS */
-.table-areas { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 8pt; margin-top: 20px; page-break-inside: auto; }
-.table-areas thead { display: table-header-group; page-break-inside: avoid; page-break-after: avoid; }
+.table-areas { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 8pt; margin-top: 20px; }
 .table-areas thead th { background: #666; color: #FFF; padding: 6px 8px; font-weight: bold; text-align: center; font-size: 8pt; border: 1px solid #666; }
-.table-areas tbody { display: table-row-group; }
-.table-areas tbody tr { page-break-inside: avoid; page-break-after: auto; }
 .table-areas tbody td { padding: 5px 8px; border: 1px solid #CCC; text-align: center; background: #FFF; }
-.table-areas .total-row { page-break-inside: avoid; }
 .table-areas .total-row td { background: #666; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #666; }
 
 /* TABELAS DETALHAMENTO */
 .banner-etapa { background: #2C3350; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; page-break-after: avoid; }
-.table-detalhes { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 7pt; margin-top: 10px; page-break-inside: auto; }
-.table-detalhes thead { display: table-header-group; page-break-inside: avoid; page-break-after: avoid; }
+.table-detalhes { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 7pt; margin-top: 10px; }
 .table-detalhes thead th { background: #666; color: #FFF; padding: 5px 4px; text-align: center; font-weight: bold; font-size: 7pt; border: 1px solid #666; }
 .table-detalhes thead th.left { text-align: left; padding-left: 6px; }
 .table-detalhes thead th.right { text-align: right; padding-right: 6px; }
-.table-detalhes tbody { display: table-row-group; }
-.table-detalhes tbody tr { page-break-inside: avoid; page-break-after: auto; }
 .table-detalhes tbody td { padding: 4px; border: 1px solid #CCC; vertical-align: middle; background: #FFF; font-size: 7pt; }
 .table-detalhes tbody td.center { text-align: center; }
 .table-detalhes tbody td.right { text-align: right; padding-right: 6px; }
 .table-detalhes tbody td.left { text-align: left; padding-left: 6px; }
-.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; margin-top: 10px; page-break-inside: avoid; }
-.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; page-break-inside: avoid; }
-.total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 20px 0 10px 0; page-break-inside: avoid; }
+.subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; margin-top: 10px; }
+.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; }
+.total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 20px 0 10px 0; }
 
 /* RODAPÉ */
 .page-footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #2C3350; font-size: 7pt; color: #999; display: flex; justify-content: flex-end; }
@@ -478,21 +471,34 @@ HTML;
     
     private static function gerarTabelaDetalhes(array $itens, float $subtotal, float $totalGeral): string
     {
-        $html = '<table class="table-detalhes"><thead><tr>';
-        $html .= '<th class="left" style="width:5%;">ITEM</th>';
-        $html .= '<th class="left" style="width:25%;">DESCRIÇÃO</th>';
-        $html .= '<th class="center" style="width:5%;">UNID</th>';
-        $html .= '<th class="center" style="width:6%;">QUANT</th>';
-        $html .= '<th class="right" style="width:10%;">VALOR UNIT MATERIAL</th>';
-        $html .= '<th class="right" style="width:10%;">VALOR UNIT M.O</th>';
-        $html .= '<th class="right" style="width:10%;">VALOR UNITÁRIO TOTAL</th>';
-        $html .= '<th class="right" style="width:11%;">VALOR TOTAL</th>';
-        $html .= '<th class="center" style="width:7%;">% ETAPA</th>';
-        $html .= '<th class="center" style="width:7%;">% OBRA</th>';
-        $html .= '<th class="center" style="width:4%;">% REALIZADO</th>';
-        $html .= '</tr></thead><tbody>';
+        $headerRow = '<tr>';
+        $headerRow .= '<th class="left" style="width:5%;">ITEM</th>';
+        $headerRow .= '<th class="left" style="width:25%;">DESCRIÇÃO</th>';
+        $headerRow .= '<th class="center" style="width:5%;">UNID</th>';
+        $headerRow .= '<th class="center" style="width:6%;">QUANT</th>';
+        $headerRow .= '<th class="right" style="width:10%;">VALOR UNIT MATERIAL</th>';
+        $headerRow .= '<th class="right" style="width:10%;">VALOR UNIT M.O</th>';
+        $headerRow .= '<th class="right" style="width:10%;">VALOR UNITÁRIO TOTAL</th>';
+        $headerRow .= '<th class="right" style="width:11%;">VALOR TOTAL</th>';
+        $headerRow .= '<th class="center" style="width:7%;">% ETAPA</th>';
+        $headerRow .= '<th class="center" style="width:7%;">% OBRA</th>';
+        $headerRow .= '<th class="center" style="width:4%;">% REALIZADO</th>';
+        $headerRow .= '</tr>';
         
+        $html = '<table class="table-detalhes">';
+        $html .= '<thead>' . $headerRow . '</thead>';
+        $html .= '<tbody>';
+        
+        $contador = 0;
         foreach ($itens as $item) {
+            // A cada 15 linhas, fechar a tabela e abrir uma nova com header
+            if ($contador > 0 && $contador % 15 === 0) {
+                $html .= '</tbody></table>';
+                $html .= '<table class="table-detalhes" style="margin-top:0;">';
+                $html .= '<thead>' . $headerRow . '</thead>';
+                $html .= '<tbody>';
+            }
+            
             $quantidade = (float)$item['quantidade'];
             $valorTotal = (float)$item['valor_cobranca'];
             $custoMaterial = (float)($item['custo_material'] ?? 0);
@@ -520,6 +526,8 @@ HTML;
             $html .= '<td class="center">' . number_format($pctObra, 2, ',', '.') . '%</td>';
             $html .= '<td class="center">' . number_format($pctRealizadoEfetivo, 2, ',', '.') . '%</td>';
             $html .= '</tr>';
+            
+            $contador++;
         }
         
         $html .= '</tbody></table>';
