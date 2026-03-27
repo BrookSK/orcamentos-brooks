@@ -85,8 +85,8 @@ tfoot { display: table-footer-group; }
 .table-areas .total-row td { background: #666; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #666; }
 
 /* TABELAS DETALHAMENTO */
-.banner-etapa { background: #2C3350; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; page-break-before: always; page-break-after: avoid; }
-.banner-etapa:first-of-type { page-break-before: avoid; }
+.banner-etapa { background: #2C3350; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 40px 0 0 0; text-align: center; page-break-after: avoid; }
+.banner-etapa:first-of-type { margin-top: 20px; }
 .table-detalhes { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 7pt; margin-top: 10px; }
 .table-detalhes thead { display: table-header-group; }
 .table-detalhes thead th { background: #666; color: #FFF; padding: 5px 4px; text-align: center; font-weight: bold; font-size: 7pt; border: 1px solid #666; }
@@ -99,7 +99,7 @@ tfoot { display: table-footer-group; }
 .table-detalhes tbody tr { page-break-inside: avoid; }
 .table-detalhes tbody tr:nth-last-child(-n+3) { page-break-after: avoid; }
 .subtotal-item { background: #2C3350; color: #FFF; padding: 6px 8px; font-weight: bold; font-size: 8pt; text-align: right; margin-top: 10px; page-break-inside: avoid; page-break-before: avoid; }
-.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; page-break-inside: avoid; page-break-before: avoid; page-break-after: always; }
+.subtotal-etapa { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 8pt; text-align: right; margin: 10px 0 0 0; page-break-inside: avoid; page-break-before: avoid; }
 .total-obra { background: #000; color: #FFF; padding: 10px 12px; font-weight: bold; font-size: 9pt; text-align: right; margin: 20px 0 10px 0; page-break-inside: avoid; page-break-before: avoid; }
 
 /* RODAPÉ */
