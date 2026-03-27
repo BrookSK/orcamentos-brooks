@@ -60,6 +60,9 @@ final class OrcamentoController
         Logger::info('orcamentos.store.start');
         $data = Orcamento::normalize($_POST);
         
+        // Inicializar logo_path vazio
+        $data['logo_path'] = '';
+        
         // Processar upload de logo
         if (!empty($_FILES['logo']['tmp_name'])) {
             $uploadDir = __DIR__ . '/../../public/uploads/logos/';
@@ -500,11 +503,13 @@ final class OrcamentoController
                 if (!empty($existing['logo_path'])) {
                     $oldPath = __DIR__ . '/../../' . ltrim($existing['logo_path'], '/');
                     if (file_exists($oldPath)) {
-                        unlink($oldPath);
+                        @unlink($oldPath);
                     }
                 }
                 $data['logo_path'] = '/public/uploads/logos/' . $filename;
-                Logger::info('orcamentos.update.logo_uploaded', ['path' => $data['logo_path']]);
+                Logger::info('orcamentos.update.logo_uploaded', ['id' => $id, 'path' => $data['logo_path'], 'file_exists' => file_exists($targetPath)]);
+            } else {
+                Logger::error('orcamentos.update.logo_upload_failed', ['id' => $id, 'tmp_name' => $_FILES['logo']['tmp_name'], 'target' => $targetPath]);
             }
         }
 

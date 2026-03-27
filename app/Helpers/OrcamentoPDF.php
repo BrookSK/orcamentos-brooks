@@ -178,8 +178,22 @@ HTML;
         
         $logoHtml = '';
         if (!empty($logoPath)) {
-            $logoHtml = '<img src="' . htmlspecialchars($logoPath) . '" style="max-width:180px;max-height:60px;" alt="Logo">';
+            // Converter caminho relativo para absoluto
+            $absolutePath = __DIR__ . '/../../' . ltrim($logoPath, '/');
+            
+            if (file_exists($absolutePath)) {
+                // Converter imagem para base64
+                $imageData = base64_encode(file_get_contents($absolutePath));
+                $ext = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
+                $mimeType = $ext === 'png' ? 'image/png' : ($ext === 'jpg' || $ext === 'jpeg' ? 'image/jpeg' : 'image/png');
+                $base64Src = 'data:' . $mimeType . ';base64,' . $imageData;
+                $logoHtml = '<img src="' . $base64Src . '" style="max-width:180px;max-height:60px;" alt="Logo">';
+            } else {
+                // Fallback se arquivo não existir
+                $logoHtml = '<div class="page-header-logo"><div class="page-header-logo-text">BROOKS</div><div class="page-header-logo-sub">CONSTRUTORA</div></div>';
+            }
         } else {
+            // Sem logo configurada
             $logoHtml = '<div class="page-header-logo"><div class="page-header-logo-text">BROOKS</div><div class="page-header-logo-sub">CONSTRUTORA</div></div>';
         }
         
