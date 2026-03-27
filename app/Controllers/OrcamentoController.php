@@ -860,20 +860,36 @@ final class OrcamentoController
         }
 
         if (class_exists('Dompdf\\Dompdf')) {
-            $html = \App\Helpers\OrcamentoPDF::gerarHTML($id, $orcamento);
+            try {
+                $html = \App\Helpers\OrcamentoPDF::gerarHTML($id, $orcamento);
 
-            $klass = 'Dompdf\\Dompdf';
-            $dompdf = new $klass([
-                'isRemoteEnabled' => true,
-            ]);
-            $dompdf->loadHtml($html, 'UTF-8');
-            $dompdf->setPaper('A4', 'portrait');
-            $dompdf->render();
+                $klass = 'Dompdf\\Dompdf';
+                $dompdf = new $klass([
+                    'isRemoteEnabled' => true,
+                ]);
+                $dompdf->loadHtml($html, 'UTF-8');
+                $dompdf->setPaper('A4', 'portrait');
+                $dompdf->render();
 
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="orcamento-' . $id . '.pdf"');
-            echo $dompdf->output();
-            return;
+                header('Content-Type: application/pdf');
+                header('Content-Disposition: inline; filename="orcamento-' . $id . '.pdf"');
+                echo $dompdf->output();
+                return;
+            } catch (\Throwable $e) {
+                Logger::error('orcamentos.pdf.error', [
+                    'id' => $id,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+                header('Content-Type: text/plain; charset=utf-8');
+                echo "ERRO AO GERAR PDF:\n\n";
+                echo "Mensagem: " . $e->getMessage() . "\n";
+                echo "Arquivo: " . $e->getFile() . "\n";
+                echo "Linha: " . $e->getLine() . "\n\n";
+                echo $e->getTraceAsString();
+                return;
+            }
         }
 
         Logger::warning('orcamentos.pdf.dompdf_missing', ['id' => $id]);
