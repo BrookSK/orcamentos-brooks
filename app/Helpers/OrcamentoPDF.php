@@ -40,10 +40,10 @@ final class OrcamentoPDF
 --line: rgba(201,168,76,0.3);
 --row-alt: #f9f9f9;
 }
-@page { margin: 0; size: A4; }
+@page { margin: 5mm 5mm; size: A4; }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Outfit', sans-serif; color: var(--black); line-height: 1.4; background: var(--white); }
-.page { page-break-after: always; position: relative; width: 210mm; min-height: 297mm; background: white; }
+body { font-family: 'Outfit', sans-serif; color: var(--black); line-height: 1.3; background: var(--white); font-size: 9px; }
+.page { page-break-after: always; position: relative; width: 100%; min-height: 277mm; background: white; }
 
 /* ══ CAPA ══ */
 .page-cover { background: var(--navy); color: var(--white); overflow: hidden; }
@@ -82,81 +82,87 @@ body { font-family: 'Outfit', sans-serif; color: var(--black); line-height: 1.4;
 .page-header { background: var(--navy); width: 100%; position: relative; overflow: hidden; }
 .page-header::before { content: ''; display: block; height: 4px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
 .page-header::after { content: ''; position: absolute; top: 0; right: 0; width: 300px; height: 100%; background: radial-gradient(ellipse at 80% 50%, rgba(201,168,76,.06) 0%, transparent 70%); pointer-events: none; }
-.header-inner { display: flex; align-items: stretch; min-height: 80px; }
-.header-project { flex: 1; padding: 18px 28px; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.header-project .doc-code { font-size: 8.5px; letter-spacing: .25em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 4px; }
-.proj-row { display: flex; align-items: baseline; gap: 6px; }
-.proj-row .lbl { font-size: 7.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); font-weight: 400; min-width: 76px; }
-.proj-row .val { font-size: 10.5px; color: var(--white); font-weight: 400; }
-.header-logo { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px 40px; border-right: 1px solid var(--line); gap: 4px; }
-.header-logo .brand { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 700; letter-spacing: .1em; color: var(--white); line-height: 1; }
-.header-logo .sub { font-size: 7px; letter-spacing: .32em; text-transform: uppercase; color: var(--gold); font-weight: 300; }
-.header-meta { display: flex; flex-direction: column; justify-content: center; padding: 18px 28px; gap: 5px; }
-.meta-row { display: flex; align-items: baseline; gap: 6px; }
-.meta-row .lbl { font-size: 7.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); font-weight: 400; min-width: 48px; }
-.meta-row .val { font-size: 10.5px; color: var(--white); font-weight: 500; }
+.header-inner { display: flex; align-items: stretch; min-height: 60px; }
+.header-project { flex: 1; padding: 10px 16px; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.header-project .doc-code { font-size: 7.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); font-weight: 500; margin-bottom: 2px; }
+.proj-row { display: flex; align-items: baseline; gap: 4px; }
+.proj-row .lbl { font-size: 6.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); font-weight: 400; min-width: 60px; }
+.proj-row .val { font-size: 9px; color: var(--white); font-weight: 400; }
+.header-logo { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 24px; border-right: 1px solid var(--line); gap: 2px; }
+.header-logo .brand { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; letter-spacing: .1em; color: var(--white); line-height: 1; }
+.header-logo .sub { font-size: 6px; letter-spacing: .28em; text-transform: uppercase; color: var(--gold); font-weight: 300; }
+.header-meta { display: flex; flex-direction: column; justify-content: center; padding: 10px 16px; gap: 3px; }
+.meta-row { display: flex; align-items: baseline; gap: 4px; }
+.meta-row .lbl { font-size: 6.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); font-weight: 400; min-width: 40px; }
+.meta-row .val { font-size: 9px; color: var(--white); font-weight: 500; }
 .meta-row .val.highlight { color: var(--gold2); }
 .header-rule { height: 1px; background: linear-gradient(to right, var(--gold), rgba(201,168,76,.1) 70%, transparent); }
 
 /* ══ TABELAS RESUMO ══ */
-.resumo-title { text-align: center; margin: 30px 0 20px 0; }
-.resumo-title h2 { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
-.resumo-title h3 { font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); font-weight: 400; }
-.table-resumo-clean { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10px; }
-.table-resumo-clean th { background: var(--navy); color: var(--white); padding: 12px 10px; text-align: left; font-weight: 500; border: none; letter-spacing: .08em; }
-.table-resumo-clean td { padding: 10px; border: 1px solid #e0e0e0; background: white; }
+.page-content { padding: 15px 12px; }
+.resumo-title { text-align: center; margin: 15px 0 12px 0; }
+.resumo-title h2 { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+.resumo-title h3 { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 400; }
+.table-resumo-clean { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 9px; table-layout: fixed; }
+.table-resumo-clean th { background: var(--navy); color: var(--white); padding: 8px 8px; text-align: left; font-weight: 500; border: none; letter-spacing: .06em; font-size: 8px; }
+.table-resumo-clean td { padding: 8px 8px; border: 1px solid #e0e0e0; background: white; font-size: 9px; }
+.table-resumo-clean td[style*="text-align:right"] { padding-right: 12px; }
 .table-resumo-clean .subtotal-row { background: var(--gold); color: var(--navy); font-weight: 600; }
-.table-resumo-clean .total-row { background: var(--navy); color: var(--white); font-weight: 600; font-size: 11px; }
-.table-areas { width: 100%; border-collapse: collapse; margin: 30px 0; font-size: 10px; }
-.table-areas th { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; font-weight: 500; text-align: center; }
-.table-areas td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+.table-resumo-clean .subtotal-row td { padding: 10px 12px; }
+.table-resumo-clean .total-row { background: var(--navy); color: var(--white); font-weight: 600; font-size: 10px; }
+.table-resumo-clean .total-row td { padding: 12px 12px; }
+.table-areas { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 9px; table-layout: fixed; }
+.table-areas th { background: #f5f5f5; padding: 8px; border: 1px solid #ddd; font-weight: 500; text-align: center; font-size: 8px; }
+.table-areas td { padding: 8px; border: 1px solid #ddd; text-align: center; font-size: 9px; }
 .table-areas .total-row { background: var(--navy); color: var(--white); font-weight: 600; }
-.page-number { position: absolute; bottom: 15mm; right: 20mm; font-size: 9px; color: #999; letter-spacing: .1em; }
+.table-areas .total-row td { padding: 10px; }
+.page-number { position: absolute; bottom: 8mm; right: 8mm; font-size: 8px; color: #999; letter-spacing: .08em; }
 
 /* ══ DETALHAMENTO ══ */
 .page-detalhamento { background: var(--white); }
-.section-title { padding: 22px 28px 14px; display: flex; align-items: center; gap: 16px; }
-.section-title h2 { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 400; color: var(--black); letter-spacing: .04em; }
-.section-title .badge { font-size: 8px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 2px; }
-.etapa-section { margin: 25px 0; page-break-inside: avoid; }
-.etapa-header { padding: 18px 28px 12px; }
-.etapa-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--gold); font-weight: 600; letter-spacing: .06em; }
-.table-wrap { padding: 0 20px 28px; }
-.table-itens { width: 100%; border-collapse: collapse; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; }
+.section-title { padding: 12px 12px 8px; display: flex; align-items: center; gap: 10px; }
+.section-title h2 { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 400; color: var(--black); letter-spacing: .03em; }
+.section-title .badge { font-size: 7px; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 3px 8px; border-radius: 2px; }
+.etapa-section { margin: 15px 0; page-break-inside: avoid; }
+.etapa-header { padding: 10px 12px 6px; }
+.etapa-title { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--gold); font-weight: 600; letter-spacing: .04em; }
+.table-wrap { padding: 0 8px 12px; }
+.table-itens { width: 100%; border-collapse: collapse; border: 1px solid #ddd; font-size: 8px; table-layout: fixed; }
 .table-itens thead tr { background: var(--navy); }
-.table-itens thead th { padding: 11px 12px; font-size: 7.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--white); font-weight: 500; border-bottom: 1px solid var(--navy); white-space: nowrap; }
-.table-itens thead th:first-child { text-align: left; padding-left: 16px; }
-.table-itens thead th:nth-child(2) { text-align: left; min-width: 200px; }
-.table-itens thead th:nth-child(n+3) { text-align: right; }
-.table-itens tbody tr { border-bottom: 1px solid #e0e0e0; transition: background .15s; }
+.table-itens thead th { padding: 8px 6px; font-size: 7px; letter-spacing: .1em; text-transform: uppercase; color: var(--white); font-weight: 500; border-bottom: 1px solid var(--navy); white-space: nowrap; text-align: center; }
+.table-itens thead th:first-child { text-align: center; width: 7%; }
+.table-itens thead th:nth-child(2) { text-align: left; width: 28%; padding-left: 8px; }
+.table-itens thead th:nth-child(3) { text-align: center; width: 7%; }
+.table-itens thead th:nth-child(4) { text-align: center; width: 6%; }
+.table-itens thead th:nth-child(5) { text-align: right; width: 12%; padding-right: 8px; }
+.table-itens thead th:nth-child(6) { text-align: right; width: 13%; padding-right: 8px; }
+.table-itens thead th:nth-child(7) { text-align: center; width: 8%; }
+.table-itens thead th:nth-child(8) { text-align: center; width: 8%; }
+.table-itens thead th:nth-child(9) { text-align: center; width: 11%; }
+.table-itens tbody tr { border-bottom: 1px solid #e8e8e8; }
 .table-itens tbody tr:nth-child(even) { background: var(--row-alt); }
-.table-itens tbody tr:hover { background: rgba(201,168,76,.08); }
-.table-itens td { padding: 10px 12px; font-size: 10px; color: var(--black); vertical-align: middle; line-height: 1.4; }
-.table-itens td:first-child { font-size: 9px; color: var(--muted); letter-spacing: .06em; font-weight: 500; padding-left: 16px; }
-.table-itens td:nth-child(2) { font-size: 10px; color: var(--black); font-weight: 400; }
-.table-itens td:nth-child(3), .table-itens td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
-.table-itens td:nth-child(5) { text-align: right; color: var(--muted); }
-.col-total { text-align: right; font-weight: 600; font-size: 10.5px; color: var(--gold) !important; font-variant-numeric: tabular-nums; }
-.col-pct { text-align: right; font-size: 9px; color: var(--muted); }
-.col-realizado { text-align: right; }
-.pct-pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 8.5px; font-weight: 600; background: rgba(76,175,122,.12); color: #4caf7a; letter-spacing: .05em; }
-.pct-pill.zero { background: rgba(122,138,154,.1); color: var(--muted); }
-.resumo-etapa { background: var(--gold); color: var(--navy); padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; margin: 20px 0; }
-.total-final { background: var(--navy); color: var(--white); padding: 30px; text-align: center; margin: 30px 20px; border-radius: 4px; border: 1px solid var(--navy); }
-.total-final h2 { font-family: 'Cormorant Garamond', serif; font-size: 22px; margin-bottom: 12px; letter-spacing: .05em; font-weight: 600; }
-.total-final-value { font-size: 32px; font-weight: 700; color: var(--gold2); margin: 8px 0; }
+.table-itens td { padding: 7px 6px; font-size: 8px; color: var(--black); vertical-align: middle; line-height: 1.3; }
+.table-itens td:first-child { font-size: 7.5px; color: var(--muted); letter-spacing: .03em; font-weight: 500; text-align: center; }
+.table-itens td:nth-child(2) { font-size: 8px; color: var(--black); font-weight: 400; padding-left: 8px; text-align: left; }
+.table-itens td:nth-child(3) { text-align: center; font-variant-numeric: tabular-nums; color: var(--black); font-weight: 500; }
+.table-itens td:nth-child(4) { text-align: center; color: var(--muted); font-size: 7.5px; }
+.table-itens td:nth-child(5) { text-align: right; color: var(--black); font-variant-numeric: tabular-nums; padding-right: 8px; }
+.table-itens td:nth-child(6) { text-align: right; font-weight: 600; font-size: 8.5px; color: var(--gold); font-variant-numeric: tabular-nums; padding-right: 8px; }
+.table-itens td:nth-child(7) { text-align: center; font-size: 7.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.table-itens td:nth-child(8) { text-align: center; font-size: 7.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.table-itens td:nth-child(9) { text-align: center; }
+.pct-pill { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 7px; font-weight: 600; background: rgba(76,175,122,.15); color: #2d8a54; letter-spacing: .03em; }
+.pct-pill.zero { background: rgba(150,150,150,.12); color: #888; }
+.resumo-etapa { background: var(--gold); color: var(--navy); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 600; margin: 12px 8px; border-radius: 2px; }
+.total-final { background: var(--navy); color: var(--white); padding: 20px; text-align: center; margin: 20px 12px; border-radius: 3px; border: 1px solid var(--navy); }
+.total-final h2 { font-family: 'Cormorant Garamond', serif; font-size: 18px; margin-bottom: 10px; letter-spacing: .04em; font-weight: 600; }
+.total-final-value { font-size: 26px; font-weight: 700; color: var(--gold2); margin: 6px 0; }
 .page-footer { background: var(--navy); border-top: 1px solid var(--navy); }
-.footer-inner { display: flex; align-items: center; justify-content: space-between; padding: 11px 28px; }
-.footer-inner .f-left { font-size: 7.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
-.footer-inner .f-center { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: .12em; }
-.footer-inner .f-right { font-size: 7.5px; letter-spacing: .12em; color: var(--muted); }
-.footer-gold-bar { height: 3px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
-.page-footer { background: var(--navy); border-top: 1px solid var(--line); }
-.footer-inner { display: flex; align-items: center; justify-content: space-between; padding: 11px 28px; }
-.footer-inner .f-left { font-size: 7.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
-.footer-inner .f-center { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: .12em; }
-.footer-inner .f-right { font-size: 7.5px; letter-spacing: .12em; color: var(--muted); }
-.footer-gold-bar { height: 3px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; }
+.footer-inner .f-left { font-size: 6.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.footer-inner .f-center { font-family: 'Cormorant Garamond', serif; font-size: 11px; font-weight: 600; color: var(--gold); letter-spacing: .1em; }
+.footer-inner .f-right { font-size: 6.5px; letter-spacing: .1em; color: var(--muted); }
+.footer-gold-bar { height: 2px; background: linear-gradient(to right, var(--gold), var(--gold2), var(--gold)); }
 </style>
 </head>
 <body>
@@ -287,24 +293,24 @@ HTML;
         $totalGeral = $totalCinza + $totalAcabamentos + $totalGerenciamento + $totalAdm;
         $area = (string)($orcamento['area_m2'] ?? '');
         
-        $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento) . '<div class="page-content">';
+        $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento) . '<div class="page-content">';
         $html .= '<div class="resumo-title"><h2>Planilha Resumo</h2><h3>Etapa Cinza (Bruta) + Acabamentos | Administração</h3></div>';
         $html .= '<table class="table-resumo-clean"><thead><tr>';
-        $html .= '<th style="width:5%;">#</th><th style="width:65%;">ETAPA CINZA</th>';
-        $html .= '<th style="width:20%;text-align:right;">VALOR TOTAL</th><th style="width:10%;text-align:right;">%</th>';
+        $html .= '<th style="width:5%;text-align:center;">#</th><th style="width:60%;text-align:left;padding-left:8px;">ETAPA CINZA</th>';
+        $html .= '<th style="width:25%;text-align:right;padding-right:12px;">VALOR TOTAL</th><th style="width:10%;text-align:center;">%</th>';
         $html .= '</tr></thead><tbody>';
         
         $numero = 1;
         foreach ($itensCinza as $item) {
             $valor = (float)$item['valor_total'];
             $pct = $totalCinza > 0 ? ($valor / $totalCinza) * 100 : 0;
-            $html .= sprintf('<tr><td style="text-align:center;">%d</td><td>%s</td><td style="text-align:right;">%s</td><td style="text-align:right;">%.2f%%</td></tr>',
-                $numero++, htmlspecialchars($item['grupo']), self::formatarValor($valor), $pct);
+            $html .= sprintf('<tr><td style="text-align:center;">%d</td><td style="padding-left:8px;">%s</td><td style="text-align:right;padding-right:12px;">R$ %s</td><td style="text-align:center;">%s%%</td></tr>',
+                $numero++, htmlspecialchars((string)$item['grupo']), self::formatarValor($valor), number_format($pct, 2, ',', '.'));
         }
         
         $pctCinza = $totalGeral > 0 ? ($totalCinza / $totalGeral) * 100 : 0;
-        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:20px;">SUBTOTAL - ETAPA CINZA</td><td style="text-align:right;">R$ %s</td><td style="text-align:right;">%.2f%%</td></tr>',
-            self::formatarValor($totalCinza), $pctCinza);
+        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:12px;font-weight:700;">SUBTOTAL - ETAPA CINZA</td><td style="text-align:right;padding-right:12px;font-weight:700;">R$ %s</td><td style="text-align:center;font-weight:700;">%s%%</td></tr>',
+            self::formatarValor($totalCinza), number_format($pctCinza, 2, ',', '.'));
         
         $html .= '</tbody></table></div><div class="page-number">FOLHA: 1</div></div>';
 
@@ -312,21 +318,21 @@ HTML;
         $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento) . '<div class="page-content">';
         $html .= '<div class="resumo-title"><h2>Planilha Resumo</h2><h3>Etapa Cinza (Bruta) + Acabamentos | Administração</h3></div>';
         $html .= '<table class="table-resumo-clean"><thead><tr>';
-        $html .= '<th style="width:5%;">#</th><th style="width:65%;">ETAPA DE ACABAMENTOS</th>';
-        $html .= '<th style="width:20%;text-align:right;">VALOR TOTAL</th><th style="width:10%;text-align:right;">%</th>';
+        $html .= '<th style="width:5%;text-align:center;">#</th><th style="width:60%;text-align:left;padding-left:8px;">ETAPA DE ACABAMENTOS</th>';
+        $html .= '<th style="width:25%;text-align:right;padding-right:12px;">VALOR TOTAL</th><th style="width:10%;text-align:center;">%</th>';
         $html .= '</tr></thead><tbody>';
         
         $numero = 18;
         foreach ($itensAcabamentos as $item) {
             $valor = (float)$item['valor_total'];
             $pct = $totalAcabamentos > 0 ? ($valor / $totalAcabamentos) * 100 : 0;
-            $html .= sprintf('<tr><td style="text-align:center;">%d</td><td>%s</td><td style="text-align:right;">%s</td><td style="text-align:right;">%.2f%%</td></tr>',
-                $numero++, htmlspecialchars($item['grupo']), self::formatarValor($valor), $pct);
+            $html .= sprintf('<tr><td style="text-align:center;">%d</td><td style="padding-left:8px;">%s</td><td style="text-align:right;padding-right:12px;">R$ %s</td><td style="text-align:center;">%s%%</td></tr>',
+                $numero++, htmlspecialchars((string)$item['grupo']), self::formatarValor($valor), number_format($pct, 2, ',', '.'));
         }
         
         $pctAcabamentos = $totalGeral > 0 ? ($totalAcabamentos / $totalGeral) * 100 : 0;
-        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:20px;">SUBTOTAL - ETAPA ACABAMENTOS</td><td style="text-align:right;">R$ %s</td><td style="text-align:right;">%.2f%%</td></tr>',
-            self::formatarValor($totalAcabamentos), $pctAcabamentos);
+        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:12px;font-weight:700;">SUBTOTAL - ETAPA ACABAMENTOS</td><td style="text-align:right;padding-right:12px;font-weight:700;">R$ %s</td><td style="text-align:center;font-weight:700;">%s%%</td></tr>',
+            self::formatarValor($totalAcabamentos), number_format($pctAcabamentos, 2, ',', '.'));
         
         $html .= '</tbody></table></div><div class="page-number">FOLHA: 2</div></div>';
 
@@ -338,27 +344,27 @@ HTML;
         $html .= '<div class="resumo-title"><h2>Planilha Resumo</h2><h3>Etapa Cinza (Bruta) + Acabamentos | Administração</h3></div>';
         
         $html .= '<table class="table-resumo-clean"><thead><tr>';
-        $html .= '<th style="width:5%;">#</th><th style="width:65%;">ETAPA DE GERENCIAMENTO</th>';
-        $html .= '<th style="width:20%;text-align:right;">VALOR TOTAL</th><th style="width:10%;text-align:right;">%</th>';
+        $html .= '<th style="width:5%;text-align:center;">#</th><th style="width:60%;text-align:left;padding-left:8px;">ETAPA DE GERENCIAMENTO</th>';
+        $html .= '<th style="width:25%;text-align:right;padding-right:12px;">VALOR TOTAL</th><th style="width:10%;text-align:center;">%</th>';
         $html .= '</tr></thead><tbody>';
-        $html .= sprintf('<tr><td style="text-align:center;">42</td><td>EQUIPE DE OBRA</td><td style="text-align:right;">%s</td><td style="text-align:right;">100,00%%</td></tr>',
+        $html .= sprintf('<tr><td style="text-align:center;">42</td><td style="padding-left:8px;">EQUIPE DE OBRA</td><td style="text-align:right;padding-right:12px;">R$ %s</td><td style="text-align:center;">100,00%%</td></tr>',
             self::formatarValor($totalGerenciamento));
-        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:20px;">SUBTOTAL - ETAPA DE GERENCIAMENTO</td><td style="text-align:right;">R$ %s</td><td style="text-align:right;">%.2f%%</td></tr>',
-            self::formatarValor($totalGerenciamento), $pctGerenciamento);
+        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:12px;font-weight:700;">SUBTOTAL - ETAPA DE GERENCIAMENTO</td><td style="text-align:right;padding-right:12px;font-weight:700;">R$ %s</td><td style="text-align:center;font-weight:700;">%s%%</td></tr>',
+            self::formatarValor($totalGerenciamento), number_format($pctGerenciamento, 2, ',', '.'));
         $html .= '</tbody></table>';
         
-        $html .= '<table class="table-resumo-clean" style="margin-top:30px;"><thead><tr>';
-        $html .= '<th style="width:5%;">#</th><th style="width:65%;">TAXA DE ADMINISTRAÇÃO + IMPOSTOS</th>';
-        $html .= '<th style="width:20%;text-align:right;">VALOR TOTAL</th><th style="width:10%;text-align:right;">%</th>';
+        $html .= '<table class="table-resumo-clean" style="margin-top:20px;"><thead><tr>';
+        $html .= '<th style="width:5%;text-align:center;">#</th><th style="width:60%;text-align:left;padding-left:8px;">TAXA DE ADMINISTRAÇÃO + IMPOSTOS</th>';
+        $html .= '<th style="width:25%;text-align:right;padding-right:12px;">VALOR TOTAL</th><th style="width:10%;text-align:center;">%</th>';
         $html .= '</tr></thead><tbody>';
-        $html .= sprintf('<tr><td style="text-align:center;">43</td><td>TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td><td style="text-align:right;">%s</td><td style="text-align:right;">100,00%%</td></tr>',
+        $html .= sprintf('<tr><td style="text-align:center;">43</td><td style="padding-left:8px;">TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td><td style="text-align:right;padding-right:12px;">R$ %s</td><td style="text-align:center;">100,00%%</td></tr>',
             self::formatarValor($totalAdm));
-        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:20px;">SUBTOTAL - TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td><td style="text-align:right;">R$ %s</td><td style="text-align:right;">%.2f%%</td></tr>',
-            self::formatarValor($totalAdm), $pctAdm);
+        $html .= sprintf('<tr class="subtotal-row"><td colspan="2" style="padding-left:12px;font-weight:700;">SUBTOTAL - TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td><td style="text-align:right;padding-right:12px;font-weight:700;">R$ %s</td><td style="text-align:center;font-weight:700;">%s%%</td></tr>',
+            self::formatarValor($totalAdm), number_format($pctAdm, 2, ',', '.'));
         $html .= '</tbody></table>';
         
-        $html .= '<table class="table-resumo-clean" style="margin-top:30px;"><tbody>';
-        $html .= sprintf('<tr class="total-row"><td colspan="2" style="padding-left:20px;font-size:13px;">VALOR TOTAL GERAL + TAXA DE ADMINISTRAÇÃO + IMPOSTOS:</td><td style="text-align:right;font-size:13px;">R$ %s</td><td style="text-align:right;font-size:13px;">100,00%%</td></tr>',
+        $html .= '<table class="table-resumo-clean" style="margin-top:20px;"><tbody>';
+        $html .= sprintf('<tr class="total-row"><td colspan="2" style="padding-left:12px;font-size:10px;font-weight:700;">VALOR TOTAL GERAL + TAXA DE ADMINISTRAÇÃO + IMPOSTOS:</td><td style="text-align:right;padding-right:12px;font-size:10px;font-weight:700;">R$ %s</td><td style="text-align:center;font-size:10px;font-weight:700;">100,00%%</td></tr>',
             self::formatarValor($totalGeral));
         $html .= '</tbody></table>';
 
@@ -499,12 +505,12 @@ HTML;
             $html .= '<div class="table-wrap">';
             $html .= self::gerarTabelaItens($grupo['itens'], $subtotal, $totalGeral);
             $html .= '</div>';
-            $html .= sprintf('<div class="resumo-etapa"><span>SUBTOTAL — %s</span><div><span style="margin-right:20px;"><strong>R$ %s</strong></span><span style="font-size:10px;opacity:.85;">%.2f%% do total</span></div></div>',
-                htmlspecialchars($grupo['label']), self::formatarValor($subtotal), $pctDoTotal);
+            $html .= sprintf('<div class="resumo-etapa"><span style="font-weight:700;">SUBTOTAL — %s</span><div><span style="margin-right:16px;font-weight:700;font-size:11px;">R$ %s</span><span style="font-size:9px;opacity:.85;">%s%% do total</span></div></div>',
+                htmlspecialchars((string)$grupo['label']), self::formatarValor($subtotal), number_format($pctDoTotal, 2, ',', '.'));
             $html .= '</div>';
         }
         
-        $html .= sprintf('<div class="total-final"><h2>VALOR TOTAL GERAL DO PROJETO</h2><div class="total-final-value">R$ %s</div><div style="font-size:11px;opacity:.9;">100,00%%</div></div>',
+        $html .= sprintf('<div class="total-final"><h2>VALOR TOTAL GERAL DO PROJETO</h2><div class="total-final-value">R$ %s</div><div style="font-size:10px;opacity:.9;margin-top:4px;">100,00%%</div></div>',
             self::formatarValor($totalGeral));
         
         $html .= '<footer class="page-footer"><div class="footer-inner">';
@@ -523,8 +529,8 @@ HTML;
     private static function gerarTabelaItens(array $itens, float $subtotal, float $totalGeral): string
     {
         $html = '<table class="table-itens"><thead><tr>';
-        $html .= '<th>Código</th><th>Descrição</th><th>Quant.</th><th>Unid</th>';
-        $html .= '<th>Valor Unit.</th><th>Valor Total</th><th>% Etapa</th><th>% Total</th><th>% Realizado</th>';
+        $html .= '<th>CÓDIGO</th><th>DESCRIÇÃO</th><th>QUANT.</th><th>UNID</th>';
+        $html .= '<th>VALOR UNIT.</th><th>VALOR TOTAL</th><th>% ETAPA</th><th>% TOTAL</th><th>% REALIZADO</th>';
         $html .= '</tr></thead><tbody>';
         
         foreach ($itens as $item) {
@@ -538,16 +544,17 @@ HTML;
             
             $pillClass = $pctRealizadoEfetivo > 0 ? 'pct-pill' : 'pct-pill zero';
             
-            $html .= sprintf(
-                '<tr><td>%s</td><td>%s</td><td class="col-pct">%s</td><td class="col-pct">%s</td>'
-                . '<td class="col-pct">R$ %s</td><td class="col-total">R$ %s</td>'
-                . '<td class="col-pct">%.2f%%</td><td class="col-pct">%.2f%%</td>'
-                . '<td class="col-realizado"><span class="%s">%.2f%%</span></td></tr>',
-                htmlspecialchars($item['codigo']), htmlspecialchars($item['descricao']),
-                number_format($quantidade, 3, ',', '.'), htmlspecialchars($item['unidade']),
-                self::formatarValor($valorUnitario), self::formatarValor($valorTotal),
-                $pctEtapa, $pctTotal, $pillClass, $pctRealizadoEfetivo
-            );
+            $html .= '<tr>';
+            $html .= '<td>' . htmlspecialchars((string)$item['codigo']) . '</td>';
+            $html .= '<td>' . htmlspecialchars((string)$item['descricao']) . '</td>';
+            $html .= '<td style="text-align:center;">' . number_format($quantidade, 2, ',', '.') . '</td>';
+            $html .= '<td style="text-align:center;">' . htmlspecialchars((string)$item['unidade']) . '</td>';
+            $html .= '<td style="text-align:right;padding-right:8px;">R$ ' . self::formatarValor($valorUnitario) . '</td>';
+            $html .= '<td style="text-align:right;padding-right:8px;font-weight:600;color:var(--gold);">R$ ' . self::formatarValor($valorTotal) . '</td>';
+            $html .= '<td style="text-align:center;">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
+            $html .= '<td style="text-align:center;">' . number_format($pctTotal, 2, ',', '.') . '%</td>';
+            $html .= '<td style="text-align:center;"><span class="' . $pillClass . '">' . number_format($pctRealizadoEfetivo, 2, ',', '.') . '%</span></td>';
+            $html .= '</tr>';
         }
         
         $html .= '</tbody></table>';
