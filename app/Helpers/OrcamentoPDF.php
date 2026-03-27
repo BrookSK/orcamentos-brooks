@@ -364,10 +364,8 @@ HTML;
     private static function gerarPaginaApresentacao(array $orcamento): string
     {
         $numeroProposta = htmlspecialchars($orcamento['numero_proposta'] ?? '');
-        $obraNome = htmlspecialchars($orcamento['obra_nome'] ?? '');
         $clienteNome = htmlspecialchars($orcamento['cliente_nome'] ?? '');
         $endereco = htmlspecialchars($orcamento['endereco_obra'] ?? '');
-        $local = htmlspecialchars($orcamento['local_obra'] ?? '');
         $area = htmlspecialchars($orcamento['area_m2'] ?? '');
         $prazo = htmlspecialchars($orcamento['prazo_dias'] ?? '');
         $prazomeses = $prazo ? round((int)$prazo / 30) : '';
@@ -404,17 +402,13 @@ HTML;
     }
     
     /**
-     * Gera página "Prezados" com texto de apresentação
-     */
-    
-    /**
      * Gera página de Resumo Executivo - Estilo Planilha Resumo (como nos prints)
      */
     private static function gerarPaginaResumoExecutivo(int $orcamentoId, array $orcamento): string
     {
         $pdo = \App\Core\Database::pdo();
         
-        // Buscar itens agrupados por código principal (1-17 = Cinza, 18-41 = Acabamentos, 42 = Gerenciamento, 43 = Adm)
+        // Buscar itens agrupados por código principal
         $stmt = $pdo->prepare(
             'SELECT codigo, grupo, SUM(valor_cobranca) as valor_total '
             . 'FROM orcamento_itens '
@@ -863,7 +857,6 @@ HTML;
             <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Logística e descarte de entulho</div>
             <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Instalações elétricas e hidráulicas</div>
             <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Instalação de louças e metais</div>
-            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Estrutura metálica e madeira</div>
             <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Suprimentos e materiais de obra</div>
         </div>
     </div>
@@ -1069,6 +1062,7 @@ HTML;
             'adm_impostos'  => ['label' => 'TAXA DE ADMINISTRAÇÃO + IMPOSTOS', 'itens' => [], 'subtotal' => 0.0],
         ];
 
+
         $idsVistos = [];
         foreach ($todosItens as $item) {
             if (isset($idsVistos[$item['id']])) {
@@ -1123,6 +1117,7 @@ HTML;
             );
 
             $html .= self::gerarTabelaItens($grupo['itens'], $subtotal, $totalGeral);
+
 
             $html .= sprintf(
                 '<div class="resumo-etapa">'
@@ -1193,7 +1188,6 @@ HTML;
             $pctTotal = $totalGeral > 0 ? ($valorTotal / $totalGeral) * 100 : 0.0;
             
             // % realizado: 0-100% onde 100% = % total do item
-            // Se item tem 5% do total e está 100% realizado, contribui 5% para o total realizado
             $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
             $pctRealizadoEfetivo = ($percentualRealizado / 100) * $pctTotal;
 
@@ -1222,6 +1216,7 @@ HTML;
                 $pctRealizadoEfetivo
             );
         }
+
 
         // Validação: soma de % etapa deve ser ~100%
         assert(
