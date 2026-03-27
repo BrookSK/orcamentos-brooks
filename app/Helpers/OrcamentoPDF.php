@@ -11,16 +11,16 @@ final class OrcamentoPDF
 {
     /**
      * Gera HTML completo para exportação em PDF
-     * Estrutura: Apresentação → Resumo Executivo → Detalhamento Completo
+     * Estrutura: Capa → Resumo (3 páginas) → Apresentação → Expertise → Objeto → Detalhamento Completo
      */
     public static function gerarHTML(int $orcamentoId, array $orcamento): string
     {
         $html = self::gerarCabecalhoHTML();
         $html .= self::gerarPaginaApresentacao($orcamento);
+        $html .= self::gerarPaginaResumoExecutivo($orcamentoId, $orcamento);
         $html .= self::gerarPaginaApresentacaoInstitucional();
         $html .= self::gerarPaginaExpertise();
         $html .= self::gerarPaginaObjetoProposta();
-        $html .= self::gerarPaginaResumoExecutivo($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarRodapeHTML();
         
@@ -28,7 +28,7 @@ final class OrcamentoPDF
     }
     
     /**
-     * Gera cabeçalho HTML com estilos CSS modernos
+     * Gera cabeçalho HTML com estilos CSS modernos - Layout Brooks Construtora
      */
     private static function gerarCabecalhoHTML(): string
     {
@@ -52,9 +52,9 @@ final class OrcamentoPDF
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Arial', 'Helvetica', sans-serif;
             color: #333;
-            line-height: 1.6;
+            line-height: 1.4;
         }
         
         .page {
@@ -62,367 +62,164 @@ final class OrcamentoPDF
             position: relative;
             width: 210mm;
             min-height: 297mm;
-            padding: 20mm;
             background: white;
         }
         
-        .page-cover {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: white;
+        /* HEADER PADRÃO - Todas as páginas exceto capa */
+        .page-header {
+            background: #1a1a2e;
+            padding: 15px 20mm;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            color: white;
+        }
+        
+        .header-left {
+            font-size: 10px;
+            line-height: 1.4;
+        }
+        
+        .header-logo {
             text-align: center;
         }
         
-        .logo-area {
-            margin-bottom: 60px;
+        .header-logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
         }
         
-        .logo-text {
-            font-size: 48px;
+        .header-logo-sub {
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: #c92a2a;
+        }
+        
+        .header-right {
+            font-size: 10px;
+            text-align: right;
+            line-height: 1.4;
+        }
+        
+        .page-content {
+            padding: 20mm;
+        }
+        
+        /* PÁGINA DE CAPA */
+        .page-cover {
+            background: #1a1a2e;
+            color: white;
+            padding: 0;
+        }
+        
+        .cover-header {
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .cover-logo {
+            flex: 1;
+        }
+        
+        .cover-logo-text {
+            font-size: 32px;
             font-weight: 700;
             letter-spacing: 3px;
             color: #fff;
-            text-transform: uppercase;
         }
         
-        .logo-subtitle {
-            font-size: 16px;
-            letter-spacing: 2px;
-            color: #e94560;
-            margin-top: 10px;
+        .cover-logo-sub {
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            color: #c92a2a;
+            margin-top: 5px;
+        }
+        
+        .cover-info-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 5px;
+            font-size: 11px;
+            line-height: 1.6;
+            text-align: right;
+        }
+        
+        .cover-body {
+            padding: 80px 40px;
+            text-align: center;
         }
         
         .cover-title {
-            font-size: 42px;
-            font-weight: 300;
-            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
             letter-spacing: 1px;
+            color: #c92a2a;
         }
         
         .cover-subtitle {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 40px;
-            color: #e94560;
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 60px;
+            color: #fff;
         }
         
-        .cover-info {
+        /* PLANILHA RESUMO - Estilo dos prints */
+        .resumo-title {
+            text-align: center;
+            margin: 30px 0 10px 0;
+        }
+        
+        .resumo-title h2 {
             font-size: 18px;
-            margin: 10px 0;
-            opacity: 0.9;
-        }
-        
-        .section-title {
-            font-size: 32px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 4px solid #e94560;
+            margin-bottom: 5px;
         }
         
-        .intro-text {
+        .resumo-title h3 {
             font-size: 14px;
-            line-height: 1.8;
-            text-align: justify;
-            margin-bottom: 30px;
-            color: #444;
+            font-weight: 400;
+            color: #c92a2a;
         }
         
-        .intro-signature {
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-top: 20px;
-        }
-        
-        .institutional-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .institutional-item {
-            font-size: 13px;
-            padding-left: 20px;
-            position: relative;
-            color: #555;
-        }
-        
-        .institutional-item:before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: #e94560;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        
-        .expertise-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 30px;
-        }
-        
-        .expertise-box {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 8px;
-            border-left: 4px solid #e94560;
-        }
-        
-        .expertise-box h3 {
-            font-size: 18px;
-            color: #1a1a2e;
-            margin-bottom: 15px;
-        }
-        
-        .expertise-box p {
-            font-size: 13px;
-            line-height: 1.7;
-            color: #555;
-        }
-        
-        .proposta-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .proposta-box {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        
-        .proposta-box h3 {
-            font-size: 16px;
-            color: #1a1a2e;
-            margin-bottom: 10px;
-        }
-        
-        .proposta-box p {
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .nota-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-        
-        .nota-box h4 {
-            font-size: 14px;
-            color: #856404;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .nota-box p {
-            font-size: 12px;
-            color: #856404;
-            line-height: 1.6;
-        }
-        
-        .resumo-financeiro {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-        }
-        
-        .resumo-financeiro h2 {
-            font-size: 28px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-        
-        .resumo-cards {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .resumo-card {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-        }
-        
-        .resumo-card-label {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .resumo-card-value {
-            font-size: 24px;
-            font-weight: 700;
-        }
-        
-        .table-resumo {
+        .table-resumo-clean {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .table-resumo th {
-            background: #1a1a2e;
-            color: white;
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-        }
-        
-        .table-resumo td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 13px;
-        }
-        
-        .table-resumo tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .table-resumo .total-row {
-            background: #f8f9fa;
-            font-weight: 700;
-            font-size: 15px;
-        }
-        
-        .etapa-section {
-            margin-bottom: 40px;
-            page-break-inside: avoid;
-        }
-        
-        .etapa-header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 0;
-        }
-        
-        .etapa-title {
-            font-size: 22px;
-            font-weight: 600;
-            margin: 0;
-        }
-        
-        .grupo-section {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-top: none;
-            padding: 25px;
-        }
-        
-        .grupo-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e94560;
-        }
-        
-        .categoria-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #2196F3;
-            margin: 20px 0 10px 0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .categoria-title.mao-obra {
-            color: #4CAF50;
-        }
-        
-        .table-itens {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 11px;
-        }
-        
-        .table-itens th {
-            background: #f8f9fa;
-            padding: 10px 8px;
-            text-align: left;
-            font-weight: 600;
-            border: 1px solid #dee2e6;
-            font-size: 11px;
-        }
-        
-        .table-itens td {
-            padding: 8px;
-            border: 1px solid #dee2e6;
-        }
-        
-        .table-itens tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-        
-        .resumo-grupo {
-            background: #e3f2fd;
-            padding: 12px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 25px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-        
-        .resumo-etapa {
-            background: #1a1a2e;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 0 0 8px 8px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .total-final {
-            background: linear-gradient(135deg, #e94560 0%, #d63447 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            margin-top: 40px;
-        }
-        
-        .total-final h2 {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        
-        .total-final-value {
-            font-size: 48px;
-            font-weight: 700;
             margin: 20px 0;
+            font-size: 11px;
+        }
+        
+        .table-resumo-clean th {
+            background: #4a4a4a;
+            color: white;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #333;
+        }
+        
+        .table-resumo-clean td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        
+        .table-resumo-clean .subtotal-row {
+            background: #c92a2a;
+            color: white;
+            font-weight: 700;
+        }
+        
+        .table-resumo-clean .total-row {
+            background: #1a1a2e;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
         }
         
         .text-right {
@@ -433,20 +230,127 @@ final class OrcamentoPDF
             text-align: center;
         }
         
-        .color-material {
-            color: #2196F3;
-        }
-        
-        .color-mao-obra {
-            color: #4CAF50;
-        }
-        
         .page-number {
             position: absolute;
             bottom: 15mm;
             right: 20mm;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        /* TABELAS DE ÁREAS */
+        .table-areas {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
             font-size: 11px;
-            color: #999;
+        }
+        
+        .table-areas th {
+            background: #f0f0f0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .table-areas td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        
+        .table-areas .total-row {
+            background: #e0e0e0;
+            font-weight: 700;
+        }
+        
+        /* DETALHAMENTO COMPLETO */
+        .section-title {
+            font-size: 28px;
+            color: #1a1a2e;
+            text-align: center;
+            margin: 40px 0 30px 0;
+            padding: 20px;
+            border-bottom: 4px solid #c92a2a;
+        }
+        
+        .etapa-section {
+            margin: 30px 0;
+            page-break-inside: avoid;
+        }
+        
+        .etapa-header {
+            background: #1a1a2e;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+        }
+        
+        .etapa-title {
+            font-size: 18px;
+            color: white;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .table-itens {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .table-itens th {
+            background: #4a4a4a;
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #333;
+        }
+        
+        .table-itens td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        
+        .table-itens tr:nth-child(even) td {
+            background: #f9f9f9;
+        }
+        
+        .resumo-etapa {
+            background: #c92a2a;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .total-final {
+            background: #1a1a2e;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin: 40px 0;
+            border-radius: 5px;
+        }
+        
+        .total-final h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        
+        .total-final-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #c92a2a;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -455,7 +359,7 @@ HTML;
     }
     
     /**
-     * Gera página de capa/apresentação
+     * Gera página de capa/apresentação - Estilo Brooks Construtora
      */
     private static function gerarPaginaApresentacao(array $orcamento): string
     {
@@ -463,23 +367,37 @@ HTML;
         $obraNome = htmlspecialchars($orcamento['obra_nome'] ?? '');
         $clienteNome = htmlspecialchars($orcamento['cliente_nome'] ?? '');
         $endereco = htmlspecialchars($orcamento['endereco_obra'] ?? '');
+        $local = htmlspecialchars($orcamento['local_obra'] ?? '');
+        $area = htmlspecialchars($orcamento['area_m2'] ?? '');
+        $prazo = htmlspecialchars($orcamento['prazo_dias'] ?? '');
+        $prazomeses = $prazo ? round((int)$prazo / 30) : '';
+        $rev = htmlspecialchars($orcamento['rev'] ?? 'R00');
         $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
         
         return <<<HTML
 <div class="page page-cover">
-    <div class="logo-area">
-        <div class="logo-text">BROOKS</div>
-        <div class="logo-subtitle">CONSTRUTORA</div>
+    <div class="cover-header">
+        <div class="cover-logo">
+            <div class="cover-logo-text">BROOKS</div>
+            <div class="cover-logo-sub">CONSTRUTORA</div>
+        </div>
+        <div class="cover-info-box">
+            <div><strong>REVISÃO:</strong> {$rev}</div>
+            <div><strong>ÁREA:</strong> {$area}m²</div>
+            <div><strong>DATA:</strong> {$data}</div>
+        </div>
     </div>
     
-    <div class="cover-title">PROPOSTA ORÇAMENTÁRIA</div>
-    <div class="cover-subtitle">{$obraNome}</div>
-    
-    <div style="margin-top: 60px;">
-        <div class="cover-info"><strong>Proposta:</strong> {$numeroProposta}</div>
-        <div class="cover-info"><strong>Cliente:</strong> {$clienteNome}</div>
-        <div class="cover-info"><strong>Endereço:</strong> {$endereco}</div>
-        <div class="cover-info"><strong>Data:</strong> {$data}</div>
+    <div class="cover-body">
+        <div class="cover-title">PLANILHA RESUMO</div>
+        <div class="cover-subtitle">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>
+        
+        <div style="margin-top: 80px; font-size: 12px; line-height: 1.8;">
+            <div><strong>{$numeroProposta}</strong></div>
+            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
+            <div><strong>ENDEREÇO:</strong> {$endereco}</div>
+            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
+        </div>
     </div>
 </div>
 HTML;
@@ -488,172 +406,466 @@ HTML;
     /**
      * Gera página "Prezados" com texto de apresentação
      */
+    
+    /**
+     * Gera página de Resumo Executivo - Estilo Planilha Resumo (como nos prints)
+     */
+    private static function gerarPaginaResumoExecutivo(int $orcamentoId, array $orcamento): string
+    {
+        $pdo = \App\Core\Database::pdo();
+        
+        // Buscar itens agrupados por código principal (1-17 = Cinza, 18-41 = Acabamentos, 42 = Gerenciamento, 43 = Adm)
+        $stmt = $pdo->prepare(
+            'SELECT codigo, grupo, SUM(valor_cobranca) as valor_total '
+            . 'FROM orcamento_itens '
+            . 'WHERE orcamento_id = :id '
+            . 'GROUP BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), grupo '
+            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED)'
+        );
+        $stmt->execute([':id' => $orcamentoId]);
+        $itensAgrupados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // Calcular totais por etapa
+        $totalCinza = 0;
+        $totalAcabamentos = 0;
+        $totalGerenciamento = 0;
+        $totalAdm = 0;
+        
+        $itensCinza = [];
+        $itensAcabamentos = [];
+        $itensGerenciamento = [];
+        $itensAdm = [];
+        
+        foreach ($itensAgrupados as $item) {
+            $codigoNum = (int)explode('.', $item['codigo'])[0];
+            $valor = (float)$item['valor_total'];
+            
+            if ($codigoNum >= 1 && $codigoNum <= 17) {
+                $itensCinza[] = $item;
+                $totalCinza += $valor;
+            } elseif ($codigoNum >= 18 && $codigoNum <= 41) {
+                $itensAcabamentos[] = $item;
+                $totalAcabamentos += $valor;
+            } elseif ($codigoNum === 42) {
+                $itensGerenciamento[] = $item;
+                $totalGerenciamento += $valor;
+            } else {
+                $itensAdm[] = $item;
+                $totalAdm += $valor;
+            }
+        }
+        
+        $totalGeral = $totalCinza + $totalAcabamentos + $totalGerenciamento + $totalAdm;
+        
+        $numeroProposta = htmlspecialchars($orcamento['numero_proposta'] ?? '');
+        $clienteNome = htmlspecialchars($orcamento['cliente_nome'] ?? '');
+        $endereco = htmlspecialchars($orcamento['endereco_obra'] ?? '');
+        $prazo = htmlspecialchars($orcamento['prazo_dias'] ?? '');
+        $prazomeses = $prazo ? round((int)$prazo / 30) : '';
+        $area = htmlspecialchars($orcamento['area_m2'] ?? '');
+        $rev = htmlspecialchars($orcamento['rev'] ?? 'R00');
+        $data = date('d/m/Y', strtotime($orcamento['data'] ?? 'now'));
+        
+        // PÁGINA 1 - ETAPA CINZA
+        $html = <<<HTML
+<div class="page">
+    <div class="page-header">
+        <div class="header-left">
+            <div><strong>{$numeroProposta}</strong></div>
+            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
+            <div><strong>ENDEREÇO:</strong> {$endereco}</div>
+            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
+        </div>
+        <div class="header-logo">
+            <div class="header-logo-text">BROOKS</div>
+            <div class="header-logo-sub">CONSTRUTORA</div>
+        </div>
+        <div class="header-right">
+            <div><strong>REVISÃO:</strong> {$rev}</div>
+            <div><strong>ÁREA:</strong> {$area}m²</div>
+            <div><strong>DATA:</strong> {$data}</div>
+        </div>
+    </div>
+    
+    <div class="page-content">
+        <div class="resumo-title">
+            <h2>PLANILHA RESUMO</h2>
+            <h3>ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</h3>
+        </div>
+        
+        <table class="table-resumo-clean">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 65%;">ETAPA CINZA</th>
+                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
+                    <th style="width: 10%; text-align: right;">%</th>
+                </tr>
+            </thead>
+            <tbody>
+HTML;
+        
+        $numero = 1;
+        foreach ($itensCinza as $item) {
+            $valor = (float)$item['valor_total'];
+            $pct = $totalCinza > 0 ? ($valor / $totalCinza) * 100 : 0;
+            
+            $html .= sprintf(
+                '<tr>'
+                . '<td style="text-align: center;">%d</td>'
+                . '<td>%s</td>'
+                . '<td style="text-align: right;">%s</td>'
+                . '<td style="text-align: right;">%.2f%%</td>'
+                . '</tr>',
+                $numero++,
+                htmlspecialchars($item['grupo']),
+                self::formatarValor($valor),
+                $pct
+            );
+        }
+        
+        $pctCinza = $totalGeral > 0 ? ($totalCinza / $totalGeral) * 100 : 0;
+        
+        $html .= sprintf(
+            '<tr class="subtotal-row">'
+            . '<td colspan="2" style="text-align: left; padding-left: 20px;">SUBTOTAL - ETAPA CINZA</td>'
+            . '<td style="text-align: right;">R$ %s</td>'
+            . '<td style="text-align: right;">%.2f%%</td>'
+            . '</tr>',
+            self::formatarValor($totalCinza),
+            $pctCinza
+        );
+        
+        $html .= <<<HTML
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="page-number">FOLHA: 1</div>
+</div>
+HTML;
+        
+        // PÁGINA 2 - ETAPA ACABAMENTOS
+        $html .= <<<HTML
+<div class="page">
+    <div class="page-header">
+        <div class="header-left">
+            <div><strong>{$numeroProposta}</strong></div>
+            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
+            <div><strong>ENDEREÇO:</strong> {$endereco}</div>
+            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
+        </div>
+        <div class="header-logo">
+            <div class="header-logo-text">BROOKS</div>
+            <div class="header-logo-sub">CONSTRUTORA</div>
+        </div>
+        <div class="header-right">
+            <div><strong>REVISÃO:</strong> {$rev}</div>
+            <div><strong>ÁREA:</strong> {$area}m²</div>
+            <div><strong>DATA:</strong> {$data}</div>
+        </div>
+    </div>
+    
+    <div class="page-content">
+        <div class="resumo-title">
+            <h2>PLANILHA RESUMO</h2>
+            <h3>ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</h3>
+        </div>
+        
+        <table class="table-resumo-clean">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 65%;">ETAPA DE ACABAMENTOS</th>
+                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
+                    <th style="width: 10%; text-align: right;">%</th>
+                </tr>
+            </thead>
+            <tbody>
+HTML;
+        
+        $numero = 18;
+        foreach ($itensAcabamentos as $item) {
+            $valor = (float)$item['valor_total'];
+            $pct = $totalAcabamentos > 0 ? ($valor / $totalAcabamentos) * 100 : 0;
+            
+            $html .= sprintf(
+                '<tr>'
+                . '<td style="text-align: center;">%d</td>'
+                . '<td>%s</td>'
+                . '<td style="text-align: right;">%s</td>'
+                . '<td style="text-align: right;">%.2f%%</td>'
+                . '</tr>',
+                $numero++,
+                htmlspecialchars($item['grupo']),
+                self::formatarValor($valor),
+                $pct
+            );
+        }
+        
+        $pctAcabamentos = $totalGeral > 0 ? ($totalAcabamentos / $totalGeral) * 100 : 0;
+        
+        $html .= sprintf(
+            '<tr class="subtotal-row">'
+            . '<td colspan="2" style="text-align: left; padding-left: 20px;">SUBTOTAL - ETAPA ACABAMENTOS</td>'
+            . '<td style="text-align: right;">R$ %s</td>'
+            . '<td style="text-align: right;">%.2f%%</td>'
+            . '</tr>',
+            self::formatarValor($totalAcabamentos),
+            $pctAcabamentos
+        );
+        
+        $html .= <<<HTML
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="page-number">FOLHA: 2</div>
+</div>
+HTML;
+        
+        // PÁGINA 3 - GERENCIAMENTO + ADM + TOTAL + ÁREAS
+        $pctGerenciamento = $totalGeral > 0 ? ($totalGerenciamento / $totalGeral) * 100 : 0;
+        $pctAdm = $totalGeral > 0 ? ($totalAdm / $totalGeral) * 100 : 0;
+        
+        $html .= <<<HTML
+<div class="page">
+    <div class="page-header">
+        <div class="header-left">
+            <div><strong>{$numeroProposta}</strong></div>
+            <div><strong>CLIENTE:</strong> {$clienteNome}</div>
+            <div><strong>ENDEREÇO:</strong> {$endereco}</div>
+            <div><strong>PRAZO DE OBRA:</strong> {$prazomeses} meses</div>
+        </div>
+        <div class="header-logo">
+            <div class="header-logo-text">BROOKS</div>
+            <div class="header-logo-sub">CONSTRUTORA</div>
+        </div>
+        <div class="header-right">
+            <div><strong>REVISÃO:</strong> {$rev}</div>
+            <div><strong>ÁREA:</strong> {$area}m²</div>
+            <div><strong>DATA:</strong> {$data}</div>
+        </div>
+    </div>
+    
+    <div class="page-content">
+        <div class="resumo-title">
+            <h2>PLANILHA RESUMO</h2>
+            <h3>ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</h3>
+        </div>
+        
+        <table class="table-resumo-clean">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 65%;">ETAPA DE GERENCIAMENTO</th>
+                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
+                    <th style="width: 10%; text-align: right;">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: center;">42</td>
+                    <td>EQUIPE DE OBRA</td>
+                    <td style="text-align: right;">{self::formatarValor($totalGerenciamento)}</td>
+                    <td style="text-align: right;">100,00%</td>
+                </tr>
+                <tr class="subtotal-row">
+                    <td colspan="2" style="text-align: left; padding-left: 20px;">SUBTOTAL - ETAPA DE GERENCIAMENTO</td>
+                    <td style="text-align: right;">R$ {self::formatarValor($totalGerenciamento)}</td>
+                    <td style="text-align: right;">{sprintf('%.2f%%', $pctGerenciamento)}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <table class="table-resumo-clean" style="margin-top: 30px;">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 65%;">TAXA DE ADMINISTRAÇÃO + IMPOSTOS</th>
+                    <th style="width: 20%; text-align: right;">VALOR TOTAL</th>
+                    <th style="width: 10%; text-align: right;">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: center;">43</td>
+                    <td>TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td>
+                    <td style="text-align: right;">{self::formatarValor($totalAdm)}</td>
+                    <td style="text-align: right;">100,00%</td>
+                </tr>
+                <tr class="subtotal-row">
+                    <td colspan="2" style="text-align: left; padding-left: 20px;">SUBTOTAL - TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td>
+                    <td style="text-align: right;">R$ {self::formatarValor($totalAdm)}</td>
+                    <td style="text-align: right;">{sprintf('%.2f%%', $pctAdm)}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <table class="table-resumo-clean" style="margin-top: 30px;">
+            <tbody>
+                <tr class="total-row">
+                    <td colspan="2" style="text-align: left; padding-left: 20px; font-size: 14px;">VALOR TOTAL GERAL + TAXA DE ADMINISTRAÇÃO + IMPOSTOS:</td>
+                    <td style="text-align: right; font-size: 14px;">R$ {self::formatarValor($totalGeral)}</td>
+                    <td style="text-align: right; font-size: 14px;">100,00%</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <table class="table-areas">
+            <thead>
+                <tr>
+                    <th>ÁREAS</th>
+                    <th>m2</th>
+                    <th>FATOR</th>
+                    <th>m2 x FATOR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ÁREA INTERNA</td>
+                    <td>344,10</td>
+                    <td>1</td>
+                    <td>344,10</td>
+                </tr>
+                <tr>
+                    <td>VARANDA COBERTA</td>
+                    <td>103,94</td>
+                    <td>1</td>
+                    <td>103,94</td>
+                </tr>
+                <tr>
+                    <td>ABRIGO AUTOS</td>
+                    <td>47,52</td>
+                    <td>1</td>
+                    <td>47,52</td>
+                </tr>
+                <tr>
+                    <td>ÁREA DESCOBERTA</td>
+                    <td>139,79</td>
+                    <td>1</td>
+                    <td>139,79</td>
+                </tr>
+                <tr>
+                    <td>PISCINA</td>
+                    <td>87,62</td>
+                    <td>1</td>
+                    <td>87,62</td>
+                </tr>
+                <tr class="total-row">
+                    <td colspan="3"><strong>ÁREA TOTAL:</strong></td>
+                    <td><strong>{$area}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <table class="table-areas" style="margin-top: 30px;">
+            <thead>
+                <tr>
+                    <th>ETAPAS</th>
+                    <th>PREÇO</th>
+                    <th>M2</th>
+                    <th>PREÇO / m2</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ETAPA BRUTA (CINZA)</td>
+                    <td>R$ {self::formatarValor($totalCinza)}</td>
+                    <td>{$area}</td>
+                    <td>R$ {self::formatarValor($totalCinza / (float)$area)}</td>
+                </tr>
+                <tr>
+                    <td>ETAPA ACABAMENTOS</td>
+                    <td>R$ {self::formatarValor($totalAcabamentos)}</td>
+                    <td>{$area}</td>
+                    <td>R$ {self::formatarValor($totalAcabamentos / (float)$area)}</td>
+                </tr>
+                <tr>
+                    <td>GERENCIAMENTO / INDIRETOS / IMPOSTOS</td>
+                    <td>R$ {self::formatarValor($totalGerenciamento + $totalAdm)}</td>
+                    <td>{$area}</td>
+                    <td>R$ {self::formatarValor(($totalGerenciamento + $totalAdm) / (float)$area)}</td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>TOTAL GERAL:</strong></td>
+                    <td><strong>R$ {self::formatarValor($totalGeral)}</strong></td>
+                    <td><strong>{$area}</strong></td>
+                    <td><strong>R$ {self::formatarValor($totalGeral / (float)$area)}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="page-number">FOLHA: 3</div>
+</div>
+HTML;
+        
+        return $html;
+    }
+    
+    /**
+     * Gera página "Prezados" com texto de apresentação - Brooks Construtora
+     */
     private static function gerarPaginaApresentacaoInstitucional(): string
     {
         return <<<'HTML'
 <div class="page">
-    <h1 class="section-title">Prezados</h1>
-    
-    <p class="intro-text">
-        Agradecemos imensamente o seu contato! Temos certeza de que esta proposta trará soluções inovadoras e valor para o 
-        seu projeto. Nas próximas páginas, apresentamos nossa empresa, detalhamos os serviços oferecidos, nossos valores e 
-        observações importantes. Estamos à sua inteira disposição para qualquer esclarecimento ou para darmos o próximo passo.
-    </p>
-    
-    <p class="intro-signature">Atenciosamente, <strong>BROOKS CONSTRUTORA</strong>.</p>
-    
-    <h2 class="section-title" style="margin-top: 60px;">Apresentação Institucional</h2>
-    
-    <p class="intro-text">
-        A <strong>Brooks Construtora</strong> é uma empresa especializada na execução de obras civis, reformas integrais e retrofit de imóveis 
-        residenciais, corporativos e comerciais de médio porte.
-    </p>
-    
-    <p class="intro-text">
-        Atuamos no segmento de construção civil por meio da execução completa de sistemas construtivos, contemplando:
-    </p>
-    
-    <div class="institutional-grid">
-        <div class="institutional-item">Demolições técnicas</div>
-        <div class="institutional-item">Infraestrutura para automação</div>
-        <div class="institutional-item">Alvenaria estrutural e de vedação</div>
-        <div class="institutional-item">Infraestrutura para climatização e ar condicionado</div>
-        <div class="institutional-item">Impermeabilizações</div>
-        <div class="institutional-item">Cálculo estrutural e reforços</div>
-        <div class="institutional-item">Instalação de básicos e revestimentos</div>
-        <div class="institutional-item">Coberturas e fundações</div>
-        <div class="institutional-item">Execução de meia esquadria</div>
-        <div class="institutional-item">Pinturas técnicas e acabamentos especiais</div>
-        <div class="institutional-item">Pisos e sistemas em drywall</div>
-        <div class="institutional-item">Enxaguamento, logística e descarte de entulho</div>
-        <div class="institutional-item">Instalações elétricas, luminotécnicas e hidráulicas</div>
-        <div class="institutional-item">Instalação de louças, metais e acessórios</div>
-        <div class="institutional-item">Estrutura metálica e madeira (PEX)</div>
-        <div class="institutional-item">Suprimentos e frotas de materiais básicos de obra</div>
-        <div class="institutional-item"></div>
-        <div class="institutional-item">Demais serviços correlatos à engenharia civil</div>
-    </div>
-    
-    <div class="page-number">Página 2</div>
-</div>
-HTML;
-    }
-    
-    /**
-     * Gera página "Nossa Expertise"
-     */
-    private static function gerarPaginaExpertise(): string
-    {
-        return <<<'HTML'
-<div class="page">
-    <h1 class="section-title">Nossa Expertise</h1>
-    
-    <p class="intro-text">
-        Contamos com equipes especializadas de alta performance, coordenadas por engenheiro civil responsável técnico, 
-        garantindo conformidade normativa, controle de qualidade de processos e cumprimento rigoroso de prazos.
-    </p>
-    
-    <p class="intro-text">
-        Possuímos centenas de obras entregues ao longo de quase uma década, mantendo parcerias consolidadas com escritórios 
-        de arquitetura e fornecedores premium na cidade de São Paulo.
-    </p>
-    
-    <div class="expertise-grid">
-        <div class="expertise-box">
-            <h3>Reconhecimento</h3>
-            <p>
-                Nossos empreendimentos já foram publicados em veículos como <strong>Casa Vogue, Casa e Jardim, Diário do 
-                Arquiteto, De.cor.ar</strong>, entre outras mídias especializadas.
-            </p>
+    <div class="page-header">
+        <div class="header-left">
+            <div><strong>BROOKS CONSTRUTORA</strong></div>
+            <div>Engenharia e Construção Civil</div>
         </div>
-        
-        <div class="expertise-box">
-            <h3>Compromisso</h3>
-            <p>
-                Nossa prioridade permanece focada na excelência técnica, ética profissional, transparência contratual e 
-                satisfação integral do cliente.
-            </p>
+        <div class="header-logo">
+            <div class="header-logo-text">BROOKS</div>
+            <div class="header-logo-sub">CONSTRUTORA</div>
+        </div>
+        <div class="header-right">
+            <div>Tel: (11) 3063-2263</div>
+            <div>contato@brooks.com.br</div>
         </div>
     </div>
     
-    <div class="page-number">Página 3</div>
-</div>
-HTML;
-    }
-    
-    /**
-     * Gera página "Objeto da Proposta"
-     */
-    private static function gerarPaginaObjetoProposta(): string
-    {
-        return <<<'HTML'
-<div class="page">
-    <h1 class="section-title">Objeto da Proposta</h1>
-    
-    <p class="intro-text">
-        A presente proposta tem como objeto a prestação de serviços de obra civil, incluindo:
-    </p>
-    
-    <div class="proposta-grid">
-        <div class="proposta-box">
-            <h3>Execução Técnica</h3>
-            <p>Execução técnica integral dos serviços descritos nas etapas seguintes.</p>
-        </div>
+    <div class="page-content">
+        <h1 style="font-size: 24px; color: #1a1a2e; margin-bottom: 20px; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Prezados</h1>
         
-        <div class="proposta-box">
-            <h3>Documentação</h3>
-            <p>Emissão de ART de execução</p>
-        </div>
+        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 20px; color: #444;">
+            Agradecemos imensamente o seu contato! Temos certeza de que esta proposta trará soluções inovadoras e valor para o 
+            seu projeto. Nas próximas páginas, apresentamos nossa empresa, detalhamos os serviços oferecidos, nossos valores e 
+            observações importantes. Estamos à sua inteira disposição para qualquer esclarecimento ou para darmos o próximo passo.
+        </p>
         
-        <div class="proposta-box">
-            <h3>Proteção</h3>
-            <p>Seguro de obra</p>
-        </div>
+        <p style="font-weight: 600; color: #1a1a2e; margin-top: 15px; font-size: 12px;">Atenciosamente, <strong>BROOKS CONSTRUTORA</strong>.</p>
         
-        <div class="proposta-box">
-            <h3>Gestão</h3>
-            <p>Coordenação operacional</p>
+        <h2 style="font-size: 20px; color: #1a1a2e; margin: 40px 0 20px 0; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Apresentação Institucional</h2>
+        
+        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 15px; color: #444;">
+            A <strong>Brooks Construtora</strong> é uma empresa especializada na execução de obras civis, reformas integrais e retrofit de imóveis 
+            residenciais, corporativos e comerciais de médio porte.
+        </p>
+        
+        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 15px; color: #444;">
+            Atuamos no segmento de construção civil por meio da execução completa de sistemas construtivos, contemplando:
+        </p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; font-size: 11px;">
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Demolições técnicas</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Infraestrutura para automação</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Alvenaria estrutural e de vedação</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Infraestrutura para climatização</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Impermeabilizações</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Cálculo estrutural e reforços</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Instalação de básicos e revestimentos</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Coberturas e fundações</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Execução de meia esquadria</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Pinturas técnicas e acabamentos</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Pisos e sistemas em drywall</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Logística e descarte de entulho</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Instalações elétricas e hidráulicas</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Instalação de louças e metais</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Estrutura metálica e madeira</div>
+            <div style="padding-left: 15px; position: relative; color: #555;"><span style="position: absolute; left: 0; color: #c92a2a; font-weight: bold;">•</span> Suprimentos e materiais de obra</div>
         </div>
-    </div>
-    
-    <p class="intro-text" style="margin-top: 30px;">
-        Todos os serviços serão executados exclusivamente conforme os descritivos técnicos desta proposta.
-    </p>
-    
-    <p class="intro-text">
-        Nesta são previstas como objeto de orçamento complementar:
-    </p>
-    
-    <ul style="margin-left: 30px; margin-bottom: 20px;">
-        <li style="margin-bottom: 8px;">Projetos complementares e executivos</li>
-        <li style="margin-bottom: 8px;">Cumprir legislação trabalhista e sanitária</li>
-        <li style="margin-bottom: 8px;">Adotar práticas de segurança do trabalho</li>
-        <li style="margin-bottom: 8px;">Manter equipe técnica qualificada</li>
-    </ul>
-    
-    <h2 class="section-title" style="margin-top: 40px;">Notas Técnicas Gerais</h2>
-    
-    <div class="nota-box">
-        <h4>⚠️ Nota 1 – Sistemas especiais</h4>
-        <p>
-            Não estão inclusos: <strong>Pressurização, Aquecimento, Automação, Energia Fotovoltaica, Bombeamento, Piscinas, 
-            Sistemas gerais, Cisternas, Sistemas complexos correlatos</strong>.
-        </p>
-        <p style="margin-top: 10px;">
-            Todos os itens não relacionados aos sistemas propostos de engenharia especializada contratados pelo cliente.
-        </p>
-    </div>
-    
-    <div class="nota-box" style="background: #d1ecf1; border-left-color: #0c5460;">
-        <h4 style="color: #0c5460;">ℹ️ Nota 2 – Sistemas especiais</h4>
-        <p style="color: #0c5460;">
-            O orçamento foi elaborado com base no projeto arquitetônico fornecido. Limitações físicas, centurianas, 
-            condominiais ou pré-existências poderão gerar imobilidades técnicas, adaptações executivas, revisões 
-            orçamentárias.
-        </p>
-        <p style="margin-top: 10px; color: #0c5460;">
-            A compatibilização entre arquitetura, engenharia e execução é indispensável.
-        </p>
     </div>
     
     <div class="page-number">Página 4</div>
@@ -662,139 +874,150 @@ HTML;
     }
     
     /**
-     * Gera página de Resumo Executivo
+     * Gera página "Nossa Expertise" - Brooks Construtora
      */
-    private static function gerarPaginaResumoExecutivo(int $orcamentoId, array $orcamento): string
+    private static function gerarPaginaExpertise(): string
     {
-        $totaisGerais = OrcamentoItem::getTotaisGerais($orcamentoId);
-        $resumoEtapas = OrcamentoItem::getResumoEtapas($orcamentoId);
-        
-        $totalMaterial = (float)$totaisGerais['total_material'];
-        $totalMaoObra = (float)$totaisGerais['total_mao_obra'];
-        $totalGeral = (float)$totaisGerais['total_cobranca'];
-        
-        // Informações de adequação
-        $adequacaoAplicada = (bool)($orcamento['adequacao_aplicada'] ?? false);
-        $valorOriginal = (float)($orcamento['valor_original'] ?? 0);
-        $valorAdequado = (float)($orcamento['valor_adequado'] ?? 0);
-        $fatorAdequacao = (float)($orcamento['fator_adequacao'] ?? 1.0);
-        
-        $html = <<<HTML
+        return <<<'HTML'
 <div class="page">
-    <h1 class="section-title">Resumo Executivo</h1>
+    <div class="page-header">
+        <div class="header-left">
+            <div><strong>BROOKS CONSTRUTORA</strong></div>
+            <div>Engenharia e Construção Civil</div>
+        </div>
+        <div class="header-logo">
+            <div class="header-logo-text">BROOKS</div>
+            <div class="header-logo-sub">CONSTRUTORA</div>
+        </div>
+        <div class="header-right">
+            <div>Tel: (11) 3063-2263</div>
+            <div>contato@brooks.com.br</div>
+        </div>
+    </div>
     
-    <div class="resumo-financeiro">
-        <h2>Visão Geral de Custos</h2>
+    <div class="page-content">
+        <h1 style="font-size: 24px; color: #1a1a2e; margin-bottom: 20px; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Nossa Expertise</h1>
         
-        <div class="resumo-cards">
-            <div class="resumo-card">
-                <div class="resumo-card-label">📦 Custo Previsto (Material)</div>
-                <div class="resumo-card-value">R$ {self::formatarValor($totalMaterial)}</div>
+        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 15px; color: #444;">
+            Contamos com equipes especializadas de alta performance, coordenadas por engenheiro civil responsável técnico, 
+            garantindo conformidade normativa, controle de qualidade de processos e cumprimento rigoroso de prazos.
+        </p>
+        
+        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 25px; color: #444;">
+            Possuímos centenas de obras entregues ao longo de quase uma década, mantendo parcerias consolidadas com escritórios 
+            de arquitetura e fornecedores premium na cidade de São Paulo.
+        </p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 25px;">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; border-left: 4px solid #c92a2a;">
+                <h3 style="font-size: 16px; color: #1a1a2e; margin-bottom: 12px;">Reconhecimento</h3>
+                <p style="font-size: 11px; line-height: 1.6; color: #555;">
+                    Nossos empreendimentos já foram publicados em veículos como <strong>Casa Vogue, Casa e Jardim, Diário do 
+                    Arquiteto, De.cor.ar</strong>, entre outras mídias especializadas.
+                </p>
             </div>
-            <div class="resumo-card">
-                <div class="resumo-card-label">👷 Custo Efetivo (Mão de Obra)</div>
-                <div class="resumo-card-value">R$ {self::formatarValor($totalMaoObra)}</div>
-            </div>
-            <div class="resumo-card">
-                <div class="resumo-card-label">💰 Valor Total do Projeto</div>
-                <div class="resumo-card-value">R$ {self::formatarValor($totalGeral)}</div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; border-left: 4px solid #c92a2a;">
+                <h3 style="font-size: 16px; color: #1a1a2e; margin-bottom: 12px;">Compromisso</h3>
+                <p style="font-size: 11px; line-height: 1.6; color: #555;">
+                    Nossa prioridade permanece focada na excelência técnica, ética profissional, transparência contratual e 
+                    satisfação integral do cliente.
+                </p>
             </div>
         </div>
-HTML;
-        
-        // Adicionar informações de adequação se aplicada
-        if ($adequacaoAplicada && $valorOriginal > 0) {
-            $percentualAjuste = (($fatorAdequacao - 1) * 100);
-            $tipoAjuste = $percentualAjuste >= 0 ? 'aumento' : 'redução';
-            $corAjuste = $percentualAjuste >= 0 ? '#28a745' : '#dc3545';
-            
-            $html .= sprintf(
-                '<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 5px;">'
-                . '<h3 style="font-size: 16px; color: #856404; margin-bottom: 15px;">💰 Adequação de Valores Aplicada</h3>'
-                . '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 13px; color: #856404;">'
-                . '<div><strong>Valor Original:</strong><br>R$ %s</div>'
-                . '<div><strong>Valor Adequado:</strong><br>R$ %s</div>'
-                . '<div><strong>Ajuste:</strong><br><span style="color: %s; font-weight: bold;">%+.2f%% (%s)</span></div>'
-                . '</div>'
-                . '</div>',
-                self::formatarValor($valorOriginal),
-                self::formatarValor($valorAdequado),
-                $corAjuste,
-                $percentualAjuste,
-                $tipoAjuste
-            );
-        }
-        
-        $html .= <<<HTML
-        
-        <table class="table-resumo">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Etapa</th>
-                    <th class="text-right">Custo Previsto</th>
-                    <th class="text-right">Custo Efetivo</th>
-                    <th class="text-right">Valor Total</th>
-                    <th class="text-right">% do Total</th>
-                </tr>
-            </thead>
-            <tbody>
-HTML;
-        
-        $numero = 1;
-        foreach ($resumoEtapas as $etapa) {
-            $valorEtapa = (float)$etapa['total_cobranca'];
-            $percentual = $totalGeral > 0 ? ($valorEtapa / $totalGeral) * 100 : 0;
-            $corInfo = OrcamentoCor::getCorPorEtapa($etapa['etapa']);
-            
-            $html .= sprintf(
-                '<tr>'
-                . '<td>%d</td>'
-                . '<td><span style="color: %s;">%s</span> %s</td>'
-                . '<td class="text-right color-material">R$ %s</td>'
-                . '<td class="text-right color-mao-obra">R$ %s</td>'
-                . '<td class="text-right"><strong>R$ %s</strong></td>'
-                . '<td class="text-right">%.2f%%</td>'
-                . '</tr>',
-                $numero++,
-                $corInfo['cor'],
-                $corInfo['icone'] ?? '●',
-                htmlspecialchars($etapa['etapa']),
-                self::formatarValor((float)$etapa['total_material']),
-                self::formatarValor((float)$etapa['total_mao_obra']),
-                self::formatarValor($valorEtapa),
-                $percentual
-            );
-        }
-        
-        $html .= sprintf(
-            '<tr class="total-row">'
-            . '<td colspan="2">TOTAL GERAL</td>'
-            . '<td class="text-right color-material">R$ %s</td>'
-            . '<td class="text-right color-mao-obra">R$ %s</td>'
-            . '<td class="text-right">R$ %s</td>'
-            . '<td class="text-right">100,00%%</td>'
-            . '</tr>',
-            self::formatarValor($totalMaterial),
-            self::formatarValor($totalMaoObra),
-            self::formatarValor($totalGeral)
-        );
-        
-        $html .= <<<HTML
-            </tbody>
-        </table>
     </div>
     
     <div class="page-number">Página 5</div>
 </div>
 HTML;
-        
-        return $html;
     }
     
     /**
-     * Gera páginas de detalhamento completo
+     * Gera página "Objeto da Proposta" - Brooks Construtora
      */
+    private static function gerarPaginaObjetoProposta(): string
+    {
+        return <<<'HTML'
+<div class="page">
+    <div class="page-header">
+        <div class="header-left">
+            <div><strong>BROOKS CONSTRUTORA</strong></div>
+            <div>Engenharia e Construção Civil</div>
+        </div>
+        <div class="header-logo">
+            <div class="header-logo-text">BROOKS</div>
+            <div class="header-logo-sub">CONSTRUTORA</div>
+        </div>
+        <div class="header-right">
+            <div>Tel: (11) 3063-2263</div>
+            <div>contato@brooks.com.br</div>
+        </div>
+    </div>
+    
+    <div class="page-content">
+        <h1 style="font-size: 24px; color: #1a1a2e; margin-bottom: 20px; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Objeto da Proposta</h1>
+        
+        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 15px; color: #444;">
+            A presente proposta tem como objeto a prestação de serviços de obra civil, incluindo:
+        </p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0;">
+            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 5px; padding: 15px;">
+                <h3 style="font-size: 14px; color: #1a1a2e; margin-bottom: 8px;">Execução Técnica</h3>
+                <p style="font-size: 11px; color: #666;">Execução técnica integral dos serviços descritos nas etapas seguintes.</p>
+            </div>
+            
+            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 5px; padding: 15px;">
+                <h3 style="font-size: 14px; color: #1a1a2e; margin-bottom: 8px;">Documentação</h3>
+                <p style="font-size: 11px; color: #666;">Emissão de ART de execução</p>
+            </div>
+            
+            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 5px; padding: 15px;">
+                <h3 style="font-size: 14px; color: #1a1a2e; margin-bottom: 8px;">Proteção</h3>
+                <p style="font-size: 11px; color: #666;">Seguro de obra</p>
+            </div>
+            
+            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 5px; padding: 15px;">
+                <h3 style="font-size: 14px; color: #1a1a2e; margin-bottom: 8px;">Gestão</h3>
+                <p style="font-size: 11px; color: #666;">Coordenação operacional</p>
+            </div>
+        </div>
+        
+        <p style="font-size: 12px; line-height: 1.8; text-align: justify; margin: 25px 0 15px 0; color: #444;">
+            Todos os serviços serão executados exclusivamente conforme os descritivos técnicos desta proposta.
+        </p>
+        
+        <h2 style="font-size: 20px; color: #1a1a2e; margin: 35px 0 20px 0; border-bottom: 3px solid #c92a2a; padding-bottom: 10px;">Notas Técnicas Gerais</h2>
+        
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 12px 0; border-radius: 3px;">
+            <h4 style="font-size: 12px; color: #856404; margin-bottom: 8px; font-weight: 600;">⚠️ Nota 1 – Sistemas especiais</h4>
+            <p style="font-size: 11px; color: #856404; line-height: 1.5;">
+                Não estão inclusos: <strong>Pressurização, Aquecimento, Automação, Energia Fotovoltaica, Bombeamento, Piscinas, 
+                Sistemas gerais, Cisternas, Sistemas complexos correlatos</strong>.
+            </p>
+            <p style="font-size: 11px; color: #856404; line-height: 1.5; margin-top: 8px;">
+                Todos os itens não relacionados aos sistemas propostos de engenharia especializada contratados pelo cliente.
+            </p>
+        </div>
+        
+        <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 15px; margin: 12px 0; border-radius: 3px;">
+            <h4 style="font-size: 12px; color: #0c5460; margin-bottom: 8px; font-weight: 600;">ℹ️ Nota 2 – Compatibilização</h4>
+            <p style="font-size: 11px; color: #0c5460; line-height: 1.5;">
+                O orçamento foi elaborado com base no projeto arquitetônico fornecido. Limitações físicas, centurianas, 
+                condominiais ou pré-existências poderão gerar imobilidades técnicas, adaptações executivas, revisões 
+                orçamentárias.
+            </p>
+            <p style="font-size: 11px; color: #0c5460; line-height: 1.5; margin-top: 8px;">
+                A compatibilização entre arquitetura, engenharia e execução é indispensável.
+            </p>
+        </div>
+    </div>
+    
+    <div class="page-number">Página 6</div>
+</div>
+HTML;
+    }
+    
     /**
      * Resolve o grupo de etapa de um item pelo prefixo numérico do código.
      * Retorna uma das 4 chaves fixas: 'cinza', 'acabamentos', 'gerenciamento', 'adm_impostos'
@@ -866,9 +1089,24 @@ HTML;
             'Soma dos subtotais difere do total geral');
 
         $html  = '<div class="page">';
+        $html .= '<div class="page-header">';
+        $html .= '<div class="header-left">';
+        $html .= '<div><strong>BROOKS CONSTRUTORA</strong></div>';
+        $html .= '<div>Engenharia e Construção Civil</div>';
+        $html .= '</div>';
+        $html .= '<div class="header-logo">';
+        $html .= '<div class="header-logo-text">BROOKS</div>';
+        $html .= '<div class="header-logo-sub">CONSTRUTORA</div>';
+        $html .= '</div>';
+        $html .= '<div class="header-right">';
+        $html .= '<div>Tel: (11) 3063-2263</div>';
+        $html .= '<div>contato@brooks.com.br</div>';
+        $html .= '</div>';
+        $html .= '</div>';
+        $html .= '<div class="page-content">';
         $html .= '<h1 class="section-title">Detalhamento Completo</h1>';
 
-        $paginaAtual = 6;
+        $paginaAtual = 7;
 
         foreach ($grupos as $grupo) {
             if (empty($grupo['itens'])) {
@@ -900,8 +1138,6 @@ HTML;
             );
 
             $html .= '</div>'; // etapa-section
-
-            $html .= sprintf('</div><div class="page"><div class="page-number">Página %d</div>', $paginaAtual++);
         }
 
         // Total Final
@@ -914,7 +1150,9 @@ HTML;
             self::formatarValor($totalGeral)
         );
 
-        $html .= '</div>';
+        $html .= '</div>'; // page-content
+        $html .= sprintf('<div class="page-number">Página %d</div>', $paginaAtual);
+        $html .= '</div>'; // page
 
         return $html;
     }
