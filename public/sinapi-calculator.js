@@ -989,10 +989,13 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
   
   // Debounce: cancelar atualização anterior para este código
   if (updateTimeouts[codigo]) {
+    console.log(`⏱ Cancelando atualização anterior para código ${codigo}`);
     clearTimeout(updateTimeouts[codigo]);
   }
   
-  // Aguardar 500ms antes de enviar
+  console.log(`⏱ Agendando atualização para código ${codigo} em 1 segundo...`);
+  
+  // Aguardar 1 segundo antes de enviar
   return new Promise((resolve) => {
     updateTimeouts[codigo] = setTimeout(async () => {
       const uf = 'SP';
@@ -1007,7 +1010,7 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
         payload.unidade = unidade.trim().toUpperCase();
       }
       
-      console.log(`📤 Enviando atualização:`, payload);
+      console.log(`📤 Enviando atualização para o banco:`, payload);
       
       try {
         const response = await fetch('/?api=sinapi-atualizar-preco', {
@@ -1021,7 +1024,7 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
         console.log('📥 Resposta recebida:', response.status, response.statusText);
         
         const responseText = await response.text();
-        console.log('📄 Texto da resposta:', responseText);
+        console.log('📄 Texto da resposta:', responseText.substring(0, 200));
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1031,14 +1034,14 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
         try {
           data = JSON.parse(responseText);
         } catch (e) {
-          console.error('❌ Erro ao parsear JSON:', responseText);
+          console.error('❌ Erro ao parsear JSON:', responseText.substring(0, 100));
           throw new Error('Resposta inválida do servidor');
         }
         
         console.log('📊 Dados da resposta:', data);
         
         if (data.success) {
-          console.log(`✓ Atualizado no banco: código ${codigo} = R$ ${novoPreco}${unidade ? ' (' + unidade + ')' : ''}`);
+          console.log(`✅ SALVO NO BANCO: código ${codigo} = R$ ${novoPreco}${unidade ? ' (' + unidade + ')' : ''}`);
           
           // Mostrar feedback visual
           const input = document.querySelector(`.sinapi-preco-input[data-codigo="${codigo}"]`);
@@ -1052,18 +1055,16 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
           }
         } else {
           console.error('❌ Erro ao atualizar:', data.error);
-          // Não mostrar alert para evitar spam
-          console.warn('Erro:', data.error);
+          console.warn('Detalhes:', data);
         }
         
         resolve(data);
       } catch (error) {
         console.error('❌ Erro ao atualizar:', error);
-        // Não mostrar alert para evitar spam
         console.warn('Erro de comunicação:', error.message);
         resolve({ success: false, error: error.message });
       }
-    }, 500);
+    }, 1000); // Aumentado para 1 segundo
   });
 }
 
@@ -1083,11 +1084,46 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
     ultimoResultadoSINAPI.lista[index].un = unidadeFormatada;
   }
   
-  // Buscar o preço atual do input
+  // Buscar o preço correto do banco para esta unidade
+  console.log(`🔍 Buscando preço para código ${codigo} com unidade ${unidadeFormatada}`);
+  
+  try {
+    const uf = 'SP';
+    const response = await fetch(`/?api=sinapi-precos&codigo=${codigo}&uf=${uf}`);
+    const data = await response.json();
+    
+    if (data.success && data.preco > 0) {
+      console.log(`✓ Preço encontrado no banco: R$ ${data.preco} por ${data.unidade}`);
+      
+      // Atualizar o preço no input
+      const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
+      if (precoInput) {
+        precoInput.value = data.preco.toFixed(2);
+        
+        // Atualizar no objeto
+        if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
+          ultimoResultadoSINAPI.lista[index].preco = data.preco;
+          ultimoResultadoSINAPI.lista[index].un = data.unidade;
+        }
+        
+        // Recalcular subtotal
+        recalcularItemSINAPI(index);
+      }
+      
+      // Atualizar a unidade no input também
+      const unInput = document.querySelector(`.sinapi-un-input[data-index="${index}"]`);
+      if (unInput && data.unidade) {
+        unInput.value = data.unidade;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Erro ao buscar preço:', error);
+  }
+  
+  // Salvar a unidade no banco
   const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
   const precoAtual = precoInput ? parseFloat(precoInput.value) : 0;
   
-  // Atualizar no banco com preço e unidade
   await atualizarPrecoSINAPI(codigo, precoAtual, unidadeFormatada);
   
   // Feedback visual na unidade
