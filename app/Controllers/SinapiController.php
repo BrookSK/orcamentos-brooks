@@ -34,12 +34,10 @@ class SinapiController
             // Testar query igual à API
             $sql = "SELECT codigo, descricao, unidade, tipo, preco_unit, uf, referencia, regime 
                     FROM sinapi_insumos 
-                    WHERE 1=1 AND (codigo LIKE :termo OR descricao LIKE :termo)
-                    ORDER BY codigo LIMIT :limite";
+                    WHERE 1=1 AND (codigo LIKE ? OR descricao LIKE ?)
+                    ORDER BY codigo LIMIT ?";
             $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':termo', '%BETONEIRA%');
-            $stmt->bindValue(':limite', 10, \PDO::PARAM_INT);
-            $stmt->execute();
+            $stmt->execute(['%BETONEIRA%', '%BETONEIRA%', 10]);
             $queryIgualAPI = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
             // Testar API listarInsumos
