@@ -56,7 +56,7 @@ final class OrcamentoPDF
         $stmt->execute([':id' => $orcamentoId]);
         $itensAgrupados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         
-        // Agrupar por categoria
+        // Agrupar por categoria (mantém subcategorias para detalhamento)
         $categorias = [];
         $totalGeral = 0;
         
@@ -76,11 +76,27 @@ final class OrcamentoPDF
             $totalGeral += $valor;
         }
         
+        // Agrupar categorias por nome principal (remover sufixos como " - MATERIAIS", " - MÃO DE OBRA", etc)
+        $categoriasAgrupadas = [];
+        foreach ($categorias as $categoriaNome => $categoriaData) {
+            // Extrair categoria principal (antes do " - ")
+            $categoriaPrincipal = $categoriaNome;
+            if (strpos($categoriaNome, ' - ') !== false) {
+                $categoriaPrincipal = trim(explode(' - ', $categoriaNome)[0]);
+            }
+            
+            if (!isset($categoriasAgrupadas[$categoriaPrincipal])) {
+                $categoriasAgrupadas[$categoriaPrincipal] = 0;
+            }
+            
+            $categoriasAgrupadas[$categoriaPrincipal] += $categoriaData['total'];
+        }
+        
         // Gerar página de RESUMO GERAL com áreas e totais por categoria
         $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
         $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
-        // Tabela de TOTAL GASTO POR CATEGORIA
+        // Tabela de TOTAL GASTO POR CATEGORIA (AGRUPADA)
         $html .= '<table class="table-resumo" style="margin-top:15px;">';
         $html .= '<thead><tr>';
         $html .= '<th class="left" style="width:50%;">CATEGORIA</th>';
@@ -88,12 +104,12 @@ final class OrcamentoPDF
         $html .= '<th class="center" style="width:20%;">% DA OBRA</th>';
         $html .= '</tr></thead><tbody>';
         
-        foreach ($categorias as $categoriaNome => $categoriaData) {
-            $pctObra = $totalGeral > 0 ? ($categoriaData['total'] / $totalGeral) * 100 : 0;
+        foreach ($categoriasAgrupadas as $categoriaNome => $totalCategoria) {
+            $pctObra = $totalGeral > 0 ? ($totalCategoria / $totalGeral) * 100 : 0;
             $html .= sprintf(
                 '<tr><td class="left">%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
                 htmlspecialchars(strtoupper($categoriaNome)),
-                self::formatarValor($categoriaData['total']),
+                self::formatarValor($totalCategoria),
                 number_format($pctObra, 2, ',', '.')
             );
         }
@@ -155,16 +171,16 @@ final class OrcamentoPDF
         $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
         $html .= '</tbody></table>';
         
-        // Gerar tabela de CATEGORIAS (usando dados reais do orçamento)
+        // Gerar tabela de CATEGORIAS AGRUPADAS com preço/m²
         $html .= '<table class="table-areas" style="margin-top:15px;"><thead><tr><th>CATEGORIAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
         
-        foreach ($categorias as $categoriaNome => $categoriaData) {
+        foreach ($categoriasAgrupadas as $categoriaNome => $totalCategoria) {
             $html .= sprintf(
                 '<tr><td>%s</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
                 htmlspecialchars(strtoupper($categoriaNome)),
-                self::formatarValor($categoriaData['total']),
+                self::formatarValor($totalCategoria),
                 number_format($areaTotal, 2, ',', '.'),
-                self::formatarValor($areaTotal > 0 ? $categoriaData['total'] / $areaTotal : 0)
+                self::formatarValor($areaTotal > 0 ? $totalCategoria / $areaTotal : 0)
             );
         }
         
