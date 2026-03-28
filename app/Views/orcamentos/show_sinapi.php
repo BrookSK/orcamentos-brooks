@@ -330,8 +330,16 @@ function toggleAdicionarItem() {
         <?php endif; ?>
 
         <?php foreach ($grouped as $grupo => $cats) : ?>
-            <tr class="category-row">
-                <td colspan="14"><?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?></td>
+            <tr class="group-row" draggable="true" data-grupo="<?php echo htmlspecialchars($grupo); ?>" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8f 100%); cursor:move;">
+                <td style="cursor:move; text-align:center; width:30px; color:#4FC3F7; font-size:18px; padding:10px;">⋮⋮</td>
+                <td colspan="11" style="cursor:move; font-weight:800; padding:12px; font-size:15px; color:#fff; letter-spacing:1px;">
+                    <?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?>
+                </td>
+                <td colspan="2" style="padding:8px; text-align:right;">
+                    <button class="btn" style="padding:6px 12px; font-size:12px; background:#4FC3F7; color:#000;" onclick="editarDescontoGrupo('<?php echo htmlspecialchars($grupo); ?>', <?php echo (int)$orcamento['id']; ?>); event.stopPropagation();">
+                        ✏️ Editar Desconto
+                    </button>
+                </td>
             </tr>
 
             <?php foreach ($cats as $categoria => $rows) : ?>
@@ -692,6 +700,13 @@ document.addEventListener('DOMContentLoaded', function() {
         setupCategoryDrag(header);
     });
     
+    // Configurar drag para grupos
+    const groupRows = document.querySelectorAll('.group-row');
+    console.log('Grupos encontrados para drag:', groupRows.length);
+    groupRows.forEach(row => {
+        setupGroupDrag(row);
+    });
+    
     function setupItemDrag(row) {
         row.addEventListener('dragstart', function(e) {
             draggedElement = this;
@@ -736,6 +751,85 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    function setupGroupDrag(row) {
+        row.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            draggedType = 'group';
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        row.addEventListener('dragend', function(e) {
+            this.style.opacity = '';
+            clearHighlights();
+        });
+        
+        row.addEventListener('dragover', function(e) {
+            if (draggedType === 'group' && draggedElement !== this) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                clearHighlights();
+                if (e.clientY < midpoint) {
+                    this.style.borderTop = '4px solid #4FC3F7';
+                } else {
+                    this.style.borderBottom = '4px solid #4FC3F7';
+                }
+            }
+        });
+        
+        row.addEventListener('dragleave', function(e) {
+            this.style.borderTop = '';
+            this.style.borderBottom = '';
+        });
+        
+        row.addEventListener('drop', function(e) {
+            if (draggedType === 'group' && draggedElement !== this) {
+                e.stopPropagation();
+                
+                // Coletar TODOS os elementos do grupo arrastado
+                const elementsToMove = [draggedElement];
+                let nextElement = draggedElement.nextElementSibling;
+                
+                // Coletar todas as categorias e itens até o próximo grupo
+                while (nextElement && !nextElement.classList.contains('group-row')) {
+                    elementsToMove.push(nextElement);
+                    nextElement = nextElement.nextElementSibling;
+                }
+                
+                // Determinar posição de inserção
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    // Inserir antes deste grupo
+                    elementsToMove.forEach(el => {
+                        this.parentNode.insertBefore(el, this);
+                    });
+                } else {
+                    // Inserir depois deste grupo (e todo seu conteúdo)
+                    let insertAfter = this.nextElementSibling;
+                    while (insertAfter && !insertAfter.classList.contains('group-row')) {
+                        insertAfter = insertAfter.nextElementSibling;
+                    }
+                    
+                    elementsToMove.forEach(el => {
+                        if (insertAfter) {
+                            this.parentNode.insertBefore(el, insertAfter);
+                        } else {
+                            this.parentNode.appendChild(el);
+                        }
+                    });
+                }
+                
+                saveNewOrder();
+            }
+        });
+    }
+    
     function setupCategoryDrag(header) {
         header.addEventListener('dragstart', function(e) {
             draggedElement = this;
@@ -750,8 +844,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         header.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            
             if (draggedType === 'category' && draggedElement !== this) {
-                e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
                 
                 const rect = this.getBoundingClientRect();
@@ -763,18 +858,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     this.style.borderBottom = '3px solid #2196F3';
                 }
+            } else if (draggedType === 'item') {
+                // Permitir drop de itens na categoria (adiciona ao final)
+                e.dataTransfer.dropEffect = 'move';
+                this.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
             }
         });
         
         header.addEventListener('dragleave', function(e) {
             this.style.borderTop = '';
             this.style.borderBottom = '';
+            this.style.backgroundColor = '';
         });
         
         header.addEventListener('drop', function(e) {
-            if (draggedType === 'category' && draggedElement !== this) {
-                e.stopPropagation();
+            e.stopPropagation();
+            this.style.backgroundColor = '';
+            
+            if (draggedType === 'item') {
+                // Item sendo solto na categoria - adicionar ao final da categoria
+                // Encontrar onde inserir (depois do último item desta categoria ou depois do header)
+                let insertAfter = this;
+                let nextElement = this.nextElementSibling;
                 
+                // Pular todos os itens desta categoria para encontrar o final
+                while (nextElement && nextElement.classList.contains('item-row')) {
+                    insertAfter = nextElement;
+                    nextElement = nextElement.nextElementSibling;
+                }
+                
+                // Inserir o item depois do último item (ou depois do header se não houver itens)
+                if (insertAfter === this) {
+                    // Categoria vazia, inserir logo após o header
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    // Inserir após o último item
+                    this.parentNode.insertBefore(draggedElement, insertAfter.nextSibling);
+                }
+                
+                saveNewOrder();
+                
+            } else if (draggedType === 'category' && draggedElement !== this) {
+                // Categoria sendo movida
                 // Coletar todos os elementos da categoria arrastada
                 const draggedCategory = draggedElement.dataset.categoria;
                 const draggedGrupo = draggedElement.dataset.grupo;
@@ -943,4 +1068,96 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 })();
 });
+
+// Função para editar desconto de grupo
+function editarDescontoGrupo(grupo, orcamentoId) {
+    const modal = document.createElement('div');
+    modal.id = 'modal-desconto-grupo';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+    
+    modal.innerHTML = `
+        <div style="background:#1a1916;border-radius:12px;padding:24px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            <div style="font-size:18px;font-weight:800;margin-bottom:16px;color:#4FC3F7;">
+                📊 Desconto para: ${grupo}
+            </div>
+            <div style="font-size:13px;color:#999;margin-bottom:20px;">
+                Aplicar desconto em TODOS os itens deste grupo (sobrepõe margens globais)
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:12px;color:#4FC3F7;font-weight:600;margin-bottom:8px;">
+                    % Desconto (negativo para desconto, positivo para acréscimo)
+                </label>
+                <input type="number" id="desconto-grupo-input" step="0.1" value="0" 
+                       style="width:100%;padding:12px;border-radius:6px;border:1px solid rgba(79,195,247,0.3);background:rgba(255,255,255,0.04);color:#fff;font-size:16px;">
+                <div style="font-size:10px;color:#999;margin-top:6px;">
+                    Exemplo: -10 para 10% de desconto, 5 para 5% de acréscimo
+                </div>
+            </div>
+            
+            <div style="display:flex;gap:12px;">
+                <button onclick="fecharModalDescontoGrupo()" 
+                        style="flex:1;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.04);cursor:pointer;color:#999;font-size:14px;">
+                    Cancelar
+                </button>
+                <button onclick="aplicarDescontoGrupo('${grupo}', ${orcamentoId})" 
+                        class="btn primary" style="flex:1;padding:12px;font-size:14px;">
+                    Aplicar Desconto
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.getElementById('desconto-grupo-input').focus();
+}
+
+function fecharModalDescontoGrupo() {
+    const modal = document.getElementById('modal-desconto-grupo');
+    if (modal) modal.remove();
+}
+
+function aplicarDescontoGrupo(grupo, orcamentoId) {
+    const desconto = parseFloat(document.getElementById('desconto-grupo-input').value || 0);
+    
+    if (desconto === 0) {
+        alert('Digite um valor de desconto diferente de zero');
+        return;
+    }
+    
+    const loadingMsg = document.createElement('div');
+    loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:10001;';
+    loadingMsg.innerHTML = '⏳ Aplicando desconto...';
+    document.body.appendChild(loadingMsg);
+    
+    fetch('/?route=orcamentos/aplicarDescontoGrupo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            orcamento_id: orcamentoId,
+            grupo: grupo,
+            desconto: desconto
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            loadingMsg.innerHTML = '✓ Desconto aplicado!';
+            loadingMsg.style.background = '#4CAF50';
+            fecharModalDescontoGrupo();
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            loadingMsg.innerHTML = '✗ Erro: ' + (data.error || 'Erro desconhecido');
+            loadingMsg.style.background = '#f44336';
+            setTimeout(() => loadingMsg.remove(), 3000);
+        }
+    })
+    .catch(err => {
+        loadingMsg.innerHTML = '✗ Erro de conexão';
+        loadingMsg.style.background = '#f44336';
+        setTimeout(() => loadingMsg.remove(), 3000);
+    });
+}
 </script>

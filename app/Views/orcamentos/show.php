@@ -510,8 +510,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         header.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            
             if (draggedType === 'category' && draggedElement !== this) {
-                e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
                 
                 const rect = this.getBoundingClientRect();
@@ -523,17 +524,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     this.style.borderBottom = '3px solid #2196F3';
                 }
+            } else if (draggedType === 'item') {
+                // Permitir drop de itens na categoria (adiciona ao final)
+                e.dataTransfer.dropEffect = 'move';
+                this.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
             }
         });
         
         header.addEventListener('dragleave', function(e) {
             this.style.borderTop = '';
             this.style.borderBottom = '';
+            this.style.backgroundColor = '';
         });
         
         header.addEventListener('drop', function(e) {
-            if (draggedType === 'category' && draggedElement !== this) {
-                e.stopPropagation();
+            e.stopPropagation();
+            this.style.backgroundColor = '';
+            
+            if (draggedType === 'item') {
+                // Item sendo solto na categoria - adicionar ao final da categoria
+                let insertAfter = this;
+                let nextElement = this.nextElementSibling;
+                
+                // Pular todos os itens desta categoria para encontrar o final
+                while (nextElement && nextElement.classList.contains('item-row')) {
+                    insertAfter = nextElement;
+                    nextElement = nextElement.nextElementSibling;
+                }
+                
+                // Inserir o item depois do último item (ou depois do header se não houver itens)
+                if (insertAfter === this) {
+                    // Categoria vazia, inserir logo após o header
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    // Inserir após o último item
+                    this.parentNode.insertBefore(draggedElement, insertAfter.nextSibling);
+                }
+                
+                saveNewOrder();
+                
+            } else if (draggedType === 'category' && draggedElement !== this) {
+                // Categoria sendo movida
                 
                 // Coletar todos os elementos da categoria arrastada
                 const draggedCategory = draggedElement.dataset.categoria;

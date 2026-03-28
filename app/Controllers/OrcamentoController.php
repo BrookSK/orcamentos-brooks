@@ -1540,6 +1540,55 @@ final class OrcamentoController
         }
     }
 
+    public function aplicarDescontoGrupo(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $json = file_get_contents('php://input');
+            $payload = json_decode($json, true);
+            
+            if (!$payload || !isset($payload['orcamento_id']) || !isset($payload['grupo']) || !isset($payload['desconto'])) {
+                echo json_encode(['success' => false, 'error' => 'Payload inválido']);
+                return;
+            }
+            
+            $orcamentoId = (int)$payload['orcamento_id'];
+            $grupo = (string)$payload['grupo'];
+            $desconto = (float)$payload['desconto'];
+            
+            // Buscar todos os itens do grupo
+            $itens = OrcamentoItem::allByOrcamento($orcamentoId);
+            $count = 0;
+            
+            foreach ($itens as $item) {
+                if ((string)($item['grupo'] ?? '') === $grupo) {
+                    // Aplicar desconto como margem personalizada
+                    $data = [
+                        'margem_personalizada' => (string)$desconto,
+                        'usa_margem_personalizada' => '1',
+                    ];
+                    
+                    OrcamentoItem::update($orcamentoId, (int)$item['id'], $data);
+                    $count++;
+                }
+            }
+            
+            Logger::info('orcamentos.aplicarDescontoGrupo.success', [
+                'orcamento_id' => $orcamentoId,
+                'grupo' => $grupo,
+                'desconto' => $desconto,
+                'count' => $count
+            ]);
+            
+            echo json_encode(['success' => true, 'count' => $count]);
+            
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.aplicarDescontoGrupo.error', ['message' => $e->getMessage()]);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
     public function addFromSinapi(): void
     {
         header('Content-Type: application/json');
