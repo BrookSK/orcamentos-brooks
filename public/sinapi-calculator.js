@@ -871,7 +871,7 @@ async function buscarPrecosBanco(codigos, uf) {
   try {
     const codigosStr = codigos.join(',');
     const response = await fetch(
-      `/sinapi-precos-api.php?codigos=${codigosStr}&uf=${uf}`
+      `/?api=sinapi-precos&codigos=${codigosStr}&uf=${uf}`
     );
     
     if (!response.ok) {

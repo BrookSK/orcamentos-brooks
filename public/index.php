@@ -2,12 +2,74 @@
 
 declare(strict_types=1);
 
-// Não processar requisições para a API SINAPI
-if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], 'sinapi-precos-api.php') !== false) {
-    return;
-}
-
 require __DIR__ . '/../app/bootstrap.php';
+
+// ============================================
+// ROTA DA API SINAPI
+// ============================================
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+if (strpos($requestUri, '/api/sinapi-precos') !== false || isset($_GET['api']) && $_GET['api'] === 'sinapi-precos') {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit;
+    }
+    
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        exit;
+    }
+    
+    try {
+        $uf = $_GET['uf'] ?? 'SP';
+        
+        // MODO 1: Listar insumos
+        if (isset($_GET['listar'])) {
+            $termo = $_GET['termo'] ?? '';
+            $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 50;
+            $insumos = \App\Api\SinapiPrecosApi::listarInsumos($termo, $uf, $limite);
+            echo json_encode(['success' => true, 'total' => count($insumos), 'insumos' => $insumos, 'uf' => $uf], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        
+        // MODO 2: Buscar múltiplos códigos
+        if (isset($_GET['codigos'])) {
+            $codigos = array_filter(array_map('trim', explode(',', $_GET['codigos'])));
+            if (empty($codigos)) {
+                echo json_encode(['success' => false, 'message' => 'Nenhum código fornecido']);
+                exit;
+            }
+            $precos = \App\Api\SinapiPrecosApi::buscarMultiplosPrecos($codigos, $uf);
+            echo json_encode(['success' => true, 'total' => count($precos), 'precos' => $precos, 'uf' => $uf], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        
+        // MODO 3: Buscar código único
+        if (isset($_GET['codigo'])) {
+            $codigo = trim($_GET['codigo']);
+            if (empty($codigo)) {
+                echo json_encode(['success' => false, 'message' => 'Código não fornecido']);
+                exit;
+            }
+            $resultado = \App\Api\SinapiPrecosApi::buscarPreco($codigo, $uf);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Parâmetros inválidos'], JSON_UNESCAPED_UNICODE);
+        exit;
+        
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Erro interno', 'error' => $e->getMessage()]);
+        exit;
+    }
+}
 
 use App\Controllers\ItemController;
 use App\Controllers\OrcamentoController;
