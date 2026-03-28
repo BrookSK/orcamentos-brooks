@@ -1555,10 +1555,20 @@ final class OrcamentoController
             
             $orcamentoId = (int)$payload['orcamento_id'];
             $elementoNome = (string)($payload['elemento_nome'] ?? 'Elemento SINAPI');
-            $percentualBdi = (float)($payload['percentual_bdi'] ?? 25.0);
             $grupoSelecionado = (string)($payload['grupo_selecionado'] ?? '');
             $categoriaSelecionada = (string)($payload['categoria_selecionada'] ?? '');
             $itens = $payload['itens'];
+            
+            // Buscar orçamento para obter margens globais
+            $orcamento = Orcamento::find($orcamentoId);
+            if (!$orcamento) {
+                echo json_encode(['success' => false, 'error' => 'Orçamento não encontrado']);
+                return;
+            }
+            
+            $margemMaoObra = (float)($orcamento['margem_mao_obra'] ?? 0);
+            $margemMateriais = (float)($orcamento['margem_materiais'] ?? 0);
+            $margemEquipamentos = (float)($orcamento['margem_equipamentos'] ?? 20);
             
             if (!is_array($itens) || empty($itens)) {
                 echo json_encode(['success' => false, 'error' => 'Nenhum item para adicionar']);
@@ -1568,7 +1578,9 @@ final class OrcamentoController
             Logger::info('orcamentos.addFromSinapi.start', [
                 'orcamento_id' => $orcamentoId,
                 'elemento' => $elementoNome,
-                'bdi' => $percentualBdi,
+                'margem_materiais' => $margemMateriais,
+                'margem_mao_obra' => $margemMaoObra,
+                'margem_equipamentos' => $margemEquipamentos,
                 'count' => count($itens)
             ]);
             
@@ -1690,8 +1702,18 @@ final class OrcamentoController
                     $quantidade = (float)($item['qty'] ?? 0);
                     $preco = (float)($item['preco'] ?? 0);
                     
-                    // Calcular valor unitário com BDI
-                    $valorUnitarioComBdi = round($preco * (1 + $percentualBdi / 100), 2);
+                    // Determinar margem baseada no tipo
+                    $margemAplicavel = 0;
+                    if ($tipo === 'material') {
+                        $margemAplicavel = $margemMateriais;
+                    } elseif ($tipo === 'mao') {
+                        $margemAplicavel = $margemMaoObra;
+                    } else { // equip
+                        $margemAplicavel = $margemEquipamentos;
+                    }
+                    
+                    // Calcular valor de cobrança com margem global
+                    $valorUnitarioComMargem = round($preco * (1 + $margemAplicavel / 100), 2);
                     
                     $data = [
                         'grupo' => $grupo,
@@ -1704,9 +1726,9 @@ final class OrcamentoController
                         'custo_mao_obra' => $tipo === 'mao' ? (string)$preco : '0',
                         'custo_equipamento' => $tipo === 'equip' ? (string)$preco : '0',
                         'valor_unitario' => (string)$preco,
-                        'valor_cobranca' => (string)$valorUnitarioComBdi,
-                        'margem_personalizada' => (string)$percentualBdi,
-                        'usa_margem_personalizada' => '1',
+                        'valor_cobranca' => (string)$valorUnitarioComMargem,
+                        'margem_personalizada' => '0',
+                        'usa_margem_personalizada' => '0',
                         'etapa' => $etapaDestino,
                         'ordem' => '0',
                     ];

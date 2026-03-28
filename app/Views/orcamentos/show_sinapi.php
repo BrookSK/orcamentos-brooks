@@ -94,13 +94,16 @@ $totalGeral = 0.0;
                 <div style="font-size:13px; font-weight:800; margin-bottom:12px;">Lista de materiais calculados</div>
                 
                 <div style="margin-bottom:16px; padding:12px; background:rgba(201,151,58,.1); border-radius:8px; border:1px solid rgba(201,151,58,.3);">
-                    <label style="display:block; font-size:12px; color:#C9973A; font-weight:600; margin-bottom:8px;">
-                        % BDI (Benefícios e Despesas Indiretas) - Margem de lucro
-                    </label>
-                    <input type="number" id="sinapi-bdi-input" value="25" min="0" max="100" step="0.1" 
-                           style="width:100%; padding:10px 12px; border-radius:6px; border:1px solid rgba(201,151,58,.3); background:rgba(255,255,255,.04); color:#fff; font-size:14px;">
-                    <div style="font-size:10px; color:#999; margin-top:6px;">
-                        Este percentual será aplicado sobre o custo (material + mão de obra) para calcular o valor de cobrança
+                    <div style="font-size:12px; color:#C9973A; font-weight:600; margin-bottom:6px;">
+                        ℹ️ Margens de Lucro
+                    </div>
+                    <div style="font-size:11px; color:#999; line-height:1.6;">
+                        As margens de lucro (% BDI) são configuradas no cabeçalho do orçamento:<br>
+                        • Materiais: <?php echo number_format($margemMateriaisGlobal, 1, ',', '.'); ?>%<br>
+                        • Mão de Obra: <?php echo number_format($margemMaoObraGlobal, 1, ',', '.'); ?>%<br>
+                        • Equipamentos: <?php echo number_format($margemEquipamentosGlobal, 1, ',', '.'); ?>%<br>
+                        <br>
+                        Para alterar, clique em "Editar cabeçalho" acima.
                     </div>
                 </div>
 
@@ -617,14 +620,10 @@ function adicionarAoOrcamentoComCategoria(grupoSelecionado, categoriaSelecionada
         return;
     }
 
-    // Obter BDI configurado
-    const bdiInput = document.getElementById('sinapi-bdi-input');
-    const percentualBdi = parseFloat(bdiInput?.value || 25);
-
+    // Usar margens do cabeçalho do orçamento (não há mais input de BDI)
     const payload = {
         orcamento_id: parseInt(orcamentoId),
         elemento_nome: ultimoResultadoSINAPI.elemento,
-        percentual_bdi: percentualBdi,
         grupo_selecionado: grupoSelecionado,
         categoria_selecionada: categoriaSelecionada,
         itens: itensSelecionados
