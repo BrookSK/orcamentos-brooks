@@ -993,9 +993,9 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
     clearTimeout(updateTimeouts[codigo]);
   }
   
-  console.log(`⏱ Agendando atualização para código ${codigo} em 1 segundo...`);
+  console.log(`⏱ Agendando atualização para código ${codigo} em 1.5 segundos...`);
   
-  // Aguardar 1 segundo antes de enviar
+  // Aguardar 1.5 segundos antes de enviar
   return new Promise((resolve) => {
     updateTimeouts[codigo] = setTimeout(async () => {
       const uf = 'SP';
@@ -1010,7 +1010,10 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
         payload.unidade = unidade.trim().toUpperCase();
       }
       
-      console.log(`📤 Enviando atualização para o banco:`, payload);
+      console.log(`📤 ENVIANDO PARA O BANCO:`, payload);
+      console.log(`   URL: /?api=sinapi-atualizar-preco`);
+      console.log(`   Método: POST`);
+      console.log(`   Body:`, JSON.stringify(payload));
       
       try {
         const response = await fetch('/?api=sinapi-atualizar-preco', {
@@ -1021,12 +1024,13 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
           body: JSON.stringify(payload)
         });
         
-        console.log('📥 Resposta recebida:', response.status, response.statusText);
+        console.log('📥 Resposta HTTP:', response.status, response.statusText);
         
         const responseText = await response.text();
-        console.log('📄 Texto da resposta:', responseText.substring(0, 200));
+        console.log('📄 Resposta completa (primeiros 500 chars):', responseText.substring(0, 500));
         
         if (!response.ok) {
+          console.error(`❌ HTTP ${response.status}:`, responseText);
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
@@ -1034,37 +1038,46 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
         try {
           data = JSON.parse(responseText);
         } catch (e) {
-          console.error('❌ Erro ao parsear JSON:', responseText.substring(0, 100));
+          console.error('❌ Erro ao parsear JSON:', e);
+          console.error('Resposta recebida:', responseText);
           throw new Error('Resposta inválida do servidor');
         }
         
-        console.log('📊 Dados da resposta:', data);
+        console.log('📊 JSON parseado:', data);
         
         if (data.success) {
-          console.log(`✅ SALVO NO BANCO: código ${codigo} = R$ ${novoPreco}${unidade ? ' (' + unidade + ')' : ''}`);
+          console.log(`✅ ✅ ✅ SALVO NO BANCO COM SUCESSO! ✅ ✅ ✅`);
+          console.log(`   Código: ${codigo}`);
+          console.log(`   Preço: R$ ${novoPreco}`);
+          console.log(`   Unidade: ${unidade || 'não alterada'}`);
+          console.log(`   Preço anterior: R$ ${data.preco_anterior || 'N/A'}`);
           
           // Mostrar feedback visual
           const input = document.querySelector(`.sinapi-preco-input[data-codigo="${codigo}"]`);
           if (input) {
             input.style.borderColor = '#4CAF50';
             input.style.background = 'rgba(76, 175, 80, 0.1)';
+            input.title = `Salvo: R$ ${novoPreco}`;
             setTimeout(() => {
               input.style.borderColor = '';
               input.style.background = '';
-            }, 2000);
+              input.title = '';
+            }, 3000);
           }
         } else {
-          console.error('❌ Erro ao atualizar:', data.error);
-          console.warn('Detalhes:', data);
+          console.error('❌ Falha ao salvar:', data.error);
+          console.warn('Detalhes completos:', data);
         }
         
         resolve(data);
       } catch (error) {
-        console.error('❌ Erro ao atualizar:', error);
-        console.warn('Erro de comunicação:', error.message);
+        console.error('❌ ❌ ❌ ERRO AO SALVAR NO BANCO:', error);
+        console.error('Tipo do erro:', error.constructor.name);
+        console.error('Mensagem:', error.message);
+        console.error('Stack:', error.stack);
         resolve({ success: false, error: error.message });
       }
-    }, 1000); // Aumentado para 1 segundo
+    }, 1500); // 1.5 segundos
   });
 }
 
@@ -1078,62 +1091,142 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
   }
   
   const unidadeFormatada = novaUnidade.trim().toUpperCase();
+  console.log(`🔄 Tentando alterar unidade do código ${codigo} para ${unidadeFormatada}`);
   
-  // Atualizar no objeto local
-  if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
-    ultimoResultadoSINAPI.lista[index].un = unidadeFormatada;
-  }
-  
-  // Buscar o preço correto do banco para esta unidade
-  console.log(`🔍 Buscando preço para código ${codigo} com unidade ${unidadeFormatada}`);
-  
+  // Buscar o item atual no banco
   try {
     const uf = 'SP';
     const response = await fetch(`/?api=sinapi-precos&codigo=${codigo}&uf=${uf}`);
-    const data = await response.json();
     
-    if (data.success && data.preco > 0) {
-      console.log(`✓ Preço encontrado no banco: R$ ${data.preco} por ${data.unidade}`);
+    if (!response.ok) {
+      console.error('❌ Erro na resposta:', response.status);
+      return;
+    }
+    
+    const data = await response.json();
+    console.log('📦 Item atual no banco:', data);
+    
+    if (data.success) {
+      const unidadeBanco = data.unidade;
+      const descricaoAtual = data.descricao;
       
-      // Atualizar o preço no input
-      const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
-      if (precoInput) {
-        precoInput.value = data.preco.toFixed(2);
+      if (unidadeBanco === unidadeFormatada) {
+        console.log(`✓ Unidade ${unidadeFormatada} já é a correta para este código`);
+        return;
+      }
+      
+      // Unidade diferente - buscar código alternativo com a mesma descrição
+      console.log(`🔍 Buscando código alternativo com unidade ${unidadeFormatada}...`);
+      console.log(`   Descrição base: ${descricaoAtual}`);
+      
+      // Extrair palavras-chave da descrição (primeiras 3-4 palavras significativas)
+      const palavrasChave = descricaoAtual
+        .split(' ')
+        .filter(p => p.length > 3)
+        .slice(0, 4)
+        .join(' ');
+      
+      console.log(`   Palavras-chave: ${palavrasChave}`);
+      
+      // Buscar no banco por descrição similar
+      const searchResponse = await fetch(`/?api=sinapi-precos&listar=1&termo=${encodeURIComponent(palavrasChave)}&uf=${uf}&limite=20`);
+      const searchData = await searchResponse.json();
+      
+      console.log(`📋 Encontrados ${searchData.total} resultados similares`);
+      
+      if (searchData.success && searchData.insumos && searchData.insumos.length > 0) {
+        // Procurar um item com a unidade desejada
+        const itemComUnidade = searchData.insumos.find(item => 
+          item.unidade === unidadeFormatada
+        );
         
-        // Atualizar no objeto
-        if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
-          ultimoResultadoSINAPI.lista[index].preco = data.preco;
-          ultimoResultadoSINAPI.lista[index].un = data.unidade;
+        if (itemComUnidade) {
+          console.log(`✅ Código alternativo encontrado!`);
+          console.log(`   Código novo: ${itemComUnidade.codigo}`);
+          console.log(`   Descrição: ${itemComUnidade.descricao}`);
+          console.log(`   Unidade: ${itemComUnidade.unidade}`);
+          console.log(`   Preço: R$ ${itemComUnidade.preco_unit || itemComUnidade.preco}`);
+          
+          const novoPreco = parseFloat(itemComUnidade.preco_unit || itemComUnidade.preco);
+          
+          // Atualizar todos os campos
+          const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
+          const unInput = document.querySelector(`.sinapi-un-input[data-index="${index}"]`);
+          const qtyInput = document.querySelector(`.sinapi-qty-input[data-index="${index}"]`);
+          const nomeCell = document.querySelector(`tr[data-item-index="${index}"] td:nth-child(3)`);
+          
+          if (precoInput) {
+            precoInput.value = novoPreco.toFixed(2);
+            precoInput.setAttribute('data-codigo', itemComUnidade.codigo);
+            // Atualizar o onchange para usar o novo código
+            precoInput.setAttribute('onchange', `recalcularItemSINAPI(${index}); atualizarPrecoSINAPI('${itemComUnidade.codigo}', this.value, null)`);
+          }
+          
+          if (unInput) {
+            unInput.value = itemComUnidade.unidade;
+            unInput.setAttribute('data-codigo', itemComUnidade.codigo);
+            // Atualizar o onchange para usar o novo código
+            unInput.setAttribute('onchange', `atualizarUnidadeSINAPI('${itemComUnidade.codigo}', this.value, ${index})`);
+          }
+          
+          if (nomeCell) {
+            nomeCell.textContent = itemComUnidade.descricao;
+          }
+          
+          // Atualizar objeto local
+          if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
+            ultimoResultadoSINAPI.lista[index].codigo_sinapi = itemComUnidade.codigo;
+            ultimoResultadoSINAPI.lista[index].preco = novoPreco;
+            ultimoResultadoSINAPI.lista[index].un = itemComUnidade.unidade;
+            ultimoResultadoSINAPI.lista[index].nome = itemComUnidade.descricao;
+            ultimoResultadoSINAPI.lista[index].fonte = 'banco_dados';
+          }
+          
+          // Recalcular subtotal
+          recalcularItemSINAPI(index);
+          
+          // Feedback visual de sucesso
+          if (unInput) {
+            unInput.style.borderColor = '#4CAF50';
+            unInput.style.background = 'rgba(76, 175, 80, 0.1)';
+            setTimeout(() => {
+              unInput.style.borderColor = '';
+              unInput.style.background = '';
+            }, 2000);
+          }
+          
+          console.log(`✅ Item atualizado com sucesso para código ${itemComUnidade.codigo}!`);
+          
+          return;
         }
-        
-        // Recalcular subtotal
-        recalcularItemSINAPI(index);
       }
       
-      // Atualizar a unidade no input também
+      // Não encontrou código alternativo
+      console.warn(`⚠ Não foi encontrado código SINAPI com unidade ${unidadeFormatada} para este item`);
+      console.warn(`💡 Mantendo código ${codigo} com unidade ${unidadeBanco}`);
+      
+      // Reverter para a unidade original
       const unInput = document.querySelector(`.sinapi-un-input[data-index="${index}"]`);
-      if (unInput && data.unidade) {
-        unInput.value = data.unidade;
+      if (unInput) {
+        unInput.value = unidadeBanco;
+        
+        // Feedback visual de aviso
+        unInput.style.borderColor = '#ff9800';
+        unInput.style.background = 'rgba(255, 152, 0, 0.1)';
+        setTimeout(() => {
+          unInput.style.borderColor = '';
+          unInput.style.background = '';
+        }, 2000);
       }
+      
+      // Atualizar objeto local
+      if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
+        ultimoResultadoSINAPI.lista[index].un = unidadeBanco;
+      }
+      
+      alert(`⚠ Não foi encontrado código SINAPI com unidade ${unidadeFormatada} para:\n"${descricaoAtual}"\n\nMantenha a unidade ${unidadeBanco} ou busque manualmente o código correto.`);
     }
   } catch (error) {
-    console.error('❌ Erro ao buscar preço:', error);
-  }
-  
-  // Salvar a unidade no banco
-  const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
-  const precoAtual = precoInput ? parseFloat(precoInput.value) : 0;
-  
-  await atualizarPrecoSINAPI(codigo, precoAtual, unidadeFormatada);
-  
-  // Feedback visual na unidade
-  const unInput = document.querySelector(`.sinapi-un-input[data-index="${index}"]`);
-  if (unInput) {
-    unInput.style.borderColor = '#4CAF50';
-    unInput.style.background = 'rgba(76, 175, 80, 0.1)';
-    setTimeout(() => {
-      unInput.style.borderColor = '';
-      unInput.style.background = '';
-    }, 2000);
+    console.error('❌ Erro ao buscar código alternativo:', error);
   }
 }

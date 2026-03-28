@@ -130,7 +130,7 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
         }
         
         // Atualizar no banco de dados
-        $db = \App\Core\Database::getInstance();
+        $db = \App\Core\Database::pdo();
         
         // Verificar se o registro existe
         $checkStmt = $db->prepare("SELECT codigo, preco_unit, unidade FROM sinapi_insumos WHERE codigo = :codigo AND uf = :uf");
