@@ -26,6 +26,11 @@ class SinapiController
             $stmt->execute();
             $cod10535 = $stmt->fetch(\PDO::FETCH_ASSOC);
             
+            // Testar query direta
+            $stmt = $pdo->prepare("SELECT codigo, descricao, unidade FROM sinapi_insumos WHERE descricao LIKE :termo LIMIT 5");
+            $stmt->execute([':termo' => '%BETONEIRA%']);
+            $queryDireta = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
             // Testar API listarInsumos
             $resultadosAPI = \App\Api\SinapiPrecosApi::listarInsumos('BETONEIRA', 'SP', 10);
             
@@ -35,6 +40,8 @@ class SinapiController
                 'total_betoneiras' => $betoneiras['total'],
                 'codigo_10535' => $cod10535 ? 'encontrado' : 'nao_encontrado',
                 'codigo_10535_uf' => $cod10535['uf'] ?? null,
+                'query_direta_count' => count($queryDireta),
+                'query_direta_sample' => $queryDireta,
                 'api_listar_count' => count($resultadosAPI),
                 'api_listar_sample' => array_slice($resultadosAPI, 0, 3)
             ], JSON_UNESCAPED_UNICODE);
@@ -42,7 +49,8 @@ class SinapiController
         } catch (\Exception $e) {
             echo json_encode([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
         exit;
