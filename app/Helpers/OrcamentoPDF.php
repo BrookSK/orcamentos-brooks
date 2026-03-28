@@ -80,10 +80,26 @@ final class OrcamentoPDF
         $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
         $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
-        // Tabela de total geral
-        $html .= '<table class="table-resumo" style="margin-top:15px;"><tbody>';
+        // Tabela de TOTAL GASTO POR CATEGORIA
+        $html .= '<table class="table-resumo" style="margin-top:15px;">';
+        $html .= '<thead><tr>';
+        $html .= '<th class="left" style="width:50%;">CATEGORIA</th>';
+        $html .= '<th class="right" style="width:30%;">VALOR TOTAL</th>';
+        $html .= '<th class="center" style="width:20%;">% DA OBRA</th>';
+        $html .= '</tr></thead><tbody>';
+        
+        foreach ($categorias as $categoriaNome => $categoriaData) {
+            $pctObra = $totalGeral > 0 ? ($categoriaData['total'] / $totalGeral) * 100 : 0;
+            $html .= sprintf(
+                '<tr><td class="left">%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
+                htmlspecialchars(strtoupper($categoriaNome)),
+                self::formatarValor($categoriaData['total']),
+                number_format($pctObra, 2, ',', '.')
+            );
+        }
+        
         $html .= sprintf(
-            '<tr class="total-row"><td colspan="2">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
+            '<tr class="total-row"><td class="left">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
             self::formatarValor($totalGeral)
         );
         $html .= '</tbody></table>';
