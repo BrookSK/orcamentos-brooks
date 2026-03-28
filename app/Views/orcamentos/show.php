@@ -221,16 +221,44 @@ function toggleAdicionarItem() {
                         }
                         
                         // Calcular custos unitários
-                        $custoMaterialUnit = $quantidade > 0 ? $custoMaterialTotal / $quantidade : 0;
-                        $custoMaoObraUnit = $quantidade > 0 ? $custoMaoObraTotal / $quantidade : 0;
-                        $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit;
+                        // IMPORTANTE: custo_material e custo_mao_obra podem estar salvos como:
+                        // - UNITÁRIOS (itens do SINAPI após correção)
+                        // - TOTAIS (itens antigos)
+                        // Para detectar, verificamos se custo/quantidade ≈ valor_unitario
                         
-                        // Se não há custo total, usar valor_unitario como base
-                        if ($custoUnitTotal == 0) {
-                            $custoUnitTotal = $valorUnitario;
+                        $custoMaterialUnit = 0;
+                        $custoMaoObraUnit = 0;
+                        
+                        if ($custoMaterialTotal > 0 && $quantidade > 0) {
+                            $custoMaterialPorQtd = $custoMaterialTotal / $quantidade;
+                            // Se custo/qtd é muito diferente do valor_unitario, provavelmente já é unitário
+                            if (abs($custoMaterialTotal - $valorUnitario) < 0.01) {
+                                // Custo já é unitário
+                                $custoMaterialUnit = $custoMaterialTotal;
+                            } else {
+                                // Custo é total, dividir pela quantidade
+                                $custoMaterialUnit = $custoMaterialPorQtd;
+                            }
                         }
                         
-                        $margemUnit = $valorCobranca - $custoUnitTotal;
+                        if ($custoMaoObraTotal > 0 && $quantidade > 0) {
+                            $custoMaoObraPorQtd = $custoMaoObraTotal / $quantidade;
+                            // Se custo/qtd é muito diferente do valor_unitario, provavelmente já é unitário
+                            if (abs($custoMaoObraTotal - $valorUnitario) < 0.01) {
+                                // Custo já é unitário
+                                $custoMaoObraUnit = $custoMaoObraTotal;
+                            } else {
+                                // Custo é total, dividir pela quantidade
+                                $custoMaoObraUnit = $custoMaoObraPorQtd;
+                            }
+                        }
+                        
+                        $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit;
+                        
+                        // Se não há custo detalhado, usar valor_unitario como base de custo
+                        $custoBase = $custoUnitTotal > 0 ? $custoUnitTotal : $valorUnitario;
+                        
+                        $margemUnit = $valorCobranca - $custoBase;
                         $valorTotal = round($quantidade * $valorCobranca, 2);
                         
                         // Calcular % BDI aplicado
@@ -245,8 +273,8 @@ function toggleAdicionarItem() {
                             } else {
                                 $percentualBdi = $margemMateriaisGlobal;
                             }
-                        } elseif ($custoUnitTotal > 0.01 && $valorCobranca > $custoUnitTotal) {
-                            $percentualBdi = (($valorCobranca - $custoUnitTotal) / $custoUnitTotal) * 100;
+                        } elseif ($custoBase > 0.01 && $valorCobranca > $custoBase) {
+                            $percentualBdi = (($valorCobranca - $custoBase) / $custoBase) * 100;
                             if ($percentualBdi > 999) {
                                 $percentualBdi = 0;
                             }
