@@ -96,30 +96,6 @@ final class OrcamentoPDF
         $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
         $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
-        // Tabela de TOTAL GASTO POR CATEGORIA (AGRUPADA)
-        $html .= '<table class="table-resumo" style="margin-top:15px;">';
-        $html .= '<thead><tr>';
-        $html .= '<th class="left" style="width:50%;">CATEGORIA</th>';
-        $html .= '<th class="right" style="width:30%;">VALOR TOTAL</th>';
-        $html .= '<th class="center" style="width:20%;">% DA OBRA</th>';
-        $html .= '</tr></thead><tbody>';
-        
-        foreach ($categoriasAgrupadas as $categoriaNome => $totalCategoria) {
-            $pctObra = $totalGeral > 0 ? ($totalCategoria / $totalGeral) * 100 : 0;
-            $html .= sprintf(
-                '<tr><td class="left">%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-                htmlspecialchars(strtoupper($categoriaNome)),
-                self::formatarValor($totalCategoria),
-                number_format($pctObra, 2, ',', '.')
-            );
-        }
-        
-        $html .= sprintf(
-            '<tr class="total-row"><td class="left">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
-            self::formatarValor($totalGeral)
-        );
-        $html .= '</tbody></table>';
-
         // TABELAS DE ÁREAS
         // Processar áreas personalizadas
         $areasPersonalizadas = [];
@@ -141,7 +117,39 @@ final class OrcamentoPDF
             $areaTotal = (float)($orcamento['area_m2'] ?? 0);
         }
         
-        // Gerar tabela de áreas
+        // Tabela ÚNICA com TODAS as informações: CATEGORIA, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
+        $html .= '<table class="table-resumo" style="margin-top:15px;">';
+        $html .= '<thead><tr>';
+        $html .= '<th class="left" style="width:30%;">CATEGORIA</th>';
+        $html .= '<th class="right" style="width:20%;">VALOR TOTAL</th>';
+        $html .= '<th class="center" style="width:12%;">% DA OBRA</th>';
+        $html .= '<th class="center" style="width:15%;">M2</th>';
+        $html .= '<th class="right" style="width:23%;">PREÇO / m2</th>';
+        $html .= '</tr></thead><tbody>';
+        
+        foreach ($categoriasAgrupadas as $categoriaNome => $totalCategoria) {
+            $pctObra = $totalGeral > 0 ? ($totalCategoria / $totalGeral) * 100 : 0;
+            $precoM2 = $areaTotal > 0 ? $totalCategoria / $areaTotal : 0;
+            
+            $html .= sprintf(
+                '<tr><td class="left">%s</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="center">%s</td><td class="right">R$ %s</td></tr>',
+                htmlspecialchars(strtoupper($categoriaNome)),
+                self::formatarValor($totalCategoria),
+                number_format($pctObra, 2, ',', '.'),
+                number_format($areaTotal, 2, ',', '.'),
+                self::formatarValor($precoM2)
+            );
+        }
+        
+        $html .= sprintf(
+            '<tr class="total-row"><td class="left">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td><td class="center">%s</td><td class="right">R$ %s</td></tr>',
+            self::formatarValor($totalGeral),
+            number_format($areaTotal, 2, ',', '.'),
+            self::formatarValor($areaTotal > 0 ? $totalGeral / $areaTotal : 0)
+        );
+        $html .= '</tbody></table>';
+        
+        // Gerar tabela de áreas (separada, abaixo)
         $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
         
         if (!empty($areasPersonalizadas)) {
@@ -169,27 +177,6 @@ final class OrcamentoPDF
         }
         
         $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
-        $html .= '</tbody></table>';
-        
-        // Gerar tabela de CATEGORIAS AGRUPADAS com preço/m²
-        $html .= '<table class="table-areas" style="margin-top:15px;"><thead><tr><th>CATEGORIAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
-        
-        foreach ($categoriasAgrupadas as $categoriaNome => $totalCategoria) {
-            $html .= sprintf(
-                '<tr><td>%s</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
-                htmlspecialchars(strtoupper($categoriaNome)),
-                self::formatarValor($totalCategoria),
-                number_format($areaTotal, 2, ',', '.'),
-                self::formatarValor($areaTotal > 0 ? $totalCategoria / $areaTotal : 0)
-            );
-        }
-        
-        $html .= sprintf(
-            '<tr class="total-row"><td>TOTAL GERAL:</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
-            self::formatarValor($totalGeral),
-            number_format($areaTotal, 2, ',', '.'),
-            self::formatarValor($areaTotal > 0 ? $totalGeral / $areaTotal : 0)
-        );
         $html .= '</tbody></table>';
         
         $html .= '<div class="page-footer"><div>FOLHA: 1</div></div>';
