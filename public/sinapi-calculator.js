@@ -1119,51 +1119,76 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
       console.log(`🔍 Buscando código alternativo com unidade ${unidadeFormatada}...`);
       console.log(`   Descrição base: ${descricaoAtual}`);
       
-      // Extrair palavra-chave principal (primeira palavra significativa)
-      const palavraChavePrincipal = descricaoAtual
-        .split(' ')
-        .filter(p => p.length > 4 && !['CAPACIDADE', 'NOMINAL', 'MOTOR', 'POTENCIA'].includes(p.toUpperCase()))
-        .slice(0, 1)
-        .join(' ');
+      // Extrair apenas a PRIMEIRA palavra significativa (mais genérico)
+      const palavras = descricaoAtual.toUpperCase().split(' ');
+      const palavraChavePrincipal = palavras.find(p => 
+        p.length > 4 && 
+        !['CAPACIDADE', 'NOMINAL', 'MOTOR', 'POTENCIA', 'ELETRICO', 'TRIFASICO'].includes(p)
+      ) || palavras[0];
       
       console.log(`   Palavra-chave principal: ${palavraChavePrincipal}`);
       
       // Buscar no banco por descrição similar com limite maior
-      const searchResponse = await fetch(`/?api=sinapi-precos&listar=1&termo=${encodeURIComponent(palavraChavePrincipal)}&uf=${uf}&limite=50`);
+      const searchResponse = await fetch(`/?api=sinapi-precos&listar=1&termo=${encodeURIComponent(palavraChavePrincipal)}&uf=${uf}&limite=100`);
       const searchData = await searchResponse.json();
       
       console.log(`📋 Encontrados ${searchData.total} resultados similares para "${palavraChavePrincipal}"`);
       
       if (searchData.success && searchData.insumos && searchData.insumos.length > 0) {
-        console.log(`📋 Resultados encontrados:`);
-        searchData.insumos.slice(0, 10).forEach(item => {
-          console.log(`   - ${item.codigo}: ${item.descricao} (${item.unidade}) - R$ ${item.preco_unit}`);
+        console.log(`📋 Primeiros 15 resultados encontrados:`);
+        searchData.insumos.slice(0, 15).forEach(item => {
+          console.log(`   - ${item.codigo}: ${item.descricao.substring(0, 60)}... (${item.unidade}) - R$ ${item.preco_unit}`);
         });
         
         // Se buscar por H, priorizar CHP (Custo Horário Produtivo - aluguel)
         let itemComUnidade;
         
         if (unidadeFormatada === 'H') {
-          console.log(`🎯 Buscando custo horário de aluguel (CHP)...`);
+          console.log(`🎯 Buscando custo horário de aluguel (CHP ou H)...`);
           
-          // Primeiro tentar encontrar CHP DIURNO (custo de aluguel)
+          // Estratégia 1: Buscar CHP DIURNO (custo de aluguel completo)
           itemComUnidade = searchData.insumos.find(item => 
             item.unidade === 'CHP' && 
             item.descricao.toUpperCase().includes('CHP DIURNO')
           );
           
-          // Se não encontrar CHP, buscar H mas excluir componentes
+          if (itemComUnidade) {
+            console.log(`✓ Encontrado CHP DIURNO: ${itemComUnidade.codigo}`);
+          }
+          
+          // Estratégia 2: Se não encontrar CHP DIURNO, buscar qualquer CHP
+          if (!itemComUnidade) {
+            console.log(`⚠ CHP DIURNO não encontrado, buscando qualquer CHP...`);
+            itemComUnidade = searchData.insumos.find(item => item.unidade === 'CHP');
+            
+            if (itemComUnidade) {
+              console.log(`✓ Encontrado CHP: ${itemComUnidade.codigo}`);
+            }
+          }
+          
+          // Estratégia 3: Se não encontrar CHP, buscar H excluindo componentes
           if (!itemComUnidade) {
             console.log(`⚠ CHP não encontrado, buscando H (excluindo componentes)...`);
-            const componentesExcluir = ['DEPRECIAÇÃO', 'DEPRECIAÇAO', 'JUROS', 'MANUTENÇÃO', 'MANUTENCAO', 'MATERIAIS NA OPERAÇÃO', 'MATERIAIS NA OPERACAO'];
+            const componentesExcluir = [
+              'DEPRECIAÇÃO', 'DEPRECIAÇAO', 'DEPRECIACAO',
+              'JUROS', 
+              'MANUTENÇÃO', 'MANUTENCAO', 'MANUTENÇÃO',
+              'MATERIAIS NA OPERAÇÃO', 'MATERIAIS NA OPERACAO',
+              'MATERIAIS'
+            ];
             
             itemComUnidade = searchData.insumos.find(item => 
               item.unidade === 'H' &&
               !componentesExcluir.some(comp => item.descricao.toUpperCase().includes(comp))
             );
+            
+            if (itemComUnidade) {
+              console.log(`✓ Encontrado H: ${itemComUnidade.codigo}`);
+            }
           }
         } else {
           // Para outras unidades, busca normal
+          console.log(`🔍 Buscando unidade ${unidadeFormatada}...`);
           itemComUnidade = searchData.insumos.find(item => 
             item.unidade === unidadeFormatada
           );
