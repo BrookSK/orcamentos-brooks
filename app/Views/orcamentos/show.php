@@ -268,23 +268,24 @@ function toggleAdicionarItem() {
     </div>
     
     <div style="overflow-x: auto;">
-    <table id="orcamento-table">
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    <table id="orcamento-table" style="min-width: 1400px;">
         <thead>
         <tr>
             <th style="width:30px;"></th>
-            <th style="width:70px">Código</th>
-            <th style="width:250px">Descrição</th>
-            <th class="center" style="width:50px">Un</th>
-            <th class="center" style="width:70px">Qtd</th>
-            <th class="num admin-col" style="width:90px;">Custo Mat.</th>
-            <th class="num admin-col" style="width:90px;">Custo M.O.</th>
-            <th class="num admin-col" style="width:90px;">Custo Equip.</th>
-            <th class="center admin-col" style="width:70px;">% BDI</th>
-            <th class="num admin-col" style="width:90px;">Margem Un.</th>
-            <th class="num" style="width:100px">Vlr Unit.</th>
-            <th class="num admin-col" style="width:100px;">Lucro Total</th>
-            <th class="num" style="width:100px">Vlr Total</th>
-            <th style="width:140px"></th>
+            <th style="width:60px">Código</th>
+            <th style="min-width:200px">Descrição</th>
+            <th class="center" style="width:45px">Un</th>
+            <th class="center" style="width:60px">Qtd</th>
+            <th class="num admin-col" style="width:85px;">Custo Mat.</th>
+            <th class="num admin-col" style="width:85px;">Custo M.O.</th>
+            <th class="num admin-col" style="width:85px;">Custo Equip.</th>
+            <th class="center admin-col" style="width:60px;">% BDI</th>
+            <th class="num admin-col" style="width:85px;">Margem Un.</th>
+            <th class="num" style="width:90px">Vlr Unit.</th>
+            <th class="num admin-col" style="width:90px;">Lucro Total</th>
+            <th class="num" style="width:90px">Vlr Total</th>
+            <th style="width:130px"></th>
         </tr>
         </thead>
         <tbody>
