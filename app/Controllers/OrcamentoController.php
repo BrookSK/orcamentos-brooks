@@ -1563,14 +1563,18 @@ final class OrcamentoController
             
             foreach ($itens as $item) {
                 if ((string)($item['grupo'] ?? '') === $grupo) {
-                    // Calcular novo valor_cobranca com a margem personalizada
-                    $custoMaterial = (float)($item['custo_material'] ?? 0);
-                    $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
-                    $custoEquipamento = (float)($item['custo_equipamento'] ?? 0);
-                    $custoTotal = $custoMaterial + $custoMaoObra + $custoEquipamento;
+                    // Pegar o valor de cobrança atual
+                    $valorCobrancaAtual = (float)($item['valor_cobranca'] ?? 0);
                     
-                    // Aplicar margem personalizada
-                    $novoValorCobranca = $custoTotal * (1 + ($desconto / 100));
+                    // Se não tiver valor_cobranca, usar valor_unitario
+                    if ($valorCobrancaAtual == 0) {
+                        $valorCobrancaAtual = (float)($item['valor_unitario'] ?? 0);
+                    }
+                    
+                    // Aplicar ajuste sobre o valor atual
+                    // Exemplo: valor = 24, desconto = -50 → 24 * (1 + (-50/100)) = 24 * 0.5 = 12
+                    // Exemplo: valor = 24, aumento = 50 → 24 * (1 + (50/100)) = 24 * 1.5 = 36
+                    $novoValorCobranca = $valorCobrancaAtual * (1 + ($desconto / 100));
                     
                     // Preparar dados para atualização
                     $data = [
@@ -1583,9 +1587,9 @@ final class OrcamentoController
                         'valor_unitario' => $item['valor_unitario'],
                         'ordem' => $item['ordem'],
                         'etapa' => $item['etapa'] ?? '',
-                        'custo_material' => $custoMaterial,
-                        'custo_mao_obra' => $custoMaoObra,
-                        'custo_equipamento' => $custoEquipamento,
+                        'custo_material' => $item['custo_material'] ?? 0,
+                        'custo_mao_obra' => $item['custo_mao_obra'] ?? 0,
+                        'custo_equipamento' => $item['custo_equipamento'] ?? 0,
                         'valor_cobranca' => $novoValorCobranca,
                         'margem_lucro' => $item['margem_lucro'] ?? 0,
                         'desconto_item' => $item['desconto_item'] ?? 0,
