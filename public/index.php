@@ -197,7 +197,22 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
     } catch (Exception $e) {
         ob_end_clean();
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Erro interno'], JSON_UNESCAPED_UNICODE);
+        echo json_encode([
+            'success' => false, 
+            'error' => 'Erro interno',
+            'message' => $e->getMessage(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine()
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    } catch (Throwable $e) {
+        ob_end_clean();
+        http_response_code(500);
+        echo json_encode([
+            'success' => false, 
+            'error' => 'Erro crítico',
+            'message' => $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }

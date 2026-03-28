@@ -979,65 +979,92 @@ function recalcularItemSINAPI(index) {
 // ══════════════════════════════════════════════
 //  ATUALIZAR PREÇO NO BANCO DE DADOS
 // ══════════════════════════════════════════════
+let updateTimeouts = {};
+
 async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
   if (!codigo || !novoPreco) {
     console.log('⚠ Código ou preço inválido:', codigo, novoPreco);
     return;
   }
   
-  const uf = 'SP'; // UF padrão para São Paulo
-  
-  const payload = {
-    codigo: codigo,
-    preco: parseFloat(novoPreco),
-    uf: uf
-  };
-  
-  if (unidade) {
-    payload.unidade = unidade.trim().toUpperCase();
+  // Debounce: cancelar atualização anterior para este código
+  if (updateTimeouts[codigo]) {
+    clearTimeout(updateTimeouts[codigo]);
   }
   
-  console.log(`📤 Enviando atualização:`, payload);
-  
-  try {
-    const response = await fetch('/?api=sinapi-atualizar-preco', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    console.log('📥 Resposta recebida:', response.status, response.statusText);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    console.log('📊 Dados da resposta:', data);
-    
-    if (data.success) {
-      console.log(`✓ Atualizado no banco: código ${codigo} = R$ ${novoPreco}${unidade ? ' (' + unidade + ')' : ''}`);
+  // Aguardar 500ms antes de enviar
+  return new Promise((resolve) => {
+    updateTimeouts[codigo] = setTimeout(async () => {
+      const uf = 'SP';
       
-      // Mostrar feedback visual
-      const input = document.querySelector(`.sinapi-preco-input[data-codigo="${codigo}"]`);
-      if (input) {
-        input.style.borderColor = '#4CAF50';
-        input.style.background = 'rgba(76, 175, 80, 0.1)';
-        setTimeout(() => {
-          input.style.borderColor = '';
-          input.style.background = '';
-        }, 2000);
+      const payload = {
+        codigo: codigo,
+        preco: parseFloat(novoPreco),
+        uf: uf
+      };
+      
+      if (unidade) {
+        payload.unidade = unidade.trim().toUpperCase();
       }
-    } else {
-      console.error('❌ Erro ao atualizar:', data.error);
-      alert('Erro ao atualizar no banco de dados: ' + (data.error || 'Erro desconhecido'));
-    }
-  } catch (error) {
-    console.error('❌ Erro ao atualizar:', error);
-    alert('Erro ao comunicar com o servidor: ' + error.message);
-  }
+      
+      console.log(`📤 Enviando atualização:`, payload);
+      
+      try {
+        const response = await fetch('/?api=sinapi-atualizar-preco', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        console.log('📥 Resposta recebida:', response.status, response.statusText);
+        
+        const responseText = await response.text();
+        console.log('📄 Texto da resposta:', responseText);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (e) {
+          console.error('❌ Erro ao parsear JSON:', responseText);
+          throw new Error('Resposta inválida do servidor');
+        }
+        
+        console.log('📊 Dados da resposta:', data);
+        
+        if (data.success) {
+          console.log(`✓ Atualizado no banco: código ${codigo} = R$ ${novoPreco}${unidade ? ' (' + unidade + ')' : ''}`);
+          
+          // Mostrar feedback visual
+          const input = document.querySelector(`.sinapi-preco-input[data-codigo="${codigo}"]`);
+          if (input) {
+            input.style.borderColor = '#4CAF50';
+            input.style.background = 'rgba(76, 175, 80, 0.1)';
+            setTimeout(() => {
+              input.style.borderColor = '';
+              input.style.background = '';
+            }, 2000);
+          }
+        } else {
+          console.error('❌ Erro ao atualizar:', data.error);
+          // Não mostrar alert para evitar spam
+          console.warn('Erro:', data.error);
+        }
+        
+        resolve(data);
+      } catch (error) {
+        console.error('❌ Erro ao atualizar:', error);
+        // Não mostrar alert para evitar spam
+        console.warn('Erro de comunicação:', error.message);
+        resolve({ success: false, error: error.message });
+      }
+    }, 500);
+  });
 }
 
 // ══════════════════════════════════════════════
