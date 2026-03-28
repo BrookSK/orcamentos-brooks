@@ -65,10 +65,10 @@ final class Orcamento
         $stmt = $pdo->prepare(
             'INSERT INTO orcamentos ('
             . ' numero_proposta, cliente_nome, arquiteto_nome, obra_nome, endereco_obra, local_obra, data, referencia, area_m2, contrato, tipo, tipo_orcamento, prazo_dias, rev,'
-            . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, capa_path_1, capa_path_2, capa_path_3, capa_path_4, percentual_custos_adm, percentual_impostos, margem_mao_obra, margem_materiais, created_at, updated_at'
+            . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, capa_path_1, capa_path_2, capa_path_3, capa_path_4, percentual_custos_adm, percentual_impostos, margem_mao_obra, margem_materiais, margem_equipamentos, ajuste_prorata_materiais, created_at, updated_at'
             . ') VALUES ('
             . ' :numero_proposta, :cliente_nome, :arquiteto_nome, :obra_nome, :endereco_obra, :local_obra, :data, :referencia, :area_m2, :contrato, :tipo, :tipo_orcamento, :prazo_dias, :rev,'
-            . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :capa_path_1, :capa_path_2, :capa_path_3, :capa_path_4, :percentual_custos_adm, :percentual_impostos, :margem_mao_obra, :margem_materiais, :created_at, :updated_at'
+            . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :capa_path_1, :capa_path_2, :capa_path_3, :capa_path_4, :percentual_custos_adm, :percentual_impostos, :margem_mao_obra, :margem_materiais, :margem_equipamentos, :ajuste_prorata_materiais, :created_at, :updated_at'
             . ')'
         );
 
@@ -100,6 +100,8 @@ final class Orcamento
             ':percentual_impostos' => (float)($data['percentual_impostos'] ?? 0),
             ':margem_mao_obra' => (float)($data['margem_mao_obra'] ?? 0),
             ':margem_materiais' => (float)($data['margem_materiais'] ?? 0),
+            ':margem_equipamentos' => (float)($data['margem_equipamentos'] ?? 20),
+            ':ajuste_prorata_materiais' => (float)($data['ajuste_prorata_materiais'] ?? 0),
             ':created_at' => $now,
             ':updated_at' => $now,
         ]);
@@ -142,6 +144,7 @@ final class Orcamento
             . ' margem_mao_obra = :margem_mao_obra,'
             . ' margem_materiais = :margem_materiais,'
             . ' margem_equipamentos = :margem_equipamentos,'
+            . ' ajuste_prorata_materiais = :ajuste_prorata_materiais,'
             . ' updated_at = :updated_at'
             . ' WHERE id = :id'
         );
@@ -176,6 +179,7 @@ final class Orcamento
             ':margem_mao_obra' => (float)($data['margem_mao_obra'] ?? 0),
             ':margem_materiais' => (float)($data['margem_materiais'] ?? 0),
             ':margem_equipamentos' => (float)($data['margem_equipamentos'] ?? 20),
+            ':ajuste_prorata_materiais' => (float)($data['ajuste_prorata_materiais'] ?? 0),
             ':updated_at' => $now,
         ]);
     }
