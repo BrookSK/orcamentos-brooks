@@ -121,6 +121,16 @@ declare(strict_types=1);
                 </div>
             </div>
 
+            <div class="field">
+                <label>% Margem Equipamentos (Padrão)</label>
+                <input name="margem_equipamentos" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['margem_equipamentos'] ?? '20')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">
+                    Margem de lucro padrão para equipamentos/locação<br>
+                    <strong>Digite apenas o número:</strong> 20 para 20%, 25 para 25%, 30 para 30%<br>
+                    <strong style="color:#c00;">NÃO digite:</strong> 200, 0.20, ou 20%
+                </div>
+            </div>
+
             <div class="field full">
                 <label>Logo da Empresa (PNG)</label>
                 <input type="file" name="logo" accept="image/png">

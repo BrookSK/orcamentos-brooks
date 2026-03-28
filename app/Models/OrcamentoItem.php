@@ -92,6 +92,7 @@ final class OrcamentoItem
         
         $custoMaterial = (float)($data['custo_material'] ?? 0);
         $custoMaoObra = (float)($data['custo_mao_obra'] ?? 0);
+        $custoEquipamento = (float)($data['custo_equipamento'] ?? 0);
         $margemLucro = (float)($data['margem_lucro'] ?? 0);
         $descontoItem = (float)($data['desconto_item'] ?? 0);
         $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
@@ -107,8 +108,8 @@ final class OrcamentoItem
         }
 
         $stmt = $pdo->prepare(
-            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, margem_personalizada, usa_margem_personalizada) '
-            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :margem_personalizada, :usa_margem_personalizada)'
+            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, custo_equipamento, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, margem_personalizada, usa_margem_personalizada) '
+            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :custo_equipamento, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :margem_personalizada, :usa_margem_personalizada)'
         );
 
         $stmt->execute([
@@ -125,6 +126,7 @@ final class OrcamentoItem
             ':etapa' => (string)($data['etapa'] ?? ''),
             ':custo_material' => $custoMaterial,
             ':custo_mao_obra' => $custoMaoObra,
+            ':custo_equipamento' => $custoEquipamento,
             ':valor_cobranca' => $valorCobranca,
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
@@ -153,6 +155,7 @@ final class OrcamentoItem
         
         $custoMaterial = (float)($data['custo_material'] ?? 0);
         $custoMaoObra = (float)($data['custo_mao_obra'] ?? 0);
+        $custoEquipamento = (float)($data['custo_equipamento'] ?? 0);
         $margemLucro = (float)($data['margem_lucro'] ?? 0);
         $descontoItem = (float)($data['desconto_item'] ?? 0);
         $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
@@ -187,6 +190,7 @@ final class OrcamentoItem
             . ' etapa = :etapa,'
             . ' custo_material = :custo_material,'
             . ' custo_mao_obra = :custo_mao_obra,'
+            . ' custo_equipamento = :custo_equipamento,'
             . ' valor_cobranca = :valor_cobranca,'
             . ' margem_lucro = :margem_lucro,'
             . ' desconto_item = :desconto_item,'
@@ -210,6 +214,7 @@ final class OrcamentoItem
             ':etapa' => (string)($data['etapa'] ?? ''),
             ':custo_material' => $custoMaterial,
             ':custo_mao_obra' => $custoMaoObra,
+            ':custo_equipamento' => $custoEquipamento,
             ':valor_cobranca' => $valorCobranca,
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,

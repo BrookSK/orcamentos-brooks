@@ -141,6 +141,7 @@ final class Orcamento
             . ' percentual_impostos = :percentual_impostos,'
             . ' margem_mao_obra = :margem_mao_obra,'
             . ' margem_materiais = :margem_materiais,'
+            . ' margem_equipamentos = :margem_equipamentos,'
             . ' updated_at = :updated_at'
             . ' WHERE id = :id'
         );
@@ -174,6 +175,7 @@ final class Orcamento
             ':percentual_impostos' => (float)($data['percentual_impostos'] ?? 0),
             ':margem_mao_obra' => (float)($data['margem_mao_obra'] ?? 0),
             ':margem_materiais' => (float)($data['margem_materiais'] ?? 0),
+            ':margem_equipamentos' => (float)($data['margem_equipamentos'] ?? 20),
             ':updated_at' => $now,
         ]);
     }

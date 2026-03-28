@@ -192,6 +192,7 @@ function toggleAdicionarItem() {
         // Buscar margens globais do orçamento
         $margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 0);
         $margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 0);
+        $margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
         ?>
 
         <?php foreach ($grouped as $grupo => $cats) : ?>
@@ -266,10 +267,12 @@ function toggleAdicionarItem() {
                         if ($usaMargemPersonalizada && $margemPersonalizada > 0) {
                             $percentualBdi = $margemPersonalizada;
                         } elseif (!$usaMargemPersonalizada) {
-                            // Detectar se é mão de obra ou material pela categoria
+                            // Detectar se é mão de obra, equipamento ou material pela categoria
                             $categoriaUpper = strtoupper($categoria);
                             if (strpos($categoriaUpper, 'MÃO DE OBRA') !== false || strpos($categoriaUpper, 'MAO DE OBRA') !== false) {
                                 $percentualBdi = $margemMaoObraGlobal;
+                            } elseif (strpos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                                $percentualBdi = $margemEquipamentosGlobal;
                             } else {
                                 $percentualBdi = $margemMateriaisGlobal;
                             }

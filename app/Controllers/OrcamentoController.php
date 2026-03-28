@@ -706,13 +706,22 @@ final class OrcamentoController
             // Usar margem global do orçamento baseada na categoria
             Logger::info('orcamentos.itemStore.orcamento_margens', [
                 'margem_mao_obra' => $orcamento['margem_mao_obra'] ?? 'NAO_EXISTE',
-                'margem_materiais' => $orcamento['margem_materiais'] ?? 'NAO_EXISTE'
+                'margem_materiais' => $orcamento['margem_materiais'] ?? 'NAO_EXISTE',
+                'margem_equipamentos' => $orcamento['margem_equipamentos'] ?? 'NAO_EXISTE'
             ]);
             
-            if (stripos($categoria, 'mão de obra') !== false || stripos($categoria, 'mao de obra') !== false) {
+            $categoriaUpper = strtoupper($categoria);
+            if (stripos($categoriaUpper, 'MÃO DE OBRA') !== false || stripos($categoriaUpper, 'MAO DE OBRA') !== false) {
                 $margem = (float)($orcamento['margem_mao_obra'] ?? 0);
                 Logger::info('orcamentos.itemStore.margem', [
                     'tipo' => 'global_mao_obra',
+                    'margem' => $margem,
+                    'categoria' => $categoria
+                ]);
+            } elseif (stripos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                $margem = (float)($orcamento['margem_equipamentos'] ?? 20);
+                Logger::info('orcamentos.itemStore.margem', [
+                    'tipo' => 'global_equipamentos',
                     'margem' => $margem,
                     'categoria' => $categoria
                 ]);
@@ -850,8 +859,11 @@ final class OrcamentoController
             $margem = (float)($data['margem_personalizada'] ?? 0);
         } else {
             // Usar margem global do orçamento baseada na categoria
-            if (stripos($categoria, 'mão de obra') !== false || stripos($categoria, 'mao de obra') !== false) {
+            $categoriaUpper = strtoupper($categoria);
+            if (stripos($categoriaUpper, 'MÃO DE OBRA') !== false || stripos($categoriaUpper, 'MAO DE OBRA') !== false) {
                 $margem = (float)($orcamento['margem_mao_obra'] ?? 0);
+            } elseif (stripos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                $margem = (float)($orcamento['margem_equipamentos'] ?? 20);
             } else {
                 $margem = (float)($orcamento['margem_materiais'] ?? 0);
             }
@@ -1625,6 +1637,7 @@ final class OrcamentoController
                         'unidade' => (string)($item['un'] ?? 'un'),
                         'custo_material' => $tipo === 'material' ? (string)$preco : '0',
                         'custo_mao_obra' => $tipo === 'mao' ? (string)$preco : '0',
+                        'custo_equipamento' => $tipo === 'equip' ? (string)$preco : '0',
                         'valor_unitario' => (string)$preco,
                         'valor_cobranca' => (string)$valorUnitarioComBdi,
                         'margem_personalizada' => (string)$percentualBdi,

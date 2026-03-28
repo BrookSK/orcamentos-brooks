@@ -418,6 +418,12 @@ HTML;
 
         // TABELAS DE ÁREAS
         $areaNum = (float)($orcamento['area_m2'] ?? 0);
+        
+        // Se área não está preenchida no orçamento, calcular a soma das áreas hardcoded
+        if ($areaNum == 0) {
+            $areaNum = 344.10 + 103.94 + 47.52 + 139.79 + 87.62; // = 722.97
+        }
+        
         $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
         $html .= '<tr><td>ÁREA INTERNA</td><td>344,10</td><td>1</td><td>344,10</td></tr>';
         $html .= '<tr><td>VARANDA COBERTA</td><td>103,94</td><td>1</td><td>103,94</td></tr>';
@@ -614,6 +620,7 @@ CSS;
         // Buscar margens globais do orçamento
         $margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 0);
         $margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 0);
+        $margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
         
         $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
         
@@ -628,46 +635,51 @@ CSS;
         $html .= '<div class="page-subtitle">Custos, Margens e BDI por Item</div>';
 
         $totalGeralObra = 0.0;
+        $lucroGeralObra = 0.0;
 
         foreach ($grouped as $etapa => $categorias) {
             $html .= '<div class="banner-etapa">' . htmlspecialchars($etapa) . '</div>';
             
             $subtotalEtapa = 0.0;
+            $lucroEtapa = 0.0;
             
             foreach ($categorias as $categoria => $itens) {
                 $html .= '<table class="table-detalhes table-detalhes-admin">';
                 $html .= '<thead><tr>';
-                $html .= '<th class="left" style="width:8%;">Cód.</th>';
-                $html .= '<th class="left" style="width:25%;">Descrição</th>';
-                $html .= '<th class="center" style="width:5%;">Un</th>';
-                $html .= '<th class="center" style="width:7%;">Qtd</th>';
-                $html .= '<th class="right col-custo" style="width:9%;">Custo Mat.</th>';
-                $html .= '<th class="right col-custo" style="width:9%;">Custo M.O.</th>';
-                $html .= '<th class="right col-bdi" style="width:6%;">% BDI</th>';
-                $html .= '<th class="right col-margem" style="width:9%;">Margem</th>';
-                $html .= '<th class="right" style="width:10%;">Vlr Unit.</th>';
-                $html .= '<th class="right" style="width:12%;">Vlr Total</th>';
+                $html .= '<th class="left" style="width:6%;">Cód.</th>';
+                $html .= '<th class="left" style="width:20%;">Descrição</th>';
+                $html .= '<th class="center" style="width:4%;">Un</th>';
+                $html .= '<th class="center" style="width:5%;">Qtd</th>';
+                $html .= '<th class="right col-custo" style="width:7%;">Custo Mat.</th>';
+                $html .= '<th class="right col-custo" style="width:7%;">Custo M.O.</th>';
+                $html .= '<th class="right col-custo" style="width:7%;">Custo Equip.</th>';
+                $html .= '<th class="right col-bdi" style="width:5%;">% BDI</th>';
+                $html .= '<th class="right col-margem" style="width:7%;">Margem Un.</th>';
+                $html .= '<th class="right" style="width:8%;">Vlr Unit.</th>';
+                $html .= '<th class="right col-lucro" style="width:10%;">Lucro Total</th>';
+                $html .= '<th class="right" style="width:14%;">Vlr Total</th>';
                 $html .= '</tr></thead><tbody>';
 
                 $subtotalCategoria = 0.0;
+                $lucroCategoria = 0.0;
 
                 foreach ($itens as $item) {
                     $quantidade = (float)($item['quantidade'] ?? 0);
                     $custoMaterialTotal = (float)($item['custo_material'] ?? 0);
                     $custoMaoObraTotal = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoEquipamentoTotal = (float)($item['custo_equipamento'] ?? 0);
                     $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
                     $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
                     $valorUnitario = (float)($item['valor_unitario'] ?? 0);
                     $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
                     
                     // Calcular valores unitários
-                    // IMPORTANTE: custo_material e custo_mao_obra podem estar salvos como:
-                    // - UNITÁRIOS (itens do SINAPI após correção)
-                    // - TOTAIS (itens antigos)
+                    // IMPORTANTE: custos podem estar salvos como UNITÁRIOS ou TOTAIS
                     // Para detectar, verificamos se custo ≈ valor_unitario (indica que é unitário)
                     
                     $custoMaterialUnit = 0;
                     $custoMaoObraUnit = 0;
+                    $custoEquipamentoUnit = 0;
                     
                     if ($custoMaterialTotal > 0 && $quantidade > 0) {
                         // Se custo é próximo do valor_unitario, provavelmente já é unitário
@@ -689,7 +701,17 @@ CSS;
                         }
                     }
                     
-                    $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit;
+                    if ($custoEquipamentoTotal > 0 && $quantidade > 0) {
+                        // Se custo é próximo do valor_unitario, provavelmente já é unitário
+                        if (abs($custoEquipamentoTotal - $valorUnitario) < 0.01) {
+                            $custoEquipamentoUnit = $custoEquipamentoTotal;
+                        } else {
+                            // Custo é total, dividir pela quantidade
+                            $custoEquipamentoUnit = $custoEquipamentoTotal / $quantidade;
+                        }
+                    }
+                    
+                    $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit + $custoEquipamentoUnit;
                     
                     // Se não há custo detalhado, usar valor_unitario como base de custo
                     $custoBase = $custoUnitTotal > 0 ? $custoUnitTotal : $valorUnitario;
@@ -706,10 +728,12 @@ CSS;
                     }
                     // PRIORIDADE 2: Se usa margem global, detectar qual margem aplicar baseado na categoria
                     elseif (!$usaMargemPersonalizada) {
-                        // Detectar se é mão de obra ou material pela categoria
+                        // Detectar se é mão de obra, equipamento ou material pela categoria
                         $categoriaUpper = strtoupper($categoria);
                         if (strpos($categoriaUpper, 'MÃO DE OBRA') !== false || strpos($categoriaUpper, 'MAO DE OBRA') !== false) {
                             $percentualMargemAplicada = $margemMaoObraGlobal;
+                        } elseif (strpos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                            $percentualMargemAplicada = $margemEquipamentosGlobal;
                         } else {
                             $percentualMargemAplicada = $margemMateriaisGlobal;
                         }
@@ -725,6 +749,10 @@ CSS;
                     
                     $subtotalCategoria += $valorTotal;
                     
+                    // Calcular lucro total (margem unitária × quantidade)
+                    $lucroTotal = $margemUnit * $quantidade;
+                    $lucroCategoria += $lucroTotal;
+                    
                     $html .= '<tr>';
                     $html .= '<td class="left">' . htmlspecialchars((string)$item['codigo']) . '</td>';
                     $html .= '<td class="left">' . nl2br(htmlspecialchars((string)$item['descricao'])) . '</td>';
@@ -732,24 +760,28 @@ CSS;
                     $html .= '<td class="center">' . number_format($quantidade, 2, ',', '.') . '</td>';
                     $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaterialUnit) . '</td>';
                     $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaoObraUnit) . '</td>';
+                    $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoEquipamentoUnit) . '</td>';
                     $html .= '<td class="center col-bdi">' . number_format($percentualMargemAplicada, 1, ',', '.') . '%</td>';
                     $html .= '<td class="right col-margem">R$ ' . self::formatarValor($margemUnit) . '</td>';
                     $html .= '<td class="right">R$ ' . self::formatarValor($valorCobrancaUnitario) . '</td>';
+                    $html .= '<td class="right col-lucro">R$ ' . self::formatarValor($lucroTotal) . '</td>';
                     $html .= '<td class="right">R$ ' . self::formatarValor($valorTotal) . '</td>';
                     $html .= '</tr>';
                 }
 
                 $html .= '</tbody></table>';
-                $html .= '<div class="subtotal-item">Subtotal ' . htmlspecialchars($categoria) . ': R$ ' . self::formatarValor($subtotalCategoria) . '</div>';
+                $html .= '<div class="subtotal-item">Subtotal ' . htmlspecialchars($categoria) . ': R$ ' . self::formatarValor($subtotalCategoria) . ' | Lucro: R$ ' . self::formatarValor($lucroCategoria) . '</div>';
                 
                 $subtotalEtapa += $subtotalCategoria;
+                $lucroEtapa += $lucroCategoria;
             }
             
-            $html .= '<div class="subtotal-etapa">SUBTOTAL ' . htmlspecialchars($etapa) . ': R$ ' . self::formatarValor($subtotalEtapa) . '</div>';
+            $html .= '<div class="subtotal-etapa">SUBTOTAL ' . htmlspecialchars($etapa) . ': R$ ' . self::formatarValor($subtotalEtapa) . ' | LUCRO: R$ ' . self::formatarValor($lucroEtapa) . '</div>';
             $totalGeralObra += $subtotalEtapa;
+            $lucroGeralObra += $lucroEtapa;
         }
 
-        $html .= '<div class="total-obra">TOTAL DA OBRA: R$ ' . self::formatarValor($totalGeralObra) . '</div>';
+        $html .= '<div class="total-obra">TOTAL DA OBRA: R$ ' . self::formatarValor($totalGeralObra) . ' | LUCRO TOTAL: R$ ' . self::formatarValor($lucroGeralObra) . '</div>';
         $html .= '</div>';
 
         return $html;
