@@ -1727,14 +1727,42 @@ final class OrcamentoController
 
     private function render(string $view, array $params = []): void
     {
-        extract($params, EXTR_SKIP);
-        $viewPath = __DIR__ . '/../Views/' . $view . '.php';
+        try {
+            extract($params, EXTR_SKIP);
+            $viewPath = __DIR__ . '/../Views/' . $view . '.php';
 
-        ob_start();
-        require $viewPath;
-        $content = ob_get_clean();
+            if (!file_exists($viewPath)) {
+                throw new \Exception("View não encontrada: $viewPath");
+            }
 
-        require __DIR__ . '/../Views/layout.php';
+            ob_start();
+            require $viewPath;
+            $content = ob_get_clean();
+
+            if ($content === false) {
+                throw new \Exception("Falha ao capturar conteúdo da view");
+            }
+
+            require __DIR__ . '/../Views/layout.php';
+        } catch (\Throwable $e) {
+            // Limpar qualquer output buffer
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+            
+            // Exibir erro
+            http_response_code(500);
+            echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Erro</title>';
+            echo '<style>body{font-family:monospace;padding:20px;background:#1a1a1a;color:#fff;}</style>';
+            echo '</head><body>';
+            echo '<h1>Erro ao renderizar view</h1>';
+            echo '<p><strong>View:</strong> ' . htmlspecialchars($view) . '</p>';
+            echo '<p><strong>Erro:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+            echo '<p><strong>Arquivo:</strong> ' . htmlspecialchars($e->getFile()) . '</p>';
+            echo '<p><strong>Linha:</strong> ' . $e->getLine() . '</p>';
+            echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+            echo '</body></html>';
+        }
     }
 
     private function renderToString(string $view, array $params = []): string
