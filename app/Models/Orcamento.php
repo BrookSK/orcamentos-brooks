@@ -65,10 +65,10 @@ final class Orcamento
         $stmt = $pdo->prepare(
             'INSERT INTO orcamentos ('
             . ' numero_proposta, cliente_nome, arquiteto_nome, obra_nome, endereco_obra, local_obra, data, referencia, area_m2, contrato, tipo, tipo_orcamento, prazo_dias, rev,'
-            . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, capa_path_1, capa_path_2, capa_path_3, capa_path_4, percentual_custos_adm, percentual_impostos, margem_mao_obra, margem_materiais, margem_equipamentos, ajuste_prorata_materiais, created_at, updated_at'
+            . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, capa_path_1, capa_path_2, capa_path_3, capa_path_4, percentual_custos_adm, percentual_impostos, margem_mao_obra, margem_materiais, margem_equipamentos, ajuste_prorata_materiais, areas_personalizadas, created_at, updated_at'
             . ') VALUES ('
             . ' :numero_proposta, :cliente_nome, :arquiteto_nome, :obra_nome, :endereco_obra, :local_obra, :data, :referencia, :area_m2, :contrato, :tipo, :tipo_orcamento, :prazo_dias, :rev,'
-            . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :capa_path_1, :capa_path_2, :capa_path_3, :capa_path_4, :percentual_custos_adm, :percentual_impostos, :margem_mao_obra, :margem_materiais, :margem_equipamentos, :ajuste_prorata_materiais, :created_at, :updated_at'
+            . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :capa_path_1, :capa_path_2, :capa_path_3, :capa_path_4, :percentual_custos_adm, :percentual_impostos, :margem_mao_obra, :margem_materiais, :margem_equipamentos, :ajuste_prorata_materiais, :areas_personalizadas, :created_at, :updated_at'
             . ')'
         );
 
@@ -102,6 +102,7 @@ final class Orcamento
             ':margem_materiais' => (float)($data['margem_materiais'] ?? 0),
             ':margem_equipamentos' => (float)($data['margem_equipamentos'] ?? 20),
             ':ajuste_prorata_materiais' => (float)($data['ajuste_prorata_materiais'] ?? 0),
+            ':areas_personalizadas' => !empty($data['areas_personalizadas']) ? (string)$data['areas_personalizadas'] : null,
             ':created_at' => $now,
             ':updated_at' => $now,
         ]);
@@ -145,6 +146,7 @@ final class Orcamento
             . ' margem_materiais = :margem_materiais,'
             . ' margem_equipamentos = :margem_equipamentos,'
             . ' ajuste_prorata_materiais = :ajuste_prorata_materiais,'
+            . ' areas_personalizadas = :areas_personalizadas,'
             . ' updated_at = :updated_at'
             . ' WHERE id = :id'
         );
@@ -180,6 +182,7 @@ final class Orcamento
             ':margem_materiais' => (float)($data['margem_materiais'] ?? 0),
             ':margem_equipamentos' => (float)($data['margem_equipamentos'] ?? 20),
             ':ajuste_prorata_materiais' => (float)($data['ajuste_prorata_materiais'] ?? 0),
+            ':areas_personalizadas' => !empty($data['areas_personalizadas']) ? (string)$data['areas_personalizadas'] : null,
             ':updated_at' => $now,
         ]);
     }
@@ -252,6 +255,21 @@ final class Orcamento
         $out['margem_materiais'] = $out['margem_materiais'] !== '' ? self::parsePtBrNumber((string)$out['margem_materiais']) : 0.0;
         $out['margem_equipamentos'] = $out['margem_equipamentos'] !== '' ? self::parsePtBrNumber((string)$out['margem_equipamentos']) : 20.0;
         $out['ajuste_prorata_materiais'] = $out['ajuste_prorata_materiais'] !== '' ? self::parsePtBrNumber((string)$out['ajuste_prorata_materiais']) : 0.0;
+        
+        // Processar áreas personalizadas
+        if (isset($data['areas']) && is_array($data['areas'])) {
+            $areas = [];
+            foreach ($data['areas'] as $area) {
+                if (!empty($area['nome'])) {
+                    $areas[] = [
+                        'nome' => trim((string)$area['nome']),
+                        'm2' => !empty($area['m2']) ? (float)$area['m2'] : 0,
+                        'fator' => !empty($area['fator']) ? (float)$area['fator'] : 1,
+                    ];
+                }
+            }
+            $out['areas_personalizadas'] = !empty($areas) ? json_encode($areas, JSON_UNESCAPED_UNICODE) : '';
+        }
         
         // Garantir que tipo_orcamento seja sempre 'manual' ou 'sinapi'
         if (!in_array($out['tipo_orcamento'], ['manual', 'sinapi'], true)) {

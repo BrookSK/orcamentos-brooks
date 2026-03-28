@@ -286,10 +286,10 @@ HTML;
 
     private static function gerarPaginasResumo(int $orcamentoId, array $orcamento): string
     {
-        // Cache cleared - 2026-03-28 - Correção para mostrar descrições detalhadas ao invés de grupos genéricos
+        // Cache cleared - 2026-03-28 - Correção para usar campo etapa ao invés de lógica hardcoded
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT codigo, descricao, grupo, (quantidade * valor_cobranca) as valor_total '
+            'SELECT codigo, descricao, grupo, etapa, (quantidade * valor_cobranca) as valor_total '
             . 'FROM orcamento_itens WHERE orcamento_id = :id '
             . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED)'
         );
@@ -300,12 +300,22 @@ HTML;
         $itensCinza = []; $itensAcabamentos = []; $itensGerenciamento = []; $itensAdm = [];
         
         foreach ($itensAgrupados as $item) {
-            $codigoNum = (int)explode('.', $item['codigo'])[0];
             $valor = (float)$item['valor_total'];
-            if ($codigoNum >= 1 && $codigoNum <= 17) { $itensCinza[] = $item; $totalCinza += $valor; }
-            elseif ($codigoNum >= 18 && $codigoNum <= 41) { $itensAcabamentos[] = $item; $totalAcabamentos += $valor; }
-            elseif ($codigoNum === 42) { $itensGerenciamento[] = $item; $totalGerenciamento += $valor; }
-            else { $itensAdm[] = $item; $totalAdm += $valor; }
+            $grupoEtapa = self::resolverGrupoEtapa($item);
+            
+            if ($grupoEtapa === 'cinza') { 
+                $itensCinza[] = $item; 
+                $totalCinza += $valor; 
+            } elseif ($grupoEtapa === 'acabamentos') { 
+                $itensAcabamentos[] = $item; 
+                $totalAcabamentos += $valor; 
+            } elseif ($grupoEtapa === 'gerenciamento') { 
+                $itensGerenciamento[] = $item; 
+                $totalGerenciamento += $valor; 
+            } else { 
+                $itensAdm[] = $item; 
+                $totalAdm += $valor; 
+            }
         }
         
         $totalGeral = $totalCinza + $totalAcabamentos + $totalGerenciamento + $totalAdm;
@@ -417,46 +427,81 @@ HTML;
         $html .= '</tbody></table>';
 
         // TABELAS DE ÁREAS
-        $areaNum = (float)($orcamento['area_m2'] ?? 0);
+        // Processar áreas personalizadas
+        $areasPersonalizadas = [];
+        $areaTotal = 0;
         
-        // Se área não está preenchida no orçamento, calcular a soma das áreas hardcoded
-        if ($areaNum == 0) {
-            $areaNum = 344.10 + 103.94 + 47.52 + 139.79 + 87.62; // = 722.97
+        if (!empty($orcamento['areas_personalizadas'])) {
+            $areasPersonalizadas = json_decode($orcamento['areas_personalizadas'], true);
+            if (is_array($areasPersonalizadas)) {
+                foreach ($areasPersonalizadas as $area) {
+                    $m2 = (float)($area['m2'] ?? 0);
+                    $fator = (float)($area['fator'] ?? 1);
+                    $areaTotal += $m2 * $fator;
+                }
+            }
         }
         
+        // Se não tiver áreas personalizadas ou área total for zero, usar área do orçamento
+        if ($areaTotal == 0) {
+            $areaTotal = (float)($orcamento['area_m2'] ?? 0);
+        }
+        
+        // Gerar tabela de áreas
         $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
-        $html .= '<tr><td>ÁREA INTERNA</td><td>344,10</td><td>1</td><td>344,10</td></tr>';
-        $html .= '<tr><td>VARANDA COBERTA</td><td>103,94</td><td>1</td><td>103,94</td></tr>';
-        $html .= '<tr><td>ABRIGO AUTOS</td><td>47,52</td><td>1</td><td>47,52</td></tr>';
-        $html .= '<tr><td>ÁREA DESCOBERTA</td><td>139,79</td><td>1</td><td>139,79</td></tr>';
-        $html .= '<tr><td>PISCINA</td><td>87,62</td><td>1</td><td>87,62</td></tr>';
-        $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaNum, 2, ',', '.'));
+        
+        if (!empty($areasPersonalizadas)) {
+            foreach ($areasPersonalizadas as $area) {
+                $nome = htmlspecialchars((string)($area['nome'] ?? ''));
+                $m2 = (float)($area['m2'] ?? 0);
+                $fator = (float)($area['fator'] ?? 1);
+                $m2xFator = $m2 * $fator;
+                
+                $html .= sprintf(
+                    '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+                    $nome,
+                    number_format($m2, 2, ',', '.'),
+                    number_format($fator, 2, ',', '.'),
+                    number_format($m2xFator, 2, ',', '.')
+                );
+            }
+        } else {
+            // Fallback: mostrar apenas área total
+            $html .= sprintf(
+                '<tr><td>ÁREA TOTAL</td><td>%s</td><td>1</td><td>%s</td></tr>',
+                number_format($areaTotal, 2, ',', '.'),
+                number_format($areaTotal, 2, ',', '.')
+            );
+        }
+        
+        $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
         $html .= '</tbody></table>';
         
+        // Gerar tabela de etapas (usando dados reais do orçamento)
         $html .= '<table class="table-areas" style="margin-top:15px;"><thead><tr><th>ETAPAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
         $html .= sprintf(
             '<tr><td>ETAPA BRUTA (CINZA)</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
             self::formatarValor($totalCinza),
-            number_format($areaNum, 2, ',', '.'),
-            self::formatarValor($areaNum > 0 ? $totalCinza / $areaNum : 0)
+            number_format($areaTotal, 2, ',', '.'),
+            self::formatarValor($areaTotal > 0 ? $totalCinza / $areaTotal : 0)
         );
         $html .= sprintf(
             '<tr><td>ETAPA ACABAMENTOS</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
             self::formatarValor($totalAcabamentos),
-            number_format($areaNum, 2, ',', '.'),
-            self::formatarValor($areaNum > 0 ? $totalAcabamentos / $areaNum : 0)
+            number_format($areaTotal, 2, ',', '.'),
+            self::formatarValor($areaTotal > 0 ? $totalAcabamentos / $areaTotal : 0)
         );
         $html .= sprintf(
             '<tr><td>GERENCIAMENTO / INDIRETOS / IMPOSTOS</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
             self::formatarValor($totalGerenciamento + $totalAdm),
-            number_format($areaNum, 2, ',', '.'),
-            self::formatarValor($areaNum > 0 ? ($totalGerenciamento + $totalAdm) / $areaNum : 0)
+            number_format($areaTotal, 2, ',', '.'),
+            self::formatarValor($areaTotal > 0 ? ($totalGerenciamento + $totalAdm) / $areaTotal : 0)
         );
         $html .= sprintf(
             '<tr class="total-row"><td>TOTAL GERAL:</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
             self::formatarValor($totalGeral),
-            number_format($areaNum, 2, ',', '.'),
-            self::formatarValor($areaNum > 0 ? $totalGeral / $areaNum : 0)
+            number_format($areaTotal, 2, ',', '.'),
+            self::formatarValor($areaTotal > 0 ? $totalGeral / $areaTotal : 0)
         );
         $html .= '</tbody></table>';
         
@@ -467,9 +512,37 @@ HTML;
     }
 
     
-    private static function resolverGrupoEtapa(string $codigo): string
+    private static function resolverGrupoEtapa(array $item): string
     {
-        $numero = (int)explode('.', trim($codigo))[0];
+        // Usar o campo etapa do item ao invés de lógica hardcoded
+        $etapa = strtoupper(trim((string)($item['etapa'] ?? '')));
+        
+        // Mapear etapas para grupos do PDF
+        if (empty($etapa) || $etapa === 'SEM ETAPA') {
+            // Fallback para lógica antiga se não tiver etapa definida
+            $numero = (int)explode('.', trim((string)$item['codigo']))[0];
+            if ($numero >= 1 && $numero <= 17) return 'cinza';
+            if ($numero >= 18 && $numero <= 41) return 'acabamentos';
+            if ($numero === 42) return 'gerenciamento';
+            return 'adm_impostos';
+        }
+        
+        // Mapear nomes de etapas para grupos
+        if (strpos($etapa, 'CINZA') !== false || strpos($etapa, 'BRUTA') !== false) {
+            return 'cinza';
+        }
+        if (strpos($etapa, 'ACABAMENTO') !== false) {
+            return 'acabamentos';
+        }
+        if (strpos($etapa, 'GERENCIAMENTO') !== false) {
+            return 'gerenciamento';
+        }
+        if (strpos($etapa, 'ADMINISTRA') !== false || strpos($etapa, 'IMPOSTO') !== false || strpos($etapa, 'INDIRETO') !== false) {
+            return 'adm_impostos';
+        }
+        
+        // Fallback: usar lógica antiga baseada no código
+        $numero = (int)explode('.', trim((string)$item['codigo']))[0];
         if ($numero >= 1 && $numero <= 17) return 'cinza';
         if ($numero >= 18 && $numero <= 41) return 'acabamentos';
         if ($numero === 42) return 'gerenciamento';
@@ -498,7 +571,7 @@ HTML;
         foreach ($todosItens as $item) {
             if (isset($idsVistos[$item['id']])) continue;
             $idsVistos[$item['id']] = true;
-            $chave = self::resolverGrupoEtapa((string)$item['codigo']);
+            $chave = self::resolverGrupoEtapa($item);
             $grupos[$chave]['itens'][] = $item;
             $grupos[$chave]['subtotal'] += (float)$item['quantidade'] * (float)$item['valor_cobranca'];
         }

@@ -146,6 +146,59 @@ declare(strict_types=1);
             <div class="field"></div>
 
             <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:4px;"></div>
+
+            <div class="field full">
+                <label style="font-size:16px; font-weight:600; color:#4FC3F7; margin-bottom:12px; display:block;">
+                    📐 Áreas Personalizadas
+                </label>
+                <div class="muted" style="font-size:12px; margin-bottom:12px;">
+                    Configure as áreas que aparecerão no PDF. Estas áreas serão usadas para calcular o preço por m².
+                </div>
+                <div id="areas-container">
+                    <?php 
+                    $areasPersonalizadas = [];
+                    if (!empty($orcamento['areas_personalizadas'])) {
+                        $areasPersonalizadas = json_decode($orcamento['areas_personalizadas'], true);
+                        if (!is_array($areasPersonalizadas)) {
+                            $areasPersonalizadas = [];
+                        }
+                    }
+                    
+                    // Se não tiver áreas, adicionar áreas padrão
+                    if (empty($areasPersonalizadas)) {
+                        $areasPersonalizadas = [
+                            ['nome' => 'AREA INTERNA', 'm2' => '', 'fator' => '1'],
+                            ['nome' => 'VARANDA COBERTA', 'm2' => '', 'fator' => '1'],
+                            ['nome' => 'ABRIGO AUTOS', 'm2' => '', 'fator' => '1'],
+                            ['nome' => 'AREA DESCOBERTA', 'm2' => '', 'fator' => '1'],
+                            ['nome' => 'PISCINA', 'm2' => '', 'fator' => '1'],
+                        ];
+                    }
+                    
+                    foreach ($areasPersonalizadas as $index => $area) :
+                    ?>
+                    <div class="area-row" style="display:grid; grid-template-columns:2fr 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:end;">
+                        <div>
+                            <label style="font-size:11px; color:#999;">Nome da Área</label>
+                            <input type="text" name="areas[<?php echo $index; ?>][nome]" value="<?php echo htmlspecialchars($area['nome'] ?? ''); ?>" placeholder="Ex: AREA INTERNA" style="width:100%;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; color:#999;">m²</label>
+                            <input type="number" step="0.01" name="areas[<?php echo $index; ?>][m2]" value="<?php echo htmlspecialchars($area['m2'] ?? ''); ?>" placeholder="0.00" style="width:100%;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; color:#999;">Fator</label>
+                            <input type="number" step="0.01" name="areas[<?php echo $index; ?>][fator]" value="<?php echo htmlspecialchars($area['fator'] ?? '1'); ?>" placeholder="1" style="width:100%;">
+                        </div>
+                        <button type="button" class="btn-remove-area" style="background:#f44336; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-size:16px;" onclick="removerArea(this)">🗑️</button>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="btn" style="margin-top:8px;" onclick="adicionarArea()">➕ Adicionar Área</button>
+            </div>
+
+            <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:4px;"></div>
+            <div class="field full">
                 <label>Logo da Empresa (PNG)</label>
                 <input type="file" name="logo" accept="image/png">
                 <?php if (!empty($orcamento['logo_path'])) : ?>
@@ -182,3 +235,39 @@ declare(strict_types=1);
     </form>
 </div>
 
+<script>
+let areaIndex = <?php echo count($areasPersonalizadas); ?>;
+
+function adicionarArea() {
+    const container = document.getElementById('areas-container');
+    const div = document.createElement('div');
+    div.className = 'area-row';
+    div.style.cssText = 'display:grid; grid-template-columns:2fr 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:end;';
+    
+    div.innerHTML = `
+        <div>
+            <label style="font-size:11px; color:#999;">Nome da Área</label>
+            <input type="text" name="areas[${areaIndex}][nome]" placeholder="Ex: AREA INTERNA" style="width:100%;">
+        </div>
+        <div>
+            <label style="font-size:11px; color:#999;">m²</label>
+            <input type="number" step="0.01" name="areas[${areaIndex}][m2]" placeholder="0.00" style="width:100%;">
+        </div>
+        <div>
+            <label style="font-size:11px; color:#999;">Fator</label>
+            <input type="number" step="0.01" name="areas[${areaIndex}][fator]" value="1" placeholder="1" style="width:100%;">
+        </div>
+        <button type="button" class="btn-remove-area" style="background:#f44336; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-size:16px;" onclick="removerArea(this)">🗑️</button>
+    `;
+    
+    container.appendChild(div);
+    areaIndex++;
+}
+
+function removerArea(btn) {
+    const row = btn.closest('.area-row');
+    if (row) {
+        row.remove();
+    }
+}
+</script>
