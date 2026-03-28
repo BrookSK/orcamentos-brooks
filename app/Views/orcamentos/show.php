@@ -199,14 +199,22 @@ function toggleAdicionarItem() {
         ?>
 
         <?php foreach ($grouped as $grupo => $cats) : ?>
-            <tr class="category-row">
-                <td colspan="14"><?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?></td>
+            <tr class="group-row" draggable="true" data-grupo="<?php echo htmlspecialchars($grupo); ?>" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8f 100%); cursor:move;">
+                <td style="cursor:move; text-align:center; width:30px; color:#4FC3F7; font-size:18px; padding:10px;">⋮⋮</td>
+                <td colspan="11" style="cursor:move; font-weight:800; padding:12px; font-size:15px; color:#fff; letter-spacing:1px;">
+                    <?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?>
+                </td>
+                <td colspan="2" style="padding:8px; text-align:right;">
+                    <button class="btn" style="padding:6px 12px; font-size:12px; background:#4FC3F7; color:#000;" onclick="editarDescontoGrupo('<?php echo htmlspecialchars($grupo); ?>', <?php echo (int)$orcamento['id']; ?>); event.stopPropagation();">
+                        ⚙️ Ajuste de Valores
+                    </button>
+                </td>
             </tr>
 
             <?php foreach ($cats as $categoria => $rows) : ?>
-                <tr class="subtotal-row category-header" draggable="true" data-categoria="<?php echo htmlspecialchars($categoria); ?>" data-grupo="<?php echo htmlspecialchars($grupo); ?>">
-                    <td colspan="14" style="cursor:move;">
-                        <span style="color:#666; margin-right:8px;">⋮⋮</span>
+                <tr class="subtotal-row category-header" draggable="true" data-categoria="<?php echo htmlspecialchars($categoria); ?>" data-grupo="<?php echo htmlspecialchars($grupo); ?>" style="background: rgba(201, 151, 58, 0.15);">
+                    <td style="cursor:move; text-align:center; width:30px; color:#C9973A; font-size:16px; padding:8px;">⋮⋮</td>
+                    <td colspan="13" style="cursor:move; font-weight:700; padding:10px;">
                         <?php echo htmlspecialchars($categoria !== '' ? $categoria : 'SEM CATEGORIA'); ?>
                     </td>
                 </tr>
@@ -734,5 +742,277 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 })();
+
+// Configurar drag para grupos
+(function() {
+    const groupRows = document.querySelectorAll('.group-row');
+    groupRows.forEach(row => {
+        setupGroupDrag(row);
+    });
+    
+    function setupGroupDrag(row) {
+        let draggedGroup = null;
+        
+        row.addEventListener('dragstart', function(e) {
+            draggedGroup = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        row.addEventListener('dragend', function(e) {
+            this.style.opacity = '';
+            document.querySelectorAll('.group-row').forEach(el => {
+                el.style.borderTop = '';
+                el.style.borderBottom = '';
+            });
+        });
+        
+        row.addEventListener('dragover', function(e) {
+            if (draggedGroup && draggedGroup !== this) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                document.querySelectorAll('.group-row').forEach(el => {
+                    el.style.borderTop = '';
+                    el.style.borderBottom = '';
+                });
+                
+                if (e.clientY < midpoint) {
+                    this.style.borderTop = '3px solid #4FC3F7';
+                } else {
+                    this.style.borderBottom = '3px solid #4FC3F7';
+                }
+            }
+        });
+        
+        row.addEventListener('drop', function(e) {
+            if (draggedGroup && draggedGroup !== this) {
+                e.stopPropagation();
+                
+                // Coletar TODOS os elementos do grupo arrastado
+                const draggedGrupo = draggedGroup.dataset.grupo;
+                const elementsToMove = [draggedGroup];
+                
+                let nextElement = draggedGroup.nextElementSibling;
+                while (nextElement && !nextElement.classList.contains('group-row')) {
+                    elementsToMove.push(nextElement);
+                    nextElement = nextElement.nextElementSibling;
+                }
+                
+                // Determinar posição de inserção
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    // Inserir antes deste grupo
+                    elementsToMove.forEach(el => {
+                        this.parentNode.insertBefore(el, this);
+                    });
+                } else {
+                    // Inserir depois deste grupo (e todos seus elementos)
+                    let insertAfter = this.nextElementSibling;
+                    while (insertAfter && !insertAfter.classList.contains('group-row')) {
+                        insertAfter = insertAfter.nextElementSibling;
+                    }
+                    
+                    elementsToMove.forEach(el => {
+                        if (insertAfter) {
+                            this.parentNode.insertBefore(el, insertAfter);
+                        } else {
+                            this.parentNode.appendChild(el);
+                        }
+                    });
+                }
+                
+                // Salvar nova ordem
+                saveNewOrder();
+            }
+        });
+    }
+    
+    function saveNewOrder() {
+        // Coletar ordem de grupos, categorias e itens
+        const categories = [];
+        const categoryHeaders = document.querySelectorAll('.category-header');
+        
+        categoryHeaders.forEach((header, catIndex) => {
+            const categoria = header.dataset.categoria;
+            const grupo = header.dataset.grupo;
+            const items = [];
+            
+            // Coletar itens desta categoria
+            let nextElement = header.nextElementSibling;
+            while (nextElement && nextElement.classList.contains('item-row')) {
+                items.push({
+                    id: parseInt(nextElement.dataset.itemId),
+                    ordem: items.length + 1
+                });
+                nextElement = nextElement.nextElementSibling;
+            }
+            
+            categories.push({
+                categoria: categoria,
+                grupo: grupo,
+                ordem_categoria: catIndex + 1,
+                items: items
+            });
+        });
+        
+        // Mostrar indicador de carregamento
+        const loadingMsg = document.createElement('div');
+        loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:9999;';
+        loadingMsg.innerHTML = '⏳ Salvando...';
+        document.body.appendChild(loadingMsg);
+        
+        // Enviar para o servidor
+        fetch('/?route=orcamentos/reorderItems', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                orcamento_id: <?php echo (int)$orcamento['id']; ?>,
+                categories: categories
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                loadingMsg.innerHTML = '✓ Salvo!';
+                loadingMsg.style.background = '#4CAF50';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                loadingMsg.innerHTML = '✗ Erro';
+                loadingMsg.style.background = '#f44336';
+                setTimeout(() => loadingMsg.remove(), 3000);
+            }
+        })
+        .catch(err => {
+            loadingMsg.innerHTML = '✗ Erro';
+            loadingMsg.style.background = '#f44336';
+            setTimeout(() => loadingMsg.remove(), 3000);
+        });
+    }
+})();
+
+// Função para editar desconto de grupo
+function editarDescontoGrupo(grupo, orcamentoId) {
+    const modal = document.createElement('div');
+    modal.id = 'modal-desconto-grupo';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+    
+    modal.innerHTML = `
+        <div style="background:#1a1916;border-radius:12px;padding:24px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            <div style="font-size:18px;font-weight:800;margin-bottom:16px;color:#4FC3F7;">
+                ⚙️ Ajuste de Valores: ${grupo}
+            </div>
+            <div style="font-size:13px;color:#999;margin-bottom:20px;">
+                Aplicar ajuste em TODOS os itens deste grupo (sobrepõe margens globais)
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:12px;color:#4FC3F7;font-weight:600;margin-bottom:12px;">
+                    Tipo de Ajuste
+                </label>
+                <div style="display:flex;gap:16px;margin-bottom:16px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="radio" name="tipo-ajuste" value="reduzir" checked style="width:auto;">
+                        <span style="color:#fff;">🔻 Reduzir (Desconto)</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="radio" name="tipo-ajuste" value="aumentar" style="width:auto;">
+                        <span style="color:#fff;">🔺 Aumentar (Acréscimo)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:12px;color:#4FC3F7;font-weight:600;margin-bottom:8px;">
+                    Percentual (0 a 100)
+                </label>
+                <input type="number" id="desconto-grupo-input" min="0" max="100" step="0.1" value="0" 
+                       style="width:100%;padding:12px;border-radius:6px;border:1px solid rgba(79,195,247,0.3);background:rgba(255,255,255,0.04);color:#fff;font-size:16px;">
+                <div style="font-size:10px;color:#999;margin-top:6px;">
+                    Exemplo: 10 para 10% de redução/aumento
+                </div>
+            </div>
+            
+            <div style="display:flex;gap:12px;">
+                <button onclick="fecharModalDescontoGrupo()" 
+                        style="flex:1;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.04);cursor:pointer;color:#999;font-size:14px;">
+                    Cancelar
+                </button>
+                <button onclick="aplicarDescontoGrupo('${grupo}', ${orcamentoId})" 
+                        class="btn primary" style="flex:1;padding:12px;font-size:14px;">
+                    Aplicar Ajuste
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.getElementById('desconto-grupo-input').focus();
+}
+
+function fecharModalDescontoGrupo() {
+    const modal = document.getElementById('modal-desconto-grupo');
+    if (modal) modal.remove();
+}
+
+function aplicarDescontoGrupo(grupo, orcamentoId) {
+    const percentual = parseFloat(document.getElementById('desconto-grupo-input').value || 0);
+    const tipoAjuste = document.querySelector('input[name="tipo-ajuste"]:checked').value;
+    
+    if (percentual === 0) {
+        alert('Digite um percentual diferente de zero');
+        return;
+    }
+    
+    if (percentual < 0 || percentual > 100) {
+        alert('O percentual deve estar entre 0 e 100');
+        return;
+    }
+    
+    // Converter para negativo se for redução
+    const desconto = tipoAjuste === 'reduzir' ? -percentual : percentual;
+    
+    const loadingMsg = document.createElement('div');
+    loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:10001;';
+    loadingMsg.innerHTML = '⏳ Aplicando ajuste...';
+    document.body.appendChild(loadingMsg);
+    
+    fetch('/?route=orcamentos/aplicarDescontoGrupo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            orcamento_id: orcamentoId,
+            grupo: grupo,
+            desconto: desconto
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            loadingMsg.innerHTML = '✓ Ajuste aplicado em ' + data.count + ' itens!';
+            loadingMsg.style.background = '#4CAF50';
+            fecharModalDescontoGrupo();
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            loadingMsg.innerHTML = '✗ Erro: ' + (data.error || 'Erro desconhecido');
+            loadingMsg.style.background = '#f44336';
+            setTimeout(() => loadingMsg.remove(), 3000);
+        }
+    })
+    .catch(err => {
+        loadingMsg.innerHTML = '✗ Erro de conexão';
+        loadingMsg.style.background = '#f44336';
+        setTimeout(() => loadingMsg.remove(), 3000);
+    });
+}
 });
 </script>

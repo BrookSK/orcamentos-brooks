@@ -337,7 +337,7 @@ function toggleAdicionarItem() {
                 </td>
                 <td colspan="2" style="padding:8px; text-align:right;">
                     <button class="btn" style="padding:6px 12px; font-size:12px; background:#4FC3F7; color:#000;" onclick="editarDescontoGrupo('<?php echo htmlspecialchars($grupo); ?>', <?php echo (int)$orcamento['id']; ?>); event.stopPropagation();">
-                        ✏️ Editar Desconto
+                        ⚙️ Ajuste de Valores
                     </button>
                 </td>
             </tr>
@@ -1078,20 +1078,36 @@ function editarDescontoGrupo(grupo, orcamentoId) {
     modal.innerHTML = `
         <div style="background:#1a1916;border-radius:12px;padding:24px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
             <div style="font-size:18px;font-weight:800;margin-bottom:16px;color:#4FC3F7;">
-                📊 Desconto para: ${grupo}
+                ⚙️ Ajuste de Valores: ${grupo}
             </div>
             <div style="font-size:13px;color:#999;margin-bottom:20px;">
-                Aplicar desconto em TODOS os itens deste grupo (sobrepõe margens globais)
+                Aplicar ajuste em TODOS os itens deste grupo (sobrepõe margens globais)
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:12px;color:#4FC3F7;font-weight:600;margin-bottom:12px;">
+                    Tipo de Ajuste
+                </label>
+                <div style="display:flex;gap:16px;margin-bottom:16px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="radio" name="tipo-ajuste" value="reduzir" checked style="width:auto;">
+                        <span style="color:#fff;">🔻 Reduzir (Desconto)</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="radio" name="tipo-ajuste" value="aumentar" style="width:auto;">
+                        <span style="color:#fff;">🔺 Aumentar (Acréscimo)</span>
+                    </label>
+                </div>
             </div>
             
             <div style="margin-bottom:20px;">
                 <label style="display:block;font-size:12px;color:#4FC3F7;font-weight:600;margin-bottom:8px;">
-                    % Desconto (negativo para desconto, positivo para acréscimo)
+                    Percentual (0 a 100)
                 </label>
-                <input type="number" id="desconto-grupo-input" step="0.1" value="0" 
+                <input type="number" id="desconto-grupo-input" min="0" max="100" step="0.1" value="0" 
                        style="width:100%;padding:12px;border-radius:6px;border:1px solid rgba(79,195,247,0.3);background:rgba(255,255,255,0.04);color:#fff;font-size:16px;">
                 <div style="font-size:10px;color:#999;margin-top:6px;">
-                    Exemplo: -10 para 10% de desconto, 5 para 5% de acréscimo
+                    Exemplo: 10 para 10% de redução/aumento
                 </div>
             </div>
             
@@ -1102,7 +1118,7 @@ function editarDescontoGrupo(grupo, orcamentoId) {
                 </button>
                 <button onclick="aplicarDescontoGrupo('${grupo}', ${orcamentoId})" 
                         class="btn primary" style="flex:1;padding:12px;font-size:14px;">
-                    Aplicar Desconto
+                    Aplicar Ajuste
                 </button>
             </div>
         </div>
@@ -1118,16 +1134,25 @@ function fecharModalDescontoGrupo() {
 }
 
 function aplicarDescontoGrupo(grupo, orcamentoId) {
-    const desconto = parseFloat(document.getElementById('desconto-grupo-input').value || 0);
+    const percentual = parseFloat(document.getElementById('desconto-grupo-input').value || 0);
+    const tipoAjuste = document.querySelector('input[name="tipo-ajuste"]:checked').value;
     
-    if (desconto === 0) {
-        alert('Digite um valor de desconto diferente de zero');
+    if (percentual === 0) {
+        alert('Digite um percentual diferente de zero');
         return;
     }
     
+    if (percentual < 0 || percentual > 100) {
+        alert('O percentual deve estar entre 0 e 100');
+        return;
+    }
+    
+    // Converter para negativo se for redução
+    const desconto = tipoAjuste === 'reduzir' ? -percentual : percentual;
+    
     const loadingMsg = document.createElement('div');
     loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:10001;';
-    loadingMsg.innerHTML = '⏳ Aplicando desconto...';
+    loadingMsg.innerHTML = '⏳ Aplicando ajuste...';
     document.body.appendChild(loadingMsg);
     
     fetch('/?route=orcamentos/aplicarDescontoGrupo', {
@@ -1142,7 +1167,7 @@ function aplicarDescontoGrupo(grupo, orcamentoId) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            loadingMsg.innerHTML = '✓ Desconto aplicado!';
+            loadingMsg.innerHTML = '✓ Ajuste aplicado em ' + data.count + ' itens!';
             loadingMsg.style.background = '#4CAF50';
             fecharModalDescontoGrupo();
             setTimeout(() => {

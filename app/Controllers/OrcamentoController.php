@@ -1563,10 +1563,35 @@ final class OrcamentoController
             
             foreach ($itens as $item) {
                 if ((string)($item['grupo'] ?? '') === $grupo) {
-                    // Aplicar desconto como margem personalizada
+                    // Calcular novo valor_cobranca com a margem personalizada
+                    $custoMaterial = (float)($item['custo_material'] ?? 0);
+                    $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoEquipamento = (float)($item['custo_equipamento'] ?? 0);
+                    $custoTotal = $custoMaterial + $custoMaoObra + $custoEquipamento;
+                    
+                    // Aplicar margem personalizada
+                    $novoValorCobranca = $custoTotal * (1 + ($desconto / 100));
+                    
+                    // Preparar dados para atualização
                     $data = [
-                        'margem_personalizada' => (string)$desconto,
-                        'usa_margem_personalizada' => '1',
+                        'grupo' => $item['grupo'],
+                        'categoria' => $item['categoria'],
+                        'codigo' => $item['codigo'],
+                        'descricao' => $item['descricao'],
+                        'quantidade' => $item['quantidade'],
+                        'unidade' => $item['unidade'],
+                        'valor_unitario' => $item['valor_unitario'],
+                        'ordem' => $item['ordem'],
+                        'etapa' => $item['etapa'] ?? '',
+                        'custo_material' => $custoMaterial,
+                        'custo_mao_obra' => $custoMaoObra,
+                        'custo_equipamento' => $custoEquipamento,
+                        'valor_cobranca' => $novoValorCobranca,
+                        'margem_lucro' => $item['margem_lucro'] ?? 0,
+                        'desconto_item' => $item['desconto_item'] ?? 0,
+                        'percentual_realizado' => $item['percentual_realizado'] ?? 0,
+                        'margem_personalizada' => $desconto,
+                        'usa_margem_personalizada' => 1,
                     ];
                     
                     OrcamentoItem::update((int)$item['id'], $data);
