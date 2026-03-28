@@ -286,142 +286,87 @@ HTML;
 
     private static function gerarPaginasResumo(int $orcamentoId, array $orcamento): string
     {
-        // Cache cleared - 2026-03-28 - Correção para usar campo etapa ao invés de lógica hardcoded
+        // Buscar itens agrupados por CATEGORIA (não por etapa hardcoded)
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT codigo, descricao, grupo, etapa, (quantidade * valor_cobranca) as valor_total '
+            'SELECT codigo, descricao, grupo, categoria, (quantidade * valor_cobranca) as valor_total '
             . 'FROM orcamento_itens WHERE orcamento_id = :id '
             . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED)'
         );
         $stmt->execute([':id' => $orcamentoId]);
         $itensAgrupados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         
-        $totalCinza = 0; $totalAcabamentos = 0; $totalGerenciamento = 0; $totalAdm = 0;
-        $itensCinza = []; $itensAcabamentos = []; $itensGerenciamento = []; $itensAdm = [];
+        // Agrupar por categoria
+        $categorias = [];
+        $totalGeral = 0;
         
         foreach ($itensAgrupados as $item) {
+            $categoria = trim((string)($item['categoria'] ?? 'SEM CATEGORIA'));
             $valor = (float)$item['valor_total'];
-            $grupoEtapa = self::resolverGrupoEtapa($item);
             
-            if ($grupoEtapa === 'cinza') { 
-                $itensCinza[] = $item; 
-                $totalCinza += $valor; 
-            } elseif ($grupoEtapa === 'acabamentos') { 
-                $itensAcabamentos[] = $item; 
-                $totalAcabamentos += $valor; 
-            } elseif ($grupoEtapa === 'gerenciamento') { 
-                $itensGerenciamento[] = $item; 
-                $totalGerenciamento += $valor; 
-            } else { 
-                $itensAdm[] = $item; 
-                $totalAdm += $valor; 
+            if (!isset($categorias[$categoria])) {
+                $categorias[$categoria] = [
+                    'itens' => [],
+                    'total' => 0
+                ];
             }
+            
+            $categorias[$categoria]['itens'][] = $item;
+            $categorias[$categoria]['total'] += $valor;
+            $totalGeral += $valor;
         }
         
-        $totalGeral = $totalCinza + $totalAcabamentos + $totalGerenciamento + $totalAdm;
+        // Se não houver categorias, retornar vazio
+        if (empty($categorias)) {
+            return '';
+        }
         
-        // PÁGINA 1 - ETAPA CINZA
-        $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
-        $html .= '<div class="etapa-header">ETAPA CINZA</div>';
-        $html .= '<table class="table-resumo"><thead><tr>';
-        $html .= '<th style="width:8%;">Nº</th><th style="width:60%;">DESCRIÇÃO</th>';
-        $html .= '<th class="right" style="width:22%;">VALOR TOTAL</th><th class="center" style="width:10%;">%</th>';
-        $html .= '</tr></thead><tbody>';
+        // Gerar páginas de resumo por categoria
+        $html = '';
+        $paginaNum = 1;
         
-        $numero = 1;
-        foreach ($itensCinza as $item) {
-            $valor = (float)$item['valor_total'];
-            $pct = $totalGeral > 0 ? ($valor / $totalGeral) * 100 : 0;
+        foreach ($categorias as $categoriaNome => $categoriaData) {
+            $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
+            $html .= '<div class="etapa-header">' . htmlspecialchars(strtoupper($categoriaNome)) . '</div>';
+            $html .= '<table class="table-resumo"><thead><tr>';
+            $html .= '<th style="width:8%;">Nº</th><th style="width:60%;">DESCRIÇÃO</th>';
+            $html .= '<th class="right" style="width:22%;">VALOR TOTAL</th><th class="center" style="width:10%;">%</th>';
+            $html .= '</tr></thead><tbody>';
+            
+            foreach ($categoriaData['itens'] as $item) {
+                $pct = $totalGeral > 0 ? ((float)$item['valor_total'] / $totalGeral) * 100 : 0;
+                $html .= sprintf(
+                    '<tr><td>%s</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
+                    htmlspecialchars((string)$item['codigo']),
+                    htmlspecialchars((string)$item['descricao']),
+                    self::formatarValor((float)$item['valor_total']),
+                    number_format($pct, 2, ',', '.')
+                );
+            }
+            
+            $pctCategoria = $totalGeral > 0 ? ($categoriaData['total'] / $totalGeral) * 100 : 0;
             $html .= sprintf(
-                '<tr><td class="center">%d</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-                $numero++,
-                htmlspecialchars((string)$item['descricao']),
-                self::formatarValor($valor),
-                number_format($pct, 2, ',', '.')
+                '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - %s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
+                htmlspecialchars(strtoupper($categoriaNome)),
+                self::formatarValor($categoriaData['total']),
+                number_format($pctCategoria, 2, ',', '.')
             );
+            
+            $html .= '</tbody></table>';
+            $html .= sprintf('<div class="page-footer"><div>FOLHA: %d</div></div>', $paginaNum);
+            $html .= '</div>';
+            
+            $paginaNum++;
         }
         
-        $pctCinza = $totalGeral > 0 ? ($totalCinza / $totalGeral) * 100 : 0;
-        $html .= sprintf(
-            '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - ETAPA CIZA</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-            self::formatarValor($totalCinza),
-            number_format($pctCinza, 2, ',', '.')
-        );
-        $html .= '</tbody></table>';
-        $html .= '<div class="page-footer"><div style="text-align:right;padding:0 20px 8px;">FOLHA: 1</div></div>';
-        $html .= '</div>';
-
-        // PÁGINA 2 - ETAPA ACABAMENTOS
+        // Página final com áreas e totais por categoria
         $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
-        $html .= '<div class="etapa-header">ETAPA ACABAMENTOS</div>';
-        $html .= '<table class="table-resumo"><thead><tr>';
-        $html .= '<th style="width:8%;">Nº</th><th style="width:60%;">DESCRIÇÃO</th>';
-        $html .= '<th class="right" style="width:22%;">VALOR TOTAL</th><th class="center" style="width:10%;">%</th>';
-        $html .= '</tr></thead><tbody>';
+        $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
-        $numero = 18;
-        foreach ($itensAcabamentos as $item) {
-            $valor = (float)$item['valor_total'];
-            $pct = $totalGeral > 0 ? ($valor / $totalGeral) * 100 : 0;
-            $html .= sprintf(
-                '<tr><td class="center">%d</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-                $numero++,
-                htmlspecialchars((string)$item['descricao']),
-                self::formatarValor($valor),
-                number_format($pct, 2, ',', '.')
-            );
-        }
-        
-        $pctAcabamentos = $totalGeral > 0 ? ($totalAcabamentos / $totalGeral) * 100 : 0;
-        $html .= sprintf(
-            '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - ETAPA ACABAMENTOS</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-            self::formatarValor($totalAcabamentos),
-            number_format($pctAcabamentos, 2, ',', '.')
-        );
-        $html .= '</tbody></table>';
-        $html .= '<div class="page-footer"><div style="text-align:right;padding:0 20px 8px;">FOLHA: 2</div></div>';
-        $html .= '</div>';
-
-        // PÁGINA 3 - GERENCIAMENTO + ADM + TOTAIS
-        $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
-        
-        $pctGerenciamento = $totalGeral > 0 ? ($totalGerenciamento / $totalGeral) * 100 : 0;
-        $html .= '<div class="etapa-header">ETAPA DE GERENCIAMENTO</div>';
-        $html .= '<table class="table-resumo"><thead><tr>';
-        $html .= '<th style="width:8%;">Nº</th><th class="left" style="width:60%;">DESCRIÇÃO</th>';
-        $html .= '<th style="width:22%;">VALOR TOTAL</th><th style="width:10%;">%</th>';
-        $html .= '</tr></thead><tbody>';
-        $html .= sprintf(
-            '<tr><td class="center">42</td><td>EQUIPE DE OBRA</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
-            self::formatarValor($totalGerenciamento)
-        );
-        $html .= sprintf(
-            '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - ETAPA DE GERENCIAMENTO</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-            self::formatarValor($totalGerenciamento),
-            number_format($pctGerenciamento, 2, ',', '.')
-        );
-        $html .= '</tbody></table>';
-        
-        $pctAdm = $totalGeral > 0 ? ($totalAdm / $totalGeral) * 100 : 0;
-        $html .= '<div class="etapa-header" style="margin-top:15px;">TAXA DE ADMINISTRAÇÃO + IMPOSTOS</div>';
-        $html .= '<table class="table-resumo"><thead><tr>';
-        $html .= '<th style="width:8%;">Nº</th><th class="left" style="width:60%;">DESCRIÇÃO</th>';
-        $html .= '<th style="width:22%;">VALOR TOTAL</th><th style="width:10%;">%</th>';
-        $html .= '</tr></thead><tbody>';
-        $html .= sprintf(
-            '<tr><td class="center">43</td><td>TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
-            self::formatarValor($totalAdm)
-        );
-        $html .= sprintf(
-            '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - TAXA DE ADMINISTRAÇÃO + IMPOSTOS</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-            self::formatarValor($totalAdm),
-            number_format($pctAdm, 2, ',', '.')
-        );
-        $html .= '</tbody></table>';
-        
+        // Tabela de total geral
         $html .= '<table class="table-resumo" style="margin-top:15px;"><tbody>';
         $html .= sprintf(
-            '<tr class="total-row"><td colspan="2">VALOR TOTAL GERAL + TAXA DE ADMINISTRAÇÃO + IMPOSTOS:</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
+            '<tr class="total-row"><td colspan="2">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
             self::formatarValor($totalGeral)
         );
         $html .= '</tbody></table>';
@@ -477,26 +422,19 @@ HTML;
         $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
         $html .= '</tbody></table>';
         
-        // Gerar tabela de etapas (usando dados reais do orçamento)
-        $html .= '<table class="table-areas" style="margin-top:15px;"><thead><tr><th>ETAPAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
-        $html .= sprintf(
-            '<tr><td>ETAPA BRUTA (CINZA)</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
-            self::formatarValor($totalCinza),
-            number_format($areaTotal, 2, ',', '.'),
-            self::formatarValor($areaTotal > 0 ? $totalCinza / $areaTotal : 0)
-        );
-        $html .= sprintf(
-            '<tr><td>ETAPA ACABAMENTOS</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
-            self::formatarValor($totalAcabamentos),
-            number_format($areaTotal, 2, ',', '.'),
-            self::formatarValor($areaTotal > 0 ? $totalAcabamentos / $areaTotal : 0)
-        );
-        $html .= sprintf(
-            '<tr><td>GERENCIAMENTO / INDIRETOS / IMPOSTOS</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
-            self::formatarValor($totalGerenciamento + $totalAdm),
-            number_format($areaTotal, 2, ',', '.'),
-            self::formatarValor($areaTotal > 0 ? ($totalGerenciamento + $totalAdm) / $areaTotal : 0)
-        );
+        // Gerar tabela de CATEGORIAS (usando dados reais do orçamento)
+        $html .= '<table class="table-areas" style="margin-top:15px;"><thead><tr><th>CATEGORIAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
+        
+        foreach ($categorias as $categoriaNome => $categoriaData) {
+            $html .= sprintf(
+                '<tr><td>%s</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
+                htmlspecialchars(strtoupper($categoriaNome)),
+                self::formatarValor($categoriaData['total']),
+                number_format($areaTotal, 2, ',', '.'),
+                self::formatarValor($areaTotal > 0 ? $categoriaData['total'] / $areaTotal : 0)
+            );
+        }
+        
         $html .= sprintf(
             '<tr class="total-row"><td>TOTAL GERAL:</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
             self::formatarValor($totalGeral),
@@ -505,7 +443,7 @@ HTML;
         );
         $html .= '</tbody></table>';
         
-        $html .= '<div class="page-footer"><div>FOLHA: 3</div></div>';
+        $html .= sprintf('<div class="page-footer"><div>FOLHA: %d</div></div>', $paginaNum);
         $html .= '</div>';
         
         return $html;
