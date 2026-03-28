@@ -3,6 +3,11 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Allow direct access to API files in public/api/
+    RewriteCond %{REQUEST_URI} ^/api/
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    RewriteRule ^api/(.*)$ public/api/$1 [L]
+
     # If the requested resource exists as a file or directory, serve it directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
