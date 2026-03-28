@@ -32,7 +32,8 @@ $totalGeral = 0.0;
             <a class="btn" href="/?route=orcamentos/index">Voltar</a>
             <a class="btn" href="/?route=orcamentos/edit&id=<?php echo (int)$orcamento['id']; ?>">Editar cabeçalho</a>
             <a class="btn" style="background: #e94560; color: white;" href="/?route=orcamentos/adequacao&id=<?php echo (int)$orcamento['id']; ?>">💰 Ajustar Valor do Contrato</a>
-            <a class="btn primary" href="/?route=orcamentos/pdf&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Exportar PDF</a>
+            <a class="btn primary" href="/?route=orcamentos/pdf&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">📄 PDF Comercial</a>
+            <a class="btn" style="background: #6b4423; color: white;" href="/?route=orcamentos/pdfAdmin&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">📊 PDF Administrativo</a>
         </div>
     </div>
 </div>
@@ -91,9 +92,31 @@ $totalGeral = 0.0;
 
             <div style="background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:16px; margin-bottom:16px;">
                 <div style="font-size:13px; font-weight:800; margin-bottom:12px;">Lista de materiais calculados</div>
+                
+                <div style="margin-bottom:16px; padding:12px; background:rgba(201,151,58,.1); border-radius:8px; border:1px solid rgba(201,151,58,.3);">
+                    <label style="display:block; font-size:12px; color:#C9973A; font-weight:600; margin-bottom:8px;">
+                        % BDI (Benefícios e Despesas Indiretas) - Margem de lucro
+                    </label>
+                    <input type="number" id="sinapi-bdi-input" value="25" min="0" max="100" step="0.1" 
+                           style="width:100%; padding:10px 12px; border-radius:6px; border:1px solid rgba(201,151,58,.3); background:rgba(255,255,255,.04); color:#fff; font-size:14px;">
+                    <div style="font-size:10px; color:#999; margin-top:6px;">
+                        Este percentual será aplicado sobre o custo (material + mão de obra) para calcular o valor de cobrança
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <button onclick="selecionarTodosSINAPI(true); return false;" style="flex:1; padding:8px; border:1px solid rgba(255,255,255,.1); border-radius:6px; background:rgba(255,255,255,.04); cursor:pointer; color:#999; font-size:11px;">
+                        ☑ Selecionar todos
+                    </button>
+                    <button onclick="selecionarTodosSINAPI(false); return false;" style="flex:1; padding:8px; border:1px solid rgba(255,255,255,.1); border-radius:6px; background:rgba(255,255,255,.04); cursor:pointer; color:#999; font-size:11px;">
+                        ☐ Desmarcar todos
+                    </button>
+                </div>
+
                 <table style="width:100%; border-collapse:collapse;">
                     <thead>
                         <tr style="border-bottom:1px solid rgba(255,255,255,.1);">
+                            <th style="padding:8px; text-align:center; font-size:10px; color:#999; width:40px;">✓</th>
                             <th style="padding:8px; text-align:left; font-size:10px; color:#999;">Tipo</th>
                             <th style="padding:8px; text-align:left; font-size:10px; color:#999;">Material / Insumo</th>
                             <th style="padding:8px; text-align:right; font-size:10px; color:#999;">Quantidade</th>
@@ -105,7 +128,7 @@ $totalGeral = 0.0;
             </div>
 
             <button class="btn primary" style="width:100%; padding:14px; font-size:14px;" onclick="adicionarAoOrcamento()">
-                ✓ Adicionar TODOS os itens ao orçamento
+                ✓ Adicionar itens selecionados ao orçamento
             </button>
             <button onclick="voltarStep1SINAPI()" style="width:100%; margin-top:8px; padding:10px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.04); cursor:pointer; color:#999; font-size:12px;">
                 ← Calcular outro elemento
@@ -230,6 +253,12 @@ function toggleCalculadora() {
             <div class="field">
                 <label>Custo Mão de Obra (R$)</label>
                 <input name="custo_mao_obra" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['custo_mao_obra'] ?? '0')); ?>">
+            </div>
+
+            <div class="field">
+                <label>% BDI (Margem de lucro)</label>
+                <input name="percentual_bdi" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['percentual_bdi'] ?? '25')); ?>" placeholder="25">
+                <div class="muted" style="font-size:11px; margin-top:4px;">Aplicado sobre custo total para calcular valor de cobrança</div>
             </div>
 
             <div class="field">

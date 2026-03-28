@@ -61,6 +61,7 @@ if ($controllerName === 'orcamentos') {
         'unidadesDelete' => ['POST'],
         'print' => ['GET'],
         'pdf' => ['GET'],
+        'pdfAdmin' => ['GET'],
         'adequacao' => ['GET'],
         'adequacaoPreview' => ['POST'],
         'adequacaoAplicar' => ['POST'],

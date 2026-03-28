@@ -95,12 +95,13 @@ final class OrcamentoItem
         $margemLucro = (float)($data['margem_lucro'] ?? 0);
         $descontoItem = (float)($data['desconto_item'] ?? 0);
         $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
+        $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
         
         $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
 
         $stmt = $pdo->prepare(
-            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item, percentual_realizado) '
-            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado)'
+            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, percentual_bdi) '
+            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :percentual_bdi)'
         );
 
         $stmt->execute([
@@ -121,6 +122,7 @@ final class OrcamentoItem
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
             ':percentual_realizado' => $percentualRealizado,
+            ':percentual_bdi' => $percentualBdi,
         ]);
 
         return (int)$pdo->lastInsertId();
@@ -146,6 +148,7 @@ final class OrcamentoItem
         $margemLucro = (float)($data['margem_lucro'] ?? 0);
         $descontoItem = (float)($data['desconto_item'] ?? 0);
         $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
+        $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
         if ($percentualRealizado < 0) {
             $percentualRealizado = 0;
         }
@@ -172,7 +175,8 @@ final class OrcamentoItem
             . ' valor_cobranca = :valor_cobranca,'
             . ' margem_lucro = :margem_lucro,'
             . ' desconto_item = :desconto_item,'
-            . ' percentual_realizado = :percentual_realizado'
+            . ' percentual_realizado = :percentual_realizado,'
+            . ' percentual_bdi = :percentual_bdi'
             . ' WHERE id = :id'
         );
 
@@ -194,6 +198,7 @@ final class OrcamentoItem
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
             ':percentual_realizado' => $percentualRealizado,
+            ':percentual_bdi' => $percentualBdi,
         ]);
     }
 

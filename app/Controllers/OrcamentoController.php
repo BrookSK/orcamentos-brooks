@@ -998,6 +998,57 @@ final class OrcamentoController
         $this->redirect('/?route=orcamentos/print&id=' . $id);
     }
 
+    public function pdfAdmin(): void
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        Logger::info('orcamentos.pdfAdmin', ['id' => $id]);
+        $orcamento = Orcamento::find($id);
+        if (!$orcamento) {
+            Logger::warning('orcamentos.pdfAdmin.not_found', ['id' => $id]);
+            $this->redirect('/?route=orcamentos/index');
+            return;
+        }
+
+        if (class_exists('Dompdf\\Dompdf')) {
+            try {
+                $html = \App\Helpers\OrcamentoPDF::gerarHTMLAdmin($id, $orcamento);
+
+                $klass = 'Dompdf\\Dompdf';
+                $dompdf = new $klass([
+                    'isRemoteEnabled' => true,
+                ]);
+                $dompdf->loadHtml($html, 'UTF-8');
+                $dompdf->setPaper('A4', 'portrait');
+                $dompdf->render();
+
+                header('Content-Type: application/pdf');
+                $nomeArquivo = $orcamento['numero_proposta'] ?? 'orcamento-' . $id;
+                $nomeArquivo = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nomeArquivo);
+                $dataExportacao = date('Y-m-d');
+                header('Content-Disposition: inline; filename="' . $nomeArquivo . '_ADMIN_' . $dataExportacao . '.pdf"');
+                echo $dompdf->output();
+                return;
+            } catch (\Throwable $e) {
+                Logger::error('orcamentos.pdfAdmin.error', [
+                    'id' => $id,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+                header('Content-Type: text/plain; charset=utf-8');
+                echo "ERRO AO GERAR PDF ADMINISTRATIVO:\n\n";
+                echo "Mensagem: " . $e->getMessage() . "\n";
+                echo "Arquivo: " . $e->getFile() . "\n";
+                echo "Linha: " . $e->getLine() . "\n\n";
+                echo $e->getTraceAsString();
+                return;
+            }
+        }
+
+        Logger::warning('orcamentos.pdfAdmin.dompdf_missing', ['id' => $id]);
+        $this->redirect('/?route=orcamentos/print&id=' . $id);
+    }
+
     public function adequacao(): void
     {
         $id = (int)($_GET['id'] ?? 0);
@@ -1324,6 +1375,7 @@ final class OrcamentoController
             
             $orcamentoId = (int)$payload['orcamento_id'];
             $elementoNome = (string)($payload['elemento_nome'] ?? 'Elemento SINAPI');
+            $percentualBdi = (float)($payload['percentual_bdi'] ?? 25.0);
             $itens = $payload['itens'];
             
             if (!is_array($itens) || empty($itens)) {
@@ -1334,36 +1386,71 @@ final class OrcamentoController
             Logger::info('orcamentos.addFromSinapi.start', [
                 'orcamento_id' => $orcamentoId,
                 'elemento' => $elementoNome,
+                'bdi' => $percentualBdi,
                 'count' => count($itens)
             ]);
             
-            // Mapear tipo para grupo/categoria
+            // Mapear elemento para etapa
+            $elementoEtapaMap = [
+                'muro_tijolo_furado' => 'CINZA',
+                'laje_macica' => 'CINZA',
+                'fundacao_corrida' => 'CINZA',
+                'contrapiso' => 'CINZA',
+                'piso_ceramico' => 'ACABAMENTOS',
+                'revestimento_parede' => 'ACABAMENTOS',
+                'pintura' => 'ACABAMENTOS',
+                'telhado' => 'ACABAMENTOS',
+                'impermeabilizacao' => 'ACABAMENTOS',
+                'calcada' => 'ACABAMENTOS',
+            ];
+            
+            // Determinar etapa baseado no elemento
+            $elementoId = '';
+            foreach ($elementoEtapaMap as $elId => $etapa) {
+                if (stripos($elementoNome, $elId) !== false || stripos($elementoNome, str_replace('_', ' ', $elId)) !== false) {
+                    $elementoId = $elId;
+                    break;
+                }
+            }
+            $etapaDestino = $elementoEtapaMap[$elementoId] ?? 'CINZA';
+            
+            // Mapear tipo para grupo/categoria baseado na etapa
             $tipoMap = [
-                'material' => ['grupo' => 'MATERIAIS', 'categoria' => 'MATERIAIS DIVERSOS'],
-                'mao' => ['grupo' => 'MÃO DE OBRA', 'categoria' => 'MÃO DE OBRA'],
+                'material' => ['grupo' => 'MATERIAIS', 'categoria' => 'MATERIAIS ' . $etapaDestino],
+                'mao' => ['grupo' => 'MÃO DE OBRA', 'categoria' => 'MÃO DE OBRA ' . $etapaDestino],
                 'equip' => ['grupo' => 'EQUIPAMENTOS', 'categoria' => 'EQUIPAMENTOS'],
             ];
             
-            // Obter próximos códigos disponíveis por grupo
+            // Obter próximos códigos disponíveis por grupo (formato X.Y sequencial)
             $itensExistentes = OrcamentoItem::allByOrcamento($orcamentoId);
-            $maxCodigos = ['MATERIAIS' => 0, 'MÃO DE OBRA' => 0, 'EQUIPAMENTOS' => 0];
+            $maxCodigos = ['MATERIAIS' => ['major' => 0, 'minor' => 0], 'MÃO DE OBRA' => ['major' => 0, 'minor' => 0], 'EQUIPAMENTOS' => ['major' => 0, 'minor' => 0]];
             
             foreach ($itensExistentes as $item) {
                 $grupo = (string)($item['grupo'] ?? '');
                 $codigo = (string)($item['codigo'] ?? '');
-                if (preg_match('/^(\d+)\./', $codigo, $m)) {
-                    $num = (int)$m[1];
+                if (preg_match('/^(\d+)\.(\d+)/', $codigo, $m)) {
+                    $major = (int)$m[1];
+                    $minor = (int)$m[2];
                     if (isset($maxCodigos[$grupo])) {
-                        $maxCodigos[$grupo] = max($maxCodigos[$grupo], $num);
+                        if ($major > $maxCodigos[$grupo]['major']) {
+                            $maxCodigos[$grupo]['major'] = $major;
+                            $maxCodigos[$grupo]['minor'] = $minor;
+                        } elseif ($major === $maxCodigos[$grupo]['major'] && $minor > $maxCodigos[$grupo]['minor']) {
+                            $maxCodigos[$grupo]['minor'] = $minor;
+                        }
                     }
                 }
             }
             
-            $contadores = [
-                'MATERIAIS' => $maxCodigos['MATERIAIS'] + 1,
-                'MÃO DE OBRA' => $maxCodigos['MÃO DE OBRA'] + 1,
-                'EQUIPAMENTOS' => $maxCodigos['EQUIPAMENTOS'] + 1,
-            ];
+            // Inicializar contadores sequenciais
+            $contadores = [];
+            foreach ($maxCodigos as $grupo => $vals) {
+                if ($vals['major'] === 0) {
+                    $contadores[$grupo] = ['major' => 1, 'minor' => 1];
+                } else {
+                    $contadores[$grupo] = ['major' => $vals['major'], 'minor' => $vals['minor'] + 1];
+                }
+            }
             
             $count = 0;
             foreach ($itens as $item) {
@@ -1372,12 +1459,13 @@ final class OrcamentoController
                 
                 $grupo = $mapping['grupo'];
                 $categoria = $mapping['categoria'];
-                $codigo = $contadores[$grupo] . '.1';
-                $contadores[$grupo]++;
+                $codigo = $contadores[$grupo]['major'] . '.' . $contadores[$grupo]['minor'];
+                $contadores[$grupo]['minor']++;
                 
                 $quantidade = (float)($item['qty'] ?? 0);
                 $preco = (float)($item['preco'] ?? 0);
-                $valorTotal = round($quantidade * $preco, 2);
+                $custoBase = $quantidade * $preco;
+                $valorCobranca = round($custoBase * (1 + $percentualBdi / 100), 2);
                 
                 $data = [
                     'grupo' => $grupo,
@@ -1389,7 +1477,9 @@ final class OrcamentoController
                     'custo_material' => $tipo === 'material' ? (string)$preco : '0',
                     'custo_mao_obra' => $tipo === 'mao' ? (string)$preco : '0',
                     'valor_unitario' => (string)$preco,
-                    'valor_cobranca' => (string)$valorTotal,
+                    'valor_cobranca' => (string)$valorCobranca,
+                    'percentual_bdi' => (string)$percentualBdi,
+                    'etapa' => $etapaDestino,
                     'ordem' => '0',
                 ];
                 

@@ -23,6 +23,25 @@ final class OrcamentoPDF
         $html .= self::gerarRodapeHTML();
         return $html;
     }
+
+    public static function gerarHTMLAdmin(int $orcamentoId, array $orcamento): string
+    {
+        $html = self::gerarCabecalhoHTMLAdmin();
+        
+        // Exibir até 4 capas personalizadas
+        for ($i = 1; $i <= 4; $i++) {
+            $capaPath = (string)($orcamento['capa_path_' . $i] ?? '');
+            if (!empty($capaPath)) {
+                $html .= self::gerarCapaPersonalizada($capaPath);
+            }
+        }
+        
+        $html .= self::gerarPaginasResumo($orcamentoId, $orcamento);
+        $html .= self::gerarPaginaDetalhamentoAdmin($orcamentoId, $orcamento);
+        $html .= self::gerarResumoFinal($orcamentoId, $orcamento);
+        $html .= self::gerarRodapeHTML();
+        return $html;
+    }
     
     private static function gerarCabecalhoHTML(): string
     {
@@ -565,5 +584,213 @@ HTML;
     private static function formatarValor(float $valor): string
     {
         return number_format($valor, 2, ',', '.');
+    }
+
+    // ══════════════════════════════════════════════
+    //  MÉTODOS PARA PDF ADMINISTRATIVO
+    // ══════════════════════════════════════════════
+
+    private static function gerarCabecalhoHTMLAdmin(): string
+    {
+        $baseCSS = self::gerarCabecalhoHTML();
+        // Adicionar CSS específico para colunas administrativas
+        $adminCSS = <<<'CSS'
+<style>
+.table-detalhes-admin thead th { font-size: 6pt; padding: 4px 2px; }
+.table-detalhes-admin tbody td { font-size: 6pt; padding: 3px 2px; }
+.col-custo { background: #FFF8DC !important; }
+.col-bdi { background: #E6F3FF !important; }
+.col-margem { background: #E8F5E9 !important; }
+</style>
+</head>
+<body>
+CSS;
+        return str_replace('</head><body>', $adminCSS, $baseCSS);
+    }
+
+    private static function gerarPaginaDetalhamentoAdmin(int $orcamentoId, array $orcamento): string
+    {
+        $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
+        
+        $grouped = [];
+        foreach ($itens as $item) {
+            $etapa = (string)($item['etapa'] ?? 'SEM ETAPA');
+            $categoria = (string)($item['categoria'] ?? 'SEM CATEGORIA');
+            $grouped[$etapa][$categoria][] = $item;
+        }
+
+        $html = '<div class="page"><div class="page-title">DETALHAMENTO ADMINISTRATIVO</div>';
+        $html .= '<div class="page-subtitle">Custos, Margens e BDI por Item</div>';
+
+        $totalGeralObra = 0.0;
+
+        foreach ($grouped as $etapa => $categorias) {
+            $html .= '<div class="banner-etapa">' . htmlspecialchars($etapa) . '</div>';
+            
+            $subtotalEtapa = 0.0;
+            
+            foreach ($categorias as $categoria => $itens) {
+                $html .= '<table class="table-detalhes table-detalhes-admin">';
+                $html .= '<thead><tr>';
+                $html .= '<th class="left" style="width:8%;">Cód.</th>';
+                $html .= '<th class="left" style="width:25%;">Descrição</th>';
+                $html .= '<th class="center" style="width:5%;">Un</th>';
+                $html .= '<th class="center" style="width:7%;">Qtd</th>';
+                $html .= '<th class="right col-custo" style="width:9%;">Custo Mat.</th>';
+                $html .= '<th class="right col-custo" style="width:9%;">Custo M.O.</th>';
+                $html .= '<th class="right col-bdi" style="width:6%;">% BDI</th>';
+                $html .= '<th class="right col-margem" style="width:9%;">Margem</th>';
+                $html .= '<th class="right" style="width:10%;">Vlr Unit.</th>';
+                $html .= '<th class="right" style="width:12%;">Vlr Total</th>';
+                $html .= '</tr></thead><tbody>';
+
+                $subtotalCategoria = 0.0;
+
+                foreach ($itens as $item) {
+                    $quantidade = (float)($item['quantidade'] ?? 0);
+                    $custoMaterial = (float)($item['custo_material'] ?? 0);
+                    $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
+                    $percentualBdi = (float)($item['percentual_bdi'] ?? 0);
+                    $valorUnitario = (float)($item['valor_unitario'] ?? 0);
+                    $valorCobranca = (float)($item['valor_cobranca'] ?? 0);
+                    
+                    $custoUnitTotal = $custoMaterial + $custoMaoObra;
+                    $margemUnit = $valorCobranca - $custoUnitTotal;
+                    $valorTotal = $quantidade * $valorCobranca;
+                    
+                    $subtotalCategoria += $valorTotal;
+                    
+                    $html .= '<tr>';
+                    $html .= '<td class="left">' . htmlspecialchars((string)$item['codigo']) . '</td>';
+                    $html .= '<td class="left">' . nl2br(htmlspecialchars((string)$item['descricao'])) . '</td>';
+                    $html .= '<td class="center">' . htmlspecialchars((string)$item['unidade']) . '</td>';
+                    $html .= '<td class="center">' . number_format($quantidade, 2, ',', '.') . '</td>';
+                    $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaterial) . '</td>';
+                    $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaoObra) . '</td>';
+                    $html .= '<td class="center col-bdi">' . number_format($percentualBdi, 1, ',', '.') . '%</td>';
+                    $html .= '<td class="right col-margem">R$ ' . self::formatarValor($margemUnit) . '</td>';
+                    $html .= '<td class="right">R$ ' . self::formatarValor($valorCobranca) . '</td>';
+                    $html .= '<td class="right">R$ ' . self::formatarValor($valorTotal) . '</td>';
+                    $html .= '</tr>';
+                }
+
+                $html .= '</tbody></table>';
+                $html .= '<div class="subtotal-item">Subtotal ' . htmlspecialchars($categoria) . ': R$ ' . self::formatarValor($subtotalCategoria) . '</div>';
+                
+                $subtotalEtapa += $subtotalCategoria;
+            }
+            
+            $html .= '<div class="subtotal-etapa">SUBTOTAL ' . htmlspecialchars($etapa) . ': R$ ' . self::formatarValor($subtotalEtapa) . '</div>';
+            $totalGeralObra += $subtotalEtapa;
+        }
+
+        $html .= '<div class="total-obra">TOTAL DA OBRA: R$ ' . self::formatarValor($totalGeralObra) . '</div>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    private static function gerarResumoFinal(int $orcamentoId, array $orcamento): string
+    {
+        $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
+        
+        $totalMateriais = 0.0;
+        $totalMaoObra = 0.0;
+        $totalEquipamentos = 0.0;
+        $totalCobranca = 0.0;
+        
+        foreach ($itens as $item) {
+            $quantidade = (float)($item['quantidade'] ?? 0);
+            $custoMaterial = (float)($item['custo_material'] ?? 0);
+            $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
+            $valorCobranca = (float)($item['valor_cobranca'] ?? 0);
+            $categoria = (string)($item['categoria'] ?? '');
+            
+            $totalCobranca += $quantidade * $valorCobranca;
+            
+            if (stripos($categoria, 'EQUIPAMENTO') !== false) {
+                $totalEquipamentos += $quantidade * $custoMaterial;
+            } else {
+                $totalMateriais += $quantidade * $custoMaterial;
+                $totalMaoObra += $quantidade * $custoMaoObra;
+            }
+        }
+        
+        $subtotal = $totalCobranca;
+        $percentualCustosAdm = (float)($orcamento['percentual_custos_adm'] ?? 0);
+        $percentualImpostos = (float)($orcamento['percentual_impostos'] ?? 0);
+        
+        $valorCustosAdm = $subtotal * ($percentualCustosAdm / 100);
+        $valorImpostos = $subtotal * ($percentualImpostos / 100);
+        $totalFinal = $subtotal + $valorCustosAdm + $valorImpostos;
+        
+        $html = '<div class="page" style="page-break-before: always;">';
+        $html .= '<div class="page-title">RESUMO DE CUSTOS</div>';
+        $html .= '<div class="page-subtitle">Análise Financeira Detalhada</div>';
+        
+        $html .= '<table class="table-resumo" style="margin-top:30px;">';
+        $html .= '<thead><tr>';
+        $html .= '<th class="left">Descrição</th>';
+        $html .= '<th class="right" style="width:20%;">Valor (R$)</th>';
+        $html .= '<th class="center" style="width:15%;">% Obra</th>';
+        $html .= '</tr></thead><tbody>';
+        
+        $html .= '<tr>';
+        $html .= '<td class="left">🧱 Total em Materiais</td>';
+        $html .= '<td class="right">R$ ' . self::formatarValor($totalMateriais) . '</td>';
+        $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalMateriais/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
+        $html .= '</tr>';
+        
+        $html .= '<tr>';
+        $html .= '<td class="left">👷 Total em Mão de Obra</td>';
+        $html .= '<td class="right">R$ ' . self::formatarValor($totalMaoObra) . '</td>';
+        $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalMaoObra/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
+        $html .= '</tr>';
+        
+        $html .= '<tr>';
+        $html .= '<td class="left">⚙️ Total em Equipamentos</td>';
+        $html .= '<td class="right">R$ ' . self::formatarValor($totalEquipamentos) . '</td>';
+        $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalEquipamentos/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
+        $html .= '</tr>';
+        
+        $html .= '<tr class="subtotal-row">';
+        $html .= '<td class="left">SUBTOTAL DA OBRA</td>';
+        $html .= '<td class="right">R$ ' . self::formatarValor($subtotal) . '</td>';
+        $html .= '<td class="center">100,00%</td>';
+        $html .= '</tr>';
+        
+        if ($percentualCustosAdm > 0) {
+            $html .= '<tr>';
+            $html .= '<td class="left">Custos Administrativos (' . number_format($percentualCustosAdm, 2, ',', '.') . '%)</td>';
+            $html .= '<td class="right">R$ ' . self::formatarValor($valorCustosAdm) . '</td>';
+            $html .= '<td class="center">—</td>';
+            $html .= '</tr>';
+        }
+        
+        if ($percentualImpostos > 0) {
+            $html .= '<tr>';
+            $html .= '<td class="left">Impostos (' . number_format($percentualImpostos, 2, ',', '.') . '%)</td>';
+            $html .= '<td class="right">R$ ' . self::formatarValor($valorImpostos) . '</td>';
+            $html .= '<td class="center">—</td>';
+            $html .= '</tr>';
+        }
+        
+        $html .= '<tr class="total-row">';
+        $html .= '<td class="left">TOTAL GERAL</td>';
+        $html .= '<td class="right">R$ ' . self::formatarValor($totalFinal) . '</td>';
+        $html .= '<td class="center">—</td>';
+        $html .= '</tr>';
+        
+        $html .= '</tbody></table>';
+        
+        $html .= '<div style="margin-top:30px; padding:15px; background:#F5F5F5; border-left:4px solid #C9973A; font-size:8pt;">';
+        $html .= '<strong>Observações:</strong><br>';
+        $html .= '• Valores incluem BDI (Benefícios e Despesas Indiretas) conforme especificado por item<br>';
+        $html .= '• Custos administrativos e impostos calculados sobre o subtotal da obra<br>';
+        $html .= '• Este documento é confidencial e destinado apenas para uso administrativo interno';
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        return $html;
     }
 }

@@ -701,21 +701,26 @@ function renderResultadoSINAPI(result, d) {
 
   let tbody = '';
   let curTipo = null;
+  let itemIndex = 0;
   lista.forEach(item => {
     if (item.tipo !== curTipo) {
       curTipo = item.tipo;
       const titulos = { material:'🧱 Materiais', mao:'👷 Mão de Obra', equip:'⚙️ Equipamentos' };
-      tbody += `<tr><td colspan="4" style="background:rgba(201,151,58,.1);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;color:#C9973A;text-transform:uppercase;">${titulos[curTipo]||curTipo}</td></tr>`;
+      tbody += `<tr><td colspan="5" style="background:rgba(201,151,58,.1);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;color:#C9973A;text-transform:uppercase;">${titulos[curTipo]||curTipo}</td></tr>`;
     }
     const sub = item.qty * item.preco;
     const qtyFmt = item.qty >= 100 ? fmt(item.qty,1) : fmt(item.qty,3);
     tbody += `
       <tr>
+        <td style="padding:8px; text-align:center;">
+          <input type="checkbox" class="sinapi-item-check" data-index="${itemIndex}" checked style="cursor:pointer; width:16px; height:16px;">
+        </td>
         <td style="padding:8px; font-size:10px; color:#999;">${tipoLabel[item.tipo]}</td>
         <td style="padding:8px; font-size:11px;">${item.nome}</td>
         <td style="padding:8px; text-align:right; font-size:11px;">${qtyFmt} <span style="color:#999;">${item.un}</span></td>
         <td style="padding:8px; text-align:right; font-size:11px; font-weight:700;">${fmtR(sub)}</td>
       </tr>`;
+    itemIndex++;
   });
 
   document.getElementById('sinapi-mat-tbody').innerHTML = tbody;
@@ -736,6 +741,21 @@ function adicionarAoOrcamento() {
     return;
   }
 
+  // Filtrar apenas itens selecionados
+  const checkboxes = document.querySelectorAll('.sinapi-item-check');
+  const itensSelecionados = [];
+  
+  checkboxes.forEach((cb, index) => {
+    if (cb.checked && ultimoResultadoSINAPI.lista[index]) {
+      itensSelecionados.push(ultimoResultadoSINAPI.lista[index]);
+    }
+  });
+
+  if (itensSelecionados.length === 0) {
+    alert('Selecione pelo menos um item para adicionar.');
+    return;
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const orcamentoId = urlParams.get('id');
   
@@ -744,10 +764,15 @@ function adicionarAoOrcamento() {
     return;
   }
 
+  // Obter BDI configurado
+  const bdiInput = document.getElementById('sinapi-bdi-input');
+  const percentualBdi = parseFloat(bdiInput?.value || 25);
+
   const payload = {
     orcamento_id: parseInt(orcamentoId),
     elemento_nome: ultimoResultadoSINAPI.elemento,
-    itens: ultimoResultadoSINAPI.lista
+    percentual_bdi: percentualBdi,
+    itens: itensSelecionados
   };
 
   // Enviar para backend
@@ -799,3 +824,12 @@ function fmtR(v) {
   `;
   document.head.appendChild(style);
 })();
+
+// ══════════════════════════════════════════════
+//  SELECIONAR/DESMARCAR TODOS
+// ══════════════════════════════════════════════
+function selecionarTodosSINAPI(checked) {
+  document.querySelectorAll('.sinapi-item-check').forEach(cb => {
+    cb.checked = checked;
+  });
+}

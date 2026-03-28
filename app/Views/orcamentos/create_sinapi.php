@@ -104,6 +104,22 @@ declare(strict_types=1);
                 </div>
             </div>
 
+            <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:4px;">
+                <div style="font-weight:700; font-size:13px; margin-bottom:8px; color:#C9973A;">⚙️ Configurações Administrativas</div>
+            </div>
+
+            <div class="field">
+                <label>% Custos Administrativos</label>
+                <input name="percentual_custos_adm" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['percentual_custos_adm'] ?? '5')); ?>" placeholder="5.00">
+                <div class="muted" style="font-size:11px; margin-top:4px;">Percentual sobre valor total da obra</div>
+            </div>
+
+            <div class="field">
+                <label>% Impostos</label>
+                <input name="percentual_impostos" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['percentual_impostos'] ?? '8')); ?>" placeholder="8.00">
+                <div class="muted" style="font-size:11px; margin-top:4px;">Percentual sobre valor total da obra</div>
+            </div>
+
             <div class="field full" style="display:flex; justify-content:flex-end; gap:8px; flex-direction:row; align-items:center;">
                 <a class="btn" href="/?route=orcamentos/index">Cancelar</a>
                 <button class="btn primary" type="submit">Criar orçamento SINAPI</button>

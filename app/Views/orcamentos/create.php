@@ -82,6 +82,19 @@ declare(strict_types=1);
                 <input name="empresa_email" value="<?php echo htmlspecialchars((string)($orcamento['empresa_email'] ?? '')); ?>">
             </div>
 
+            <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:4px;"></div>
+
+            <div class="field">
+                <label>% Custos Administrativos</label>
+                <input name="percentual_custos_adm" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['percentual_custos_adm'] ?? '0')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Percentual sobre o valor da obra (ex: 5.5 para 5,5%)</div>
+            </div>
+            <div class="field">
+                <label>% Impostos</label>
+                <input name="percentual_impostos" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['percentual_impostos'] ?? '0')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Percentual sobre o valor da obra (ex: 8.65 para 8,65%)</div>
+            </div>
+
             <div class="field full">
                 <label>Logo da Empresa (PNG)</label>
                 <input type="file" name="logo" accept="image/png">

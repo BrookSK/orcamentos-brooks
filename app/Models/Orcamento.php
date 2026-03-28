@@ -65,10 +65,10 @@ final class Orcamento
         $stmt = $pdo->prepare(
             'INSERT INTO orcamentos ('
             . ' numero_proposta, cliente_nome, arquiteto_nome, obra_nome, endereco_obra, local_obra, data, referencia, area_m2, contrato, tipo, tipo_orcamento, prazo_dias, rev,'
-            . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, capa_path_1, capa_path_2, capa_path_3, capa_path_4, created_at, updated_at'
+            . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, capa_path_1, capa_path_2, capa_path_3, capa_path_4, percentual_custos_adm, percentual_impostos, created_at, updated_at'
             . ') VALUES ('
             . ' :numero_proposta, :cliente_nome, :arquiteto_nome, :obra_nome, :endereco_obra, :local_obra, :data, :referencia, :area_m2, :contrato, :tipo, :tipo_orcamento, :prazo_dias, :rev,'
-            . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :capa_path_1, :capa_path_2, :capa_path_3, :capa_path_4, :created_at, :updated_at'
+            . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :capa_path_1, :capa_path_2, :capa_path_3, :capa_path_4, :percentual_custos_adm, :percentual_impostos, :created_at, :updated_at'
             . ')'
         );
 
@@ -96,6 +96,8 @@ final class Orcamento
             ':capa_path_2' => $data['capa_path_2'] !== '' ? (string)$data['capa_path_2'] : null,
             ':capa_path_3' => $data['capa_path_3'] !== '' ? (string)$data['capa_path_3'] : null,
             ':capa_path_4' => $data['capa_path_4'] !== '' ? (string)$data['capa_path_4'] : null,
+            ':percentual_custos_adm' => $data['percentual_custos_adm'] !== '' ? (float)$data['percentual_custos_adm'] : 0,
+            ':percentual_impostos' => $data['percentual_impostos'] !== '' ? (float)$data['percentual_impostos'] : 0,
             ':created_at' => $now,
             ':updated_at' => $now,
         ]);
@@ -133,6 +135,8 @@ final class Orcamento
             . ' capa_path_2 = :capa_path_2,'
             . ' capa_path_3 = :capa_path_3,'
             . ' capa_path_4 = :capa_path_4,'
+            . ' percentual_custos_adm = :percentual_custos_adm,'
+            . ' percentual_impostos = :percentual_impostos,'
             . ' updated_at = :updated_at'
             . ' WHERE id = :id'
         );
@@ -162,6 +166,8 @@ final class Orcamento
             ':capa_path_2' => $data['capa_path_2'] !== '' ? (string)$data['capa_path_2'] : null,
             ':capa_path_3' => $data['capa_path_3'] !== '' ? (string)$data['capa_path_3'] : null,
             ':capa_path_4' => $data['capa_path_4'] !== '' ? (string)$data['capa_path_4'] : null,
+            ':percentual_custos_adm' => $data['percentual_custos_adm'] !== '' ? (float)$data['percentual_custos_adm'] : 0,
+            ':percentual_impostos' => $data['percentual_impostos'] !== '' ? (float)$data['percentual_impostos'] : 0,
             ':updated_at' => $now,
         ]);
     }
@@ -213,6 +219,8 @@ final class Orcamento
             'capa_path_2',
             'capa_path_3',
             'capa_path_4',
+            'percentual_custos_adm',
+            'percentual_impostos',
         ];
 
         $out = [];
@@ -222,6 +230,8 @@ final class Orcamento
 
         $out['area_m2'] = $out['area_m2'] !== '' ? (string)self::parsePtBrNumber((string)$out['area_m2']) : '';
         $out['prazo_dias'] = $out['prazo_dias'] !== '' ? (string)(int)$out['prazo_dias'] : '';
+        $out['percentual_custos_adm'] = $out['percentual_custos_adm'] !== '' ? (string)self::parsePtBrNumber((string)$out['percentual_custos_adm']) : '0';
+        $out['percentual_impostos'] = $out['percentual_impostos'] !== '' ? (string)self::parsePtBrNumber((string)$out['percentual_impostos']) : '0';
 
         return $out;
     }

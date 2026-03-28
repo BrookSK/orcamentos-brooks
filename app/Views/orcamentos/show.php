@@ -32,6 +32,7 @@ $totalGeral = 0.0;
             <a class="btn" style="background: #e94560; color: white;" href="/?route=orcamentos/adequacao&id=<?php echo (int)$orcamento['id']; ?>">💰 Ajustar Valor do Contrato</a>
             <!-- <a class="btn" href="/?route=orcamentos/print&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Imprimir</a> -->
             <a class="btn primary" href="/?route=orcamentos/pdf&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Exportar PDF</a>
+            <a class="btn" style="background: #C9973A; color: white;" href="/?route=orcamentos/pdfAdmin&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">📊 PDF Administrativo</a>
         </div>
     </div>
 </div>
@@ -118,6 +119,12 @@ $totalGeral = 0.0;
                 <label>Valor unitário</label>
                 <input name="valor_unitario" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['valor_unitario'] ?? '')); ?>">
                 <?php if (!empty($errors['valor_unitario'])) : ?><div class="error"><?php echo htmlspecialchars((string)$errors['valor_unitario']); ?></div><?php endif; ?>
+            </div>
+
+            <div class="field">
+                <label>% BDI (Margem de Lucro)</label>
+                <input name="percentual_bdi" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['percentual_bdi'] ?? '0')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Benefícios e Despesas Indiretas (ex: 25 para 25%)</div>
             </div>
 
             <div class="field" style="display:flex; justify-content:flex-end; align-items:flex-end;">
