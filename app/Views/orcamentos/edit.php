@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 ?><div class="card">
+    <?php if (!empty($errors['geral'])) : ?>
+        <div style="background: #CC1F2D; color: white; padding: 12px 16px; margin-bottom: 16px; border-radius: 8px;">
+            <strong>Erro:</strong> <?php echo htmlspecialchars((string)$errors['geral']); ?>
+        </div>
+    <?php endif; ?>
     <form method="post" action="/?route=orcamentos/update" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?php echo (int)($orcamento['id'] ?? 0); ?>">
         <div class="form">

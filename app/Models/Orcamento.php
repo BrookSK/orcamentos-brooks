@@ -96,8 +96,8 @@ final class Orcamento
             ':capa_path_2' => $data['capa_path_2'] !== '' ? (string)$data['capa_path_2'] : null,
             ':capa_path_3' => $data['capa_path_3'] !== '' ? (string)$data['capa_path_3'] : null,
             ':capa_path_4' => $data['capa_path_4'] !== '' ? (string)$data['capa_path_4'] : null,
-            ':percentual_custos_adm' => $data['percentual_custos_adm'] !== '' ? (float)$data['percentual_custos_adm'] : 0,
-            ':percentual_impostos' => $data['percentual_impostos'] !== '' ? (float)$data['percentual_impostos'] : 0,
+            ':percentual_custos_adm' => (float)($data['percentual_custos_adm'] ?? 0),
+            ':percentual_impostos' => (float)($data['percentual_impostos'] ?? 0),
             ':created_at' => $now,
             ':updated_at' => $now,
         ]);
@@ -166,8 +166,8 @@ final class Orcamento
             ':capa_path_2' => $data['capa_path_2'] !== '' ? (string)$data['capa_path_2'] : null,
             ':capa_path_3' => $data['capa_path_3'] !== '' ? (string)$data['capa_path_3'] : null,
             ':capa_path_4' => $data['capa_path_4'] !== '' ? (string)$data['capa_path_4'] : null,
-            ':percentual_custos_adm' => $data['percentual_custos_adm'] !== '' ? (float)$data['percentual_custos_adm'] : 0,
-            ':percentual_impostos' => $data['percentual_impostos'] !== '' ? (float)$data['percentual_impostos'] : 0,
+            ':percentual_custos_adm' => (float)($data['percentual_custos_adm'] ?? 0),
+            ':percentual_impostos' => (float)($data['percentual_impostos'] ?? 0),
             ':updated_at' => $now,
         ]);
     }
@@ -230,8 +230,8 @@ final class Orcamento
 
         $out['area_m2'] = $out['area_m2'] !== '' ? (string)self::parsePtBrNumber((string)$out['area_m2']) : '';
         $out['prazo_dias'] = $out['prazo_dias'] !== '' ? (string)(int)$out['prazo_dias'] : '';
-        $out['percentual_custos_adm'] = $out['percentual_custos_adm'] !== '' ? (string)self::parsePtBrNumber((string)$out['percentual_custos_adm']) : '0';
-        $out['percentual_impostos'] = $out['percentual_impostos'] !== '' ? (string)self::parsePtBrNumber((string)$out['percentual_impostos']) : '0';
+        $out['percentual_custos_adm'] = $out['percentual_custos_adm'] !== '' ? self::parsePtBrNumber((string)$out['percentual_custos_adm']) : 0.0;
+        $out['percentual_impostos'] = $out['percentual_impostos'] !== '' ? self::parsePtBrNumber((string)$out['percentual_impostos']) : 0.0;
 
         return $out;
     }

@@ -506,7 +506,16 @@ final class OrcamentoController
             return;
         }
 
-        $data = Orcamento::normalize($_POST);
+        try {
+            $data = Orcamento::normalize($_POST);
+        } catch (\Exception $e) {
+            Logger::error('orcamentos.update.normalize_failed', ['id' => $id, 'error' => $e->getMessage()]);
+            $this->render('orcamentos/edit', [
+                'orcamento' => $existing,
+                'errors' => ['geral' => 'Erro ao processar dados: ' . $e->getMessage()],
+            ]);
+            return;
+        }
 
         $data['logo_path'] = (string)($existing['logo_path'] ?? '');
         $data['capa_path_1'] = (string)($existing['capa_path_1'] ?? '');
@@ -573,9 +582,18 @@ final class OrcamentoController
             return;
         }
 
-        Orcamento::update($id, $data);
-        Logger::info('orcamentos.update.updated', ['id' => $id]);
-        $this->redirect('/?route=orcamentos/show&id=' . $id);
+        try {
+            Orcamento::update($id, $data);
+            Logger::info('orcamentos.update.updated', ['id' => $id]);
+            $this->redirect('/?route=orcamentos/show&id=' . $id);
+        } catch (\Exception $e) {
+            Logger::error('orcamentos.update.failed', ['id' => $id, 'error' => $e->getMessage()]);
+            $data['id'] = $id;
+            $this->render('orcamentos/edit', [
+                'orcamento' => $data,
+                'errors' => ['geral' => 'Erro ao salvar: ' . $e->getMessage()],
+            ]);
+        }
     }
 
     public function delete(): void
