@@ -38,8 +38,109 @@ $totalGeral = 0.0;
 </div>
 
 <div class="card" style="padding:16px; margin-bottom:12px;">
+    <div style="font-weight:800; margin-bottom:10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleCalculadora()">
+        <span>🧮 Calculadora SINAPI - Adicionar elementos construtivos</span>
+        <span id="toggle-calc-icon" style="font-size: 20px;">▼</span>
+    </div>
+    <div id="calculadora-sinapi" style="display: none;">
+        <div id="sinapi-step1">
+            <div style="font-size:11px; font-weight:700; letter-spacing:2px; color:#C9973A; margin-bottom:8px;">PASSO 1</div>
+            <div style="font-size:16px; font-weight:800; margin-bottom:16px;">O que você vai construir?</div>
+            <div id="sinapi-element-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-bottom:20px;"></div>
+        </div>
+
+        <div id="sinapi-step2" style="display:none;">
+            <div style="font-size:11px; font-weight:700; letter-spacing:2px; color:#C9973A; margin-bottom:8px;">PASSO 2</div>
+            <div style="font-size:16px; font-weight:800; margin-bottom:16px;">Informe as medidas</div>
+            <div style="background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:20px; margin-bottom:16px;">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div id="sinapi-el-icon" style="font-size:32px;"></div>
+                    <div style="flex:1;">
+                        <div id="sinapi-el-name" style="font-size:16px; font-weight:800;"></div>
+                        <div id="sinapi-el-desc" style="font-size:11px; color:#999; margin-top:4px;"></div>
+                    </div>
+                    <button onclick="voltarStep1SINAPI()" style="font-size:11px; padding:6px 12px; border:1px solid rgba(255,255,255,.1); border-radius:6px; background:rgba(255,255,255,.04); cursor:pointer; color:#999;">← Voltar</button>
+                </div>
+                <div id="sinapi-dims-fields" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:16px;"></div>
+                <div id="sinapi-extras-container"></div>
+                <button class="btn primary" style="width:100%; padding:12px;" onclick="calcularSINAPI()">📋 Gerar Estimativa de Materiais</button>
+            </div>
+        </div>
+
+        <div id="sinapi-resultado" style="display:none;">
+            <div style="background:linear-gradient(135deg,#1a1916 0%,#2d2a24 100%); border-radius:10px; padding:20px; margin-bottom:16px; color:#fff;">
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+                    <div>
+                        <div style="font-size:9px; letter-spacing:2px; color:#888; margin-bottom:6px;">ELEMENTO</div>
+                        <div id="sinapi-res-el" style="font-size:14px; font-weight:800; color:#C9973A;"></div>
+                        <div id="sinapi-res-dims" style="font-size:10px; color:#888; margin-top:4px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:9px; letter-spacing:2px; color:#888; margin-bottom:6px;">QUANTIDADE</div>
+                        <div id="sinapi-res-qty" style="font-size:20px; font-weight:800; color:#C9973A;"></div>
+                        <div id="sinapi-res-un" style="font-size:10px; color:#888; margin-top:4px;"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:9px; letter-spacing:2px; color:#888; margin-bottom:6px;">TOTAL ESTIMADO</div>
+                        <div id="sinapi-res-total" style="font-size:20px; font-weight:800; color:#C9973A;"></div>
+                        <div style="font-size:10px; color:#888; margin-top:4px;">incluindo M+MO+EQ</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:16px; margin-bottom:16px;">
+                <div style="font-size:13px; font-weight:800; margin-bottom:12px;">Lista de materiais calculados</div>
+                
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <button onclick="selecionarTodosSINAPI(true); return false;" style="flex:1; padding:8px; border:1px solid rgba(255,255,255,.1); border-radius:6px; background:rgba(255,255,255,.04); cursor:pointer; color:#999; font-size:11px;">
+                        ☑ Selecionar todos
+                    </button>
+                    <button onclick="selecionarTodosSINAPI(false); return false;" style="flex:1; padding:8px; border:1px solid rgba(255,255,255,.1); border-radius:6px; background:rgba(255,255,255,.04); cursor:pointer; color:#999; font-size:11px;">
+                        ☐ Desmarcar todos
+                    </button>
+                </div>
+
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="border-bottom:1px solid rgba(255,255,255,.1);">
+                            <th style="padding:8px; text-align:center; font-size:10px; color:#999; width:40px;">✓</th>
+                            <th style="padding:8px; text-align:left; font-size:10px; color:#999;">Tipo</th>
+                            <th style="padding:8px; text-align:left; font-size:10px; color:#999;">Material / Insumo</th>
+                            <th style="padding:8px; text-align:right; font-size:10px; color:#999;">Quantidade</th>
+                            <th style="padding:8px; text-align:center; font-size:10px; color:#999; width:70px;">Unid.</th>
+                            <th style="padding:8px; text-align:right; font-size:10px; color:#999;">Valor Unit.</th>
+                            <th style="padding:8px; text-align:right; font-size:10px; color:#999;">Subtotal</th>
+                            <th style="padding:8px; text-align:center; font-size:10px; color:#999; width:60px;">Fonte</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sinapi-mat-tbody"></tbody>
+                </table>
+            </div>
+
+            <button class="btn primary" style="width:100%; padding:14px; font-size:14px;" onclick="abrirModalCategoria()">
+                ✓ Adicionar itens selecionados ao orçamento
+            </button>
+            <button onclick="voltarStep1SINAPI()" style="width:100%; margin-top:8px; padding:10px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.04); cursor:pointer; color:#999; font-size:12px;">
+                ← Calcular outro elemento
+            </button>
+        </div>
+
+        <div style="margin-top:12px; padding:12px; background:rgba(201,151,58,.1); border-radius:8px; border:1px solid rgba(201,151,58,.3);">
+            <div style="font-size:12px; color:#C9973A; font-weight:600; margin-bottom:6px;">💡 Como usar:</div>
+            <div style="font-size:11px; color:#999; line-height:1.6;">
+                1. Escolha um elemento construtivo (muro, laje, piso, telhado, fundação, etc.)<br>
+                2. Informe as dimensões e opções desejadas<br>
+                3. Clique em "Gerar Estimativa de Materiais"<br>
+                4. Revise os materiais, mão de obra e equipamentos calculados<br>
+                5. Clique em "Adicionar itens selecionados ao orçamento" para importar
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="padding:16px; margin-bottom:12px;">
     <div style="font-weight:800; margin-bottom:10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleAdicionarItem()">
-        <span>Adicionar item</span>
+        <span>Adicionar item manualmente</span>
         <span id="toggle-icon" style="font-size: 20px;">▼</span>
     </div>
     <div id="form-adicionar-item" style="display: none;">
@@ -1015,4 +1116,28 @@ function aplicarDescontoGrupo(grupo, orcamentoId) {
     });
 }
 });
+</script>
+
+<script src="/public/sinapi-calc-data.js"></script>
+<script src="/public/sinapi-calculator.js"></script>
+<script>
+function toggleCalculadora() {
+    const calc = document.getElementById('calculadora-sinapi');
+    const icon = document.getElementById('toggle-calc-icon');
+    
+    if (calc.style.display === 'none') {
+        calc.style.display = 'block';
+        icon.textContent = '▲';
+        if (typeof renderGridSINAPI === 'function') {
+            renderGridSINAPI();
+        }
+    } else {
+        calc.style.display = 'none';
+        icon.textContent = '▼';
+    }
+}
+
+function selecionarTodosSINAPI(checked) {
+    document.querySelectorAll('.sinapi-item-check').forEach(cb => cb.checked = checked);
+}
 </script>
