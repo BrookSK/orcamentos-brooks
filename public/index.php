@@ -41,6 +41,7 @@ if ($controllerName === 'orcamentos') {
         'createSinapi' => ['GET'],
         'storeSinapi' => ['POST'],
         'showSinapi' => ['GET'],
+        'addFromSinapi' => ['POST'],
         'edit' => ['GET'],
         'update' => ['POST'],
         'delete' => ['POST'],

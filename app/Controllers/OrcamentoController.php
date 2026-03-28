@@ -1309,6 +1309,103 @@ final class OrcamentoController
         }
     }
 
+    public function addFromSinapi(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $json = file_get_contents('php://input');
+            $payload = json_decode($json, true);
+            
+            if (!$payload || !isset($payload['orcamento_id']) || !isset($payload['itens'])) {
+                echo json_encode(['success' => false, 'error' => 'Payload inválido']);
+                return;
+            }
+            
+            $orcamentoId = (int)$payload['orcamento_id'];
+            $elementoNome = (string)($payload['elemento_nome'] ?? 'Elemento SINAPI');
+            $itens = $payload['itens'];
+            
+            if (!is_array($itens) || empty($itens)) {
+                echo json_encode(['success' => false, 'error' => 'Nenhum item para adicionar']);
+                return;
+            }
+            
+            Logger::info('orcamentos.addFromSinapi.start', [
+                'orcamento_id' => $orcamentoId,
+                'elemento' => $elementoNome,
+                'count' => count($itens)
+            ]);
+            
+            // Mapear tipo para grupo/categoria
+            $tipoMap = [
+                'material' => ['grupo' => 'MATERIAIS', 'categoria' => 'MATERIAIS DIVERSOS'],
+                'mao' => ['grupo' => 'MÃO DE OBRA', 'categoria' => 'MÃO DE OBRA'],
+                'equip' => ['grupo' => 'EQUIPAMENTOS', 'categoria' => 'EQUIPAMENTOS'],
+            ];
+            
+            // Obter próximos códigos disponíveis por grupo
+            $itensExistentes = OrcamentoItem::allByOrcamento($orcamentoId);
+            $maxCodigos = ['MATERIAIS' => 0, 'MÃO DE OBRA' => 0, 'EQUIPAMENTOS' => 0];
+            
+            foreach ($itensExistentes as $item) {
+                $grupo = (string)($item['grupo'] ?? '');
+                $codigo = (string)($item['codigo'] ?? '');
+                if (preg_match('/^(\d+)\./', $codigo, $m)) {
+                    $num = (int)$m[1];
+                    if (isset($maxCodigos[$grupo])) {
+                        $maxCodigos[$grupo] = max($maxCodigos[$grupo], $num);
+                    }
+                }
+            }
+            
+            $contadores = [
+                'MATERIAIS' => $maxCodigos['MATERIAIS'] + 1,
+                'MÃO DE OBRA' => $maxCodigos['MÃO DE OBRA'] + 1,
+                'EQUIPAMENTOS' => $maxCodigos['EQUIPAMENTOS'] + 1,
+            ];
+            
+            $count = 0;
+            foreach ($itens as $item) {
+                $tipo = (string)($item['tipo'] ?? 'material');
+                $mapping = $tipoMap[$tipo] ?? $tipoMap['material'];
+                
+                $grupo = $mapping['grupo'];
+                $categoria = $mapping['categoria'];
+                $codigo = $contadores[$grupo] . '.1';
+                $contadores[$grupo]++;
+                
+                $quantidade = (float)($item['qty'] ?? 0);
+                $preco = (float)($item['preco'] ?? 0);
+                $valorTotal = round($quantidade * $preco, 2);
+                
+                $data = [
+                    'grupo' => $grupo,
+                    'categoria' => $categoria,
+                    'codigo' => $codigo,
+                    'descricao' => (string)($item['nome'] ?? ''),
+                    'quantidade' => (string)$quantidade,
+                    'unidade' => (string)($item['un'] ?? 'un'),
+                    'custo_material' => $tipo === 'material' ? (string)$preco : '0',
+                    'custo_mao_obra' => $tipo === 'mao' ? (string)$preco : '0',
+                    'valor_unitario' => (string)$preco,
+                    'valor_cobranca' => (string)$valorTotal,
+                    'ordem' => '0',
+                ];
+                
+                OrcamentoItem::create($orcamentoId, $data);
+                $count++;
+            }
+            
+            Logger::info('orcamentos.addFromSinapi.success', ['count' => $count]);
+            echo json_encode(['success' => true, 'count' => $count]);
+            
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.addFromSinapi.error', ['message' => $e->getMessage()]);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
     private function render(string $view, array $params = []): void
     {
         extract($params, EXTR_SKIP);
