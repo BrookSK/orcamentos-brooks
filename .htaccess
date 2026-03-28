@@ -3,6 +3,9 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
+    # Permitir acesso direto aos arquivos PHP na pasta public
+    RewriteRule ^(sinapi-precos-api|test-api)\.php$ public/$1.php [L,QSA]
+    
     # Redirecionar /api/* para public/api/*
     RewriteRule ^api/(.*)$ public/api/$1 [L,QSA]
 

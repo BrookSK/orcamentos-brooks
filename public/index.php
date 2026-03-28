@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+// Não processar requisições para a API SINAPI
+if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], 'sinapi-precos-api.php') !== false) {
+    return;
+}
+
 require __DIR__ . '/../app/bootstrap.php';
 
 use App\Controllers\ItemController;
