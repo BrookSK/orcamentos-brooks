@@ -424,6 +424,7 @@ document.getElementById('toggle-admin-columns').addEventListener('change', funct
 
 <script>
 // Drag and Drop para reordenar itens e categorias
+document.addEventListener('DOMContentLoaded', function() {
 (function() {
     let draggedElement = null;
     let draggedType = null; // 'item' ou 'category'
@@ -659,4 +660,5 @@ document.getElementById('toggle-admin-columns').addEventListener('change', funct
         });
     }
 })();
+});
 </script>

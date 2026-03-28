@@ -335,9 +335,9 @@ function toggleAdicionarItem() {
             </tr>
 
             <?php foreach ($cats as $categoria => $rows) : ?>
-                <tr class="subtotal-row category-header" draggable="true" data-categoria="<?php echo htmlspecialchars($categoria); ?>" data-grupo="<?php echo htmlspecialchars($grupo); ?>">
-                    <td colspan="14" style="cursor:move;">
-                        <span style="color:#666; margin-right:8px;">⋮⋮</span>
+                <tr class="subtotal-row category-header" draggable="true" data-categoria="<?php echo htmlspecialchars($categoria); ?>" data-grupo="<?php echo htmlspecialchars($grupo); ?>" style="background: rgba(201, 151, 58, 0.15);">
+                    <td style="cursor:move; text-align:center; width:30px; color:#C9973A; font-size:16px; padding:8px;">⋮⋮</td>
+                    <td colspan="13" style="cursor:move; font-weight:700; padding:10px;">
                         <?php echo htmlspecialchars($categoria !== '' ? $categoria : 'SEM CATEGORIA'); ?>
                     </td>
                 </tr>
@@ -662,18 +662,21 @@ document.getElementById('toggle-admin-columns-sinapi').addEventListener('change'
 });
 
 // Drag and Drop para reordenar itens e categorias
+document.addEventListener('DOMContentLoaded', function() {
 (function() {
     let draggedElement = null;
     let draggedType = null; // 'item' ou 'category'
     
     // Configurar drag para itens
     const itemRows = document.querySelectorAll('.item-row');
+    console.log('Itens encontrados para drag:', itemRows.length);
     itemRows.forEach(row => {
         setupItemDrag(row);
     });
     
     // Configurar drag para categorias
     const categoryHeaders = document.querySelectorAll('.category-header');
+    console.log('Categorias encontradas para drag:', categoryHeaders.length);
     categoryHeaders.forEach(header => {
         setupCategoryDrag(header);
     });
@@ -896,4 +899,5 @@ document.getElementById('toggle-admin-columns-sinapi').addEventListener('change'
         });
     }
 })();
+});
 </script>
