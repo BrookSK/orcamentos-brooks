@@ -1464,8 +1464,9 @@ final class OrcamentoController
                 
                 $quantidade = (float)($item['qty'] ?? 0);
                 $preco = (float)($item['preco'] ?? 0);
-                $custoBase = $quantidade * $preco;
-                $valorCobranca = round($custoBase * (1 + $percentualBdi / 100), 2);
+                
+                // Calcular valor unitário com BDI
+                $valorUnitarioComBdi = round($preco * (1 + $percentualBdi / 100), 2);
                 
                 $data = [
                     'grupo' => $grupo,
@@ -1474,10 +1475,10 @@ final class OrcamentoController
                     'descricao' => (string)($item['nome'] ?? ''),
                     'quantidade' => (string)$quantidade,
                     'unidade' => (string)($item['un'] ?? 'un'),
-                    'custo_material' => $tipo === 'material' ? (string)$preco : '0',
-                    'custo_mao_obra' => $tipo === 'mao' ? (string)$preco : '0',
+                    'custo_material' => $tipo === 'material' ? (string)($quantidade * $preco) : '0',
+                    'custo_mao_obra' => $tipo === 'mao' ? (string)($quantidade * $preco) : '0',
                     'valor_unitario' => (string)$preco,
-                    'valor_cobranca' => (string)$valorCobranca,
+                    'valor_cobranca' => (string)$valorUnitarioComBdi,
                     'percentual_bdi' => (string)$percentualBdi,
                     'etapa' => $etapaDestino,
                     'ordem' => '0',

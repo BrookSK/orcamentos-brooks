@@ -288,7 +288,7 @@ HTML;
     {
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT codigo, grupo, SUM(valor_cobranca) as valor_total '
+            'SELECT codigo, grupo, SUM(quantidade * valor_cobranca) as valor_total '
             . 'FROM orcamento_itens WHERE orcamento_id = :id '
             . 'GROUP BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), grupo '
             . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED)'
@@ -494,7 +494,7 @@ HTML;
             $idsVistos[$item['id']] = true;
             $chave = self::resolverGrupoEtapa((string)$item['codigo']);
             $grupos[$chave]['itens'][] = $item;
-            $grupos[$chave]['subtotal'] += (float)$item['valor_cobranca'];
+            $grupos[$chave]['subtotal'] += (float)$item['quantidade'] * (float)$item['valor_cobranca'];
         }
         
         $totalGeral = array_sum(array_column($grupos, 'subtotal'));
@@ -544,13 +544,14 @@ HTML;
         
         foreach ($itens as $item) {
             $quantidade = (float)$item['quantidade'];
-            $valorTotal = (float)$item['valor_cobranca'];
+            $valorCobrancaUnitario = (float)$item['valor_cobranca'];
+            $valorTotal = $quantidade * $valorCobrancaUnitario;
             $custoMaterial = (float)($item['custo_material'] ?? 0);
             $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
             
             $valorUnitMaterial = $quantidade > 0 ? $custoMaterial / $quantidade : 0;
             $valorUnitMaoObra = $quantidade > 0 ? $custoMaoObra / $quantidade : 0;
-            $valorUnitTotal = $quantidade > 0 ? $valorTotal / $quantidade : (float)$item['valor_unitario'];
+            $valorUnitTotal = $valorCobrancaUnitario;
             
             $pctEtapa = $subtotal > 0 ? ($valorTotal / $subtotal) * 100 : 0.0;
             $pctObra = $totalGeral > 0 ? ($valorTotal / $totalGeral) * 100 : 0.0;
@@ -648,15 +649,18 @@ CSS;
 
                 foreach ($itens as $item) {
                     $quantidade = (float)($item['quantidade'] ?? 0);
-                    $custoMaterial = (float)($item['custo_material'] ?? 0);
-                    $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoMaterialTotal = (float)($item['custo_material'] ?? 0);
+                    $custoMaoObraTotal = (float)($item['custo_mao_obra'] ?? 0);
                     $percentualBdi = (float)($item['percentual_bdi'] ?? 0);
                     $valorUnitario = (float)($item['valor_unitario'] ?? 0);
-                    $valorCobranca = (float)($item['valor_cobranca'] ?? 0);
+                    $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
                     
-                    $custoUnitTotal = $custoMaterial + $custoMaoObra;
-                    $margemUnit = $valorCobranca - $custoUnitTotal;
-                    $valorTotal = $quantidade * $valorCobranca;
+                    // Calcular valores unitários
+                    $custoMaterialUnit = $quantidade > 0 ? $custoMaterialTotal / $quantidade : 0;
+                    $custoMaoObraUnit = $quantidade > 0 ? $custoMaoObraTotal / $quantidade : 0;
+                    $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit;
+                    $margemUnit = $valorCobrancaUnitario - $custoUnitTotal;
+                    $valorTotal = $quantidade * $valorCobrancaUnitario;
                     
                     $subtotalCategoria += $valorTotal;
                     
@@ -665,11 +669,11 @@ CSS;
                     $html .= '<td class="left">' . nl2br(htmlspecialchars((string)$item['descricao'])) . '</td>';
                     $html .= '<td class="center">' . htmlspecialchars((string)$item['unidade']) . '</td>';
                     $html .= '<td class="center">' . number_format($quantidade, 2, ',', '.') . '</td>';
-                    $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaterial) . '</td>';
-                    $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaoObra) . '</td>';
+                    $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaterialUnit) . '</td>';
+                    $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaoObraUnit) . '</td>';
                     $html .= '<td class="center col-bdi">' . number_format($percentualBdi, 1, ',', '.') . '%</td>';
                     $html .= '<td class="right col-margem">R$ ' . self::formatarValor($margemUnit) . '</td>';
-                    $html .= '<td class="right">R$ ' . self::formatarValor($valorCobranca) . '</td>';
+                    $html .= '<td class="right">R$ ' . self::formatarValor($valorCobrancaUnitario) . '</td>';
                     $html .= '<td class="right">R$ ' . self::formatarValor($valorTotal) . '</td>';
                     $html .= '</tr>';
                 }

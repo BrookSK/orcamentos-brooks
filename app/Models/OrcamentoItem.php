@@ -97,7 +97,13 @@ final class OrcamentoItem
         $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
         $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
         
-        $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
+        // Se valor_cobranca foi passado explicitamente (SINAPI), usar ele
+        // Caso contrário, calcular baseado em custos + margem + desconto
+        if (isset($data['valor_cobranca']) && $data['valor_cobranca'] !== '') {
+            $valorCobranca = (float)$data['valor_cobranca'];
+        } else {
+            $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
+        }
 
         $stmt = $pdo->prepare(
             'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, percentual_bdi) '
@@ -156,7 +162,13 @@ final class OrcamentoItem
             $percentualRealizado = 100;
         }
         
-        $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
+        // Se valor_cobranca foi passado explicitamente (SINAPI), usar ele
+        // Caso contrário, calcular baseado em custos + margem + desconto
+        if (isset($data['valor_cobranca']) && $data['valor_cobranca'] !== '') {
+            $valorCobranca = (float)$data['valor_cobranca'];
+        } else {
+            $valorCobranca = self::calculateValorCobranca($custoMaterial, $custoMaoObra, $margemLucro, $descontoItem);
+        }
 
         $stmt = $pdo->prepare(
             'UPDATE orcamento_itens SET'
