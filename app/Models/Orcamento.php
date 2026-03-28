@@ -232,6 +232,11 @@ final class Orcamento
         $out['prazo_dias'] = $out['prazo_dias'] !== '' ? (string)(int)$out['prazo_dias'] : '';
         $out['percentual_custos_adm'] = $out['percentual_custos_adm'] !== '' ? self::parsePtBrNumber((string)$out['percentual_custos_adm']) : 0.0;
         $out['percentual_impostos'] = $out['percentual_impostos'] !== '' ? self::parsePtBrNumber((string)$out['percentual_impostos']) : 0.0;
+        
+        // Garantir que tipo_orcamento seja sempre 'manual' ou 'sinapi'
+        if (!in_array($out['tipo_orcamento'], ['manual', 'sinapi'], true)) {
+            $out['tipo_orcamento'] = 'manual';
+        }
 
         return $out;
     }

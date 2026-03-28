@@ -10,6 +10,7 @@ declare(strict_types=1);
     <?php endif; ?>
     <form method="post" action="/?route=orcamentos/update" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?php echo (int)($orcamento['id'] ?? 0); ?>">
+        <input type="hidden" name="tipo_orcamento" value="<?php echo htmlspecialchars((string)($orcamento['tipo_orcamento'] ?? 'manual')); ?>">
         <div class="form">
             <div class="field">
                 <label>Nº Proposta</label>
