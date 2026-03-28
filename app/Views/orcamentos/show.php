@@ -429,6 +429,17 @@ document.addEventListener('DOMContentLoaded', function() {
     let draggedElement = null;
     let draggedType = null; // 'item' ou 'category'
     
+    // Adicionar preventDefault no tbody para permitir drop
+    const tbody = document.querySelector('#orcamento-table tbody');
+    if (tbody) {
+        tbody.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+        tbody.addEventListener('drop', function(e) {
+            e.preventDefault();
+        });
+    }
+    
     // Configurar drag para itens
     const itemRows = document.querySelectorAll('.item-row');
     itemRows.forEach(row => {
