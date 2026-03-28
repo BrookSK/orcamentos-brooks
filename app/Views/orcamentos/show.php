@@ -543,6 +543,7 @@ document.getElementById('toggle-admin-columns').addEventListener('change', funct
                 
                 // Determinar posição de inserção
                 const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;tBoundingClientRect();
                 const midpoint = rect.top + rect.height / 2;
                 
                 if (e.clientY < midpoint) {
