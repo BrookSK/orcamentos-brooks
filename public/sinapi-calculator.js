@@ -740,6 +740,7 @@ async function renderResultadoSINAPI(result, d) {
     }
     const sub = item.qty * item.preco;
     const qtyFmt = item.qty >= 100 ? fmt(item.qty,1) : fmt(item.qty,3);
+    const codigoEscaped = String(item.codigo_sinapi || '').replace(/'/g, "\\'");
     tbody += `
       <tr data-item-index="${itemIndex}">
         <td style="padding:8px; text-align:center;">
@@ -762,12 +763,12 @@ async function renderResultadoSINAPI(result, d) {
           <input type="number" 
                  class="sinapi-preco-input" 
                  data-index="${itemIndex}" 
-                 data-codigo="${item.codigo_sinapi}"
+                 data-codigo="${codigoEscaped}"
                  value="${item.preco.toFixed(2)}" 
                  step="0.01" 
                  min="0"
                  style="width:90px; padding:4px 6px; text-align:right; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:11px;"
-                 onchange="recalcularItemSINAPI(${itemIndex}); atualizarPrecoSINAPI('${item.codigo_sinapi}', this.value)">
+                 onchange="recalcularItemSINAPI(${itemIndex}); atualizarPrecoSINAPI('${codigoEscaped}', this.value)">
         </td>
         <td class="sinapi-subtotal-${itemIndex}" style="padding:8px; text-align:right; font-size:11px; font-weight:700;">${fmtR(sub)}</td>
         <td style="padding:4px; text-align:center; font-size:9px; color:#666;">
@@ -967,10 +968,13 @@ function recalcularItemSINAPI(index) {
 // ══════════════════════════════════════════════
 async function atualizarPrecoSINAPI(codigo, novoPreco) {
   if (!codigo || !novoPreco) {
+    console.log('⚠ Código ou preço inválido:', codigo, novoPreco);
     return;
   }
   
-  const uf = document.getElementById('uf2')?.value || 'SP';
+  const uf = 'SP'; // UF padrão para São Paulo
+  
+  console.log(`📤 Enviando atualização: código=${codigo}, preço=${novoPreco}, uf=${uf}`);
   
   try {
     const response = await fetch('/?api=sinapi-atualizar-preco', {
@@ -985,7 +989,14 @@ async function atualizarPrecoSINAPI(codigo, novoPreco) {
       })
     });
     
+    console.log('📥 Resposta recebida:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
+    console.log('📊 Dados da resposta:', data);
     
     if (data.success) {
       console.log(`✓ Preço atualizado no banco: código ${codigo} = R$ ${novoPreco}`);
@@ -1001,11 +1012,11 @@ async function atualizarPrecoSINAPI(codigo, novoPreco) {
         }, 2000);
       }
     } else {
-      console.error('Erro ao atualizar preço:', data.error);
+      console.error('❌ Erro ao atualizar preço:', data.error);
       alert('Erro ao atualizar preço no banco de dados: ' + (data.error || 'Erro desconhecido'));
     }
   } catch (error) {
-    console.error('Erro ao atualizar preço:', error);
-    alert('Erro ao comunicar com o servidor para atualizar o preço.');
+    console.error('❌ Erro ao atualizar preço:', error);
+    alert('Erro ao comunicar com o servidor: ' + error.message);
   }
 }

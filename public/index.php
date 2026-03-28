@@ -87,15 +87,23 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
     
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        echo json_encode(['success' => false, 'error' => 'Método não permitido']);
         exit;
     }
     
     try {
-        $input = json_decode(file_get_contents('php://input'), true);
+        $rawInput = file_get_contents('php://input');
+        error_log("SINAPI UPDATE - Raw input: " . $rawInput);
+        
+        $input = json_decode($rawInput, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            echo json_encode(['success' => false, 'error' => 'JSON inválido: ' . json_last_error_msg()]);
+            exit;
+        }
         
         if (!isset($input['codigo']) || !isset($input['preco'])) {
-            echo json_encode(['success' => false, 'error' => 'Código e preço são obrigatórios']);
+            echo json_encode(['success' => false, 'error' => 'Código e preço são obrigatórios', 'received' => $input]);
             exit;
         }
         
@@ -103,13 +111,33 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
         $preco = (float)$input['preco'];
         $uf = $input['uf'] ?? 'SP';
         
+        error_log("SINAPI UPDATE - Código: $codigo, Preço: $preco, UF: $uf");
+        
         if (empty($codigo) || $preco < 0) {
-            echo json_encode(['success' => false, 'error' => 'Dados inválidos']);
+            echo json_encode(['success' => false, 'error' => 'Dados inválidos', 'codigo' => $codigo, 'preco' => $preco]);
             exit;
         }
         
         // Atualizar no banco de dados
         $db = \App\Core\Database::getInstance();
+        
+        // Primeiro verificar se o registro existe
+        $checkStmt = $db->prepare("SELECT codigo, preco_unit FROM sinapi_insumos WHERE codigo = :codigo AND uf = :uf");
+        $checkStmt->execute([':codigo' => $codigo, ':uf' => $uf]);
+        $existing = $checkStmt->fetch(\PDO::FETCH_ASSOC);
+        
+        error_log("SINAPI UPDATE - Registro existente: " . json_encode($existing));
+        
+        if (!$existing) {
+            echo json_encode([
+                'success' => false, 
+                'error' => 'Código SINAPI não encontrado no banco de dados',
+                'codigo' => $codigo,
+                'uf' => $uf
+            ]);
+            exit;
+        }
+        
         $stmt = $db->prepare("
             UPDATE sinapi_insumos 
             SET preco_unit = :preco 
@@ -124,25 +152,30 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
         
         $rowsAffected = $stmt->rowCount();
         
+        error_log("SINAPI UPDATE - Linhas afetadas: $rowsAffected");
+        
         if ($rowsAffected > 0) {
             echo json_encode([
                 'success' => true, 
                 'message' => 'Preço atualizado com sucesso',
                 'codigo' => $codigo,
                 'preco' => $preco,
+                'preco_anterior' => $existing['preco_unit'],
                 'uf' => $uf
             ]);
         } else {
             echo json_encode([
                 'success' => false, 
-                'error' => 'Nenhum registro encontrado para atualizar'
+                'error' => 'Nenhuma alteração realizada (preço já era o mesmo)',
+                'preco_atual' => $existing['preco_unit']
             ]);
         }
         exit;
         
     } catch (Exception $e) {
+        error_log("SINAPI UPDATE - Erro: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        echo json_encode(['success' => false, 'error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         exit;
     }
 }
