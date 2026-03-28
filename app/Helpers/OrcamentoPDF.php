@@ -491,49 +491,49 @@ HTML;
     {
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado, custo_material, custo_mao_obra, margem_personalizada, usa_margem_personalizada '
+            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado, custo_material, custo_mao_obra, categoria '
             . 'FROM orcamento_itens WHERE orcamento_id = :id '
             . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED), id'
         );
         $stmt->execute([':id' => $orcamentoId]);
         $todosItens = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         
-        $grupos = [
-            'cinza' => ['label' => 'ETAPA CINZA', 'itens' => [], 'subtotal' => 0.0],
-            'acabamentos' => ['label' => 'ETAPA ACABAMENTOS', 'itens' => [], 'subtotal' => 0.0],
-            'gerenciamento' => ['label' => 'ETAPA DE GERENCIAMENTO', 'itens' => [], 'subtotal' => 0.0],
-            'adm_impostos' => ['label' => 'TAXA DE ADMINISTRAÇÃO + IMPOSTOS', 'itens' => [], 'subtotal' => 0.0],
-        ];
+        // Agrupar por CATEGORIA
+        $categorias = [];
+        $totalGeral = 0.0;
         
-        $idsVistos = [];
         foreach ($todosItens as $item) {
-            if (isset($idsVistos[$item['id']])) continue;
-            $idsVistos[$item['id']] = true;
-            $chave = self::resolverGrupoEtapa($item);
-            $grupos[$chave]['itens'][] = $item;
-            $grupos[$chave]['subtotal'] += (float)$item['quantidade'] * (float)$item['valor_cobranca'];
+            $categoria = (string)($item['categoria'] ?? 'SEM CATEGORIA');
+            if (!isset($categorias[$categoria])) {
+                $categorias[$categoria] = [
+                    'label' => strtoupper($categoria),
+                    'itens' => [],
+                    'subtotal' => 0.0
+                ];
+            }
+            $valorTotal = (float)$item['quantidade'] * (float)$item['valor_cobranca'];
+            $categorias[$categoria]['itens'][] = $item;
+            $categorias[$categoria]['subtotal'] += $valorTotal;
+            $totalGeral += $valorTotal;
         }
-        
-        $totalGeral = array_sum(array_column($grupos, 'subtotal'));
         
         $html = '<div class="no-page-break">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA ORÇAMENTÁRIA') . '</div>';
         
-        foreach ($grupos as $grupo) {
-            if (empty($grupo['itens'])) continue;
-            $subtotal = $grupo['subtotal'];
-            $pctDoTotal = $totalGeral > 0 ? ($subtotal / $totalGeral) * 100 : 0.0;
+        foreach ($categorias as $categoria) {
+            if (empty($categoria['itens'])) continue;
+            $subtotal = $categoria['subtotal'];
             
-            $html .= sprintf('<div class="banner-etapa">%s</div>', htmlspecialchars((string)$grupo['label']));
-            $html .= self::gerarTabelaDetalhes($grupo['itens'], $subtotal, $totalGeral);
+            $html .= sprintf('<div class="banner-etapa">%s</div>', htmlspecialchars((string)$categoria['label']));
+            $html .= self::gerarTabelaDetalhes($categoria['itens'], $subtotal, $totalGeral);
             $html .= sprintf(
                 '<div class="subtotal-etapa">SUBTOTAL — %s: R$ %s</div>',
-                htmlspecialchars((string)$grupo['label']),
+                htmlspecialchars((string)$categoria['label']),
                 self::formatarValor($subtotal)
             );
         }
         
         $html .= sprintf(
-            '<div class="total-obra">VALOR TOTAL DE OBRA [CUSTO TOTAL DE OBRA + EQUIPE DE OBRA]: R$ %s</div>',
+            '<div class="total-obra">VALOR TOTAL DE OBRA: R$ %s</div>',
             self::formatarValor($totalGeral)
         );
         
@@ -635,11 +635,11 @@ CSS;
         
         $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
         
+        // Agrupar por CATEGORIA (não por etapa)
         $grouped = [];
         foreach ($itens as $item) {
-            $etapa = (string)($item['etapa'] ?? 'SEM ETAPA');
             $categoria = (string)($item['categoria'] ?? 'SEM CATEGORIA');
-            $grouped[$etapa][$categoria][] = $item;
+            $grouped[$categoria][] = $item;
         }
 
         $html = '<div class="page"><div class="page-title">DETALHAMENTO ADMINISTRATIVO</div>';
@@ -648,33 +648,29 @@ CSS;
         $totalGeralObra = 0.0;
         $lucroGeralObra = 0.0;
 
-        foreach ($grouped as $etapa => $categorias) {
-            $html .= '<div class="banner-etapa">' . htmlspecialchars($etapa) . '</div>';
+        foreach ($grouped as $categoria => $itensCategoria) {
+            $html .= '<div class="banner-etapa">' . htmlspecialchars(strtoupper($categoria)) . '</div>';
             
-            $subtotalEtapa = 0.0;
-            $lucroEtapa = 0.0;
+            $subtotalCategoria = 0.0;
+            $lucroCategoria = 0.0;
             
-            foreach ($categorias as $categoria => $itens) {
-                $html .= '<table class="table-detalhes table-detalhes-admin">';
-                $html .= '<thead><tr>';
-                $html .= '<th class="left" style="width:6%;">Cód.</th>';
-                $html .= '<th class="left" style="width:20%;">Descrição</th>';
-                $html .= '<th class="center" style="width:4%;">Un</th>';
-                $html .= '<th class="center" style="width:5%;">Qtd</th>';
-                $html .= '<th class="right col-custo" style="width:7%;">Custo Mat.</th>';
-                $html .= '<th class="right col-custo" style="width:7%;">Custo M.O.</th>';
-                $html .= '<th class="right col-custo" style="width:7%;">Custo Equip.</th>';
-                $html .= '<th class="right col-bdi" style="width:5%;">% BDI</th>';
-                $html .= '<th class="right col-margem" style="width:7%;">Margem Un.</th>';
-                $html .= '<th class="right" style="width:8%;">Vlr Unit.</th>';
-                $html .= '<th class="right col-lucro" style="width:10%;">Lucro Total</th>';
-                $html .= '<th class="right" style="width:14%;">Vlr Total</th>';
-                $html .= '</tr></thead><tbody>';
+            $html .= '<table class="table-detalhes table-detalhes-admin">';
+            $html .= '<thead><tr>';
+            $html .= '<th class="left" style="width:6%;">Cód.</th>';
+            $html .= '<th class="left" style="width:20%;">Descrição</th>';
+            $html .= '<th class="center" style="width:4%;">Un</th>';
+            $html .= '<th class="center" style="width:5%;">Qtd</th>';
+            $html .= '<th class="right col-custo" style="width:7%;">Custo Mat.</th>';
+            $html .= '<th class="right col-custo" style="width:7%;">Custo M.O.</th>';
+            $html .= '<th class="right col-custo" style="width:7%;">Custo Equip.</th>';
+            $html .= '<th class="right col-bdi" style="width:5%;">% BDI</th>';
+            $html .= '<th class="right col-margem" style="width:7%;">Margem Un.</th>';
+            $html .= '<th class="right" style="width:8%;">Vlr Unit.</th>';
+            $html .= '<th class="right col-lucro" style="width:10%;">Lucro Total</th>';
+            $html .= '<th class="right" style="width:14%;">Vlr Total</th>';
+            $html .= '</tr></thead><tbody>';
 
-                $subtotalCategoria = 0.0;
-                $lucroCategoria = 0.0;
-
-                foreach ($itens as $item) {
+            foreach ($itensCategoria as $item) {
                     $quantidade = (float)($item['quantidade'] ?? 0);
                     $custoMaterialTotal = (float)($item['custo_material'] ?? 0);
                     $custoMaoObraTotal = (float)($item['custo_mao_obra'] ?? 0);
@@ -781,15 +777,10 @@ CSS;
                 }
 
                 $html .= '</tbody></table>';
-                $html .= '<div class="subtotal-item">Subtotal ' . htmlspecialchars($categoria) . ': R$ ' . self::formatarValor($subtotalCategoria) . ' | Lucro: R$ ' . self::formatarValor($lucroCategoria) . '</div>';
+                $html .= '<div class="subtotal-item">Subtotal ' . htmlspecialchars(strtoupper($categoria)) . ': R$ ' . self::formatarValor($subtotalCategoria) . ' | Lucro: R$ ' . self::formatarValor($lucroCategoria) . '</div>';
                 
-                $subtotalEtapa += $subtotalCategoria;
-                $lucroEtapa += $lucroCategoria;
-            }
-            
-            $html .= '<div class="subtotal-etapa">SUBTOTAL ' . htmlspecialchars($etapa) . ': R$ ' . self::formatarValor($subtotalEtapa) . ' | LUCRO: R$ ' . self::formatarValor($lucroEtapa) . '</div>';
-            $totalGeralObra += $subtotalEtapa;
-            $lucroGeralObra += $lucroEtapa;
+                $totalGeralObra += $subtotalCategoria;
+                $lucroGeralObra += $lucroCategoria;
         }
 
         $html .= '<div class="total-obra">TOTAL DA OBRA: R$ ' . self::formatarValor($totalGeralObra) . ' | LUCRO TOTAL: R$ ' . self::formatarValor($lucroGeralObra) . '</div>';
