@@ -601,6 +601,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    function updateCodesVisually(categories) {
+        // Atualizar códigos na tela imediatamente para feedback visual
+        categories.forEach((cat, catIndex) => {
+            const majorCode = catIndex + 1;
+            cat.items.forEach((item, itemIndex) => {
+                const minorCode = itemIndex + 1;
+                const newCode = `${majorCode}.${minorCode}`;
+                
+                // Encontrar a linha do item e atualizar o código
+                const itemRow = document.querySelector(`.item-row[data-item-id="${item.id}"]`);
+                if (itemRow) {
+                    const codeCell = itemRow.querySelector('td:nth-child(2)'); // Segunda coluna (código)
+                    if (codeCell) {
+                        codeCell.textContent = newCode;
+                        // Adicionar animação de destaque
+                        codeCell.style.transition = 'background-color 0.3s';
+                        codeCell.style.backgroundColor = 'rgba(76, 175, 80, 0.3)';
+                        setTimeout(() => {
+                            codeCell.style.backgroundColor = '';
+                        }, 1000);
+                    }
+                }
+            });
+        });
+    }
+    
     function saveNewOrder() {
         // Coletar ordem de categorias e itens
         const categories = [];
@@ -629,10 +655,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
+        // Atualizar códigos visualmente ANTES de salvar (feedback imediato)
+        updateCodesVisually(categories);
+        
         // Mostrar indicador de carregamento
         const loadingMsg = document.createElement('div');
-        loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#4CAF50;color:white;padding:12px 20px;border-radius:8px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
-        loadingMsg.textContent = 'Salvando nova ordem...';
+        loadingMsg.id = 'drag-loading-msg';
+        loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:14px;';
+        loadingMsg.innerHTML = '<span style="display:inline-block;margin-right:8px;">⏳</span> Salvando...';
         document.body.appendChild(loadingMsg);
         
         // Enviar para o servidor
@@ -648,25 +678,27 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
+            const msg = document.getElementById('drag-loading-msg');
             if (data.success) {
-                loadingMsg.textContent = 'Ordem atualizada! Recarregando...';
-                loadingMsg.style.background = '#4CAF50';
+                msg.innerHTML = '<span style="display:inline-block;margin-right:8px;">✓</span> Salvo com sucesso!';
+                msg.style.background = '#4CAF50';
                 
-                // Recarregar página após 500ms para mostrar códigos atualizados
+                // Remover mensagem após 2 segundos (NÃO recarrega mais)
                 setTimeout(() => {
-                    window.location.reload();
-                }, 500);
+                    msg.remove();
+                }, 2000);
             } else {
-                loadingMsg.textContent = 'Erro ao salvar ordem';
-                loadingMsg.style.background = '#f44336';
-                setTimeout(() => loadingMsg.remove(), 3000);
+                msg.innerHTML = '<span style="display:inline-block;margin-right:8px;">✗</span> Erro ao salvar';
+                msg.style.background = '#f44336';
+                setTimeout(() => msg.remove(), 3000);
                 console.error('Erro ao atualizar ordem:', data.error);
             }
         })
         .catch(error => {
-            loadingMsg.textContent = 'Erro de conexão';
-            loadingMsg.style.background = '#f44336';
-            setTimeout(() => loadingMsg.remove(), 3000);
+            const msg = document.getElementById('drag-loading-msg');
+            msg.innerHTML = '<span style="display:inline-block;margin-right:8px;">✗</span> Erro de conexão';
+            msg.style.background = '#f44336';
+            setTimeout(() => msg.remove(), 3000);
             console.error('Erro:', error);
         });
     }
