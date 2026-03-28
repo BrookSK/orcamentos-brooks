@@ -736,19 +736,43 @@ async function renderResultadoSINAPI(result, d) {
     if (item.tipo !== curTipo) {
       curTipo = item.tipo;
       const titulos = { material:'🧱 Materiais', mao:'👷 Mão de Obra', equip:'⚙️ Equipamentos' };
-      tbody += `<tr><td colspan="5" style="background:rgba(201,151,58,.1);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;color:#C9973A;text-transform:uppercase;">${titulos[curTipo]||curTipo}</td></tr>`;
+      tbody += `<tr><td colspan="7" style="background:rgba(201,151,58,.1);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;color:#C9973A;text-transform:uppercase;">${titulos[curTipo]||curTipo}</td></tr>`;
     }
     const sub = item.qty * item.preco;
     const qtyFmt = item.qty >= 100 ? fmt(item.qty,1) : fmt(item.qty,3);
     tbody += `
-      <tr>
+      <tr data-item-index="${itemIndex}">
         <td style="padding:8px; text-align:center;">
           <input type="checkbox" class="sinapi-item-check" data-index="${itemIndex}" checked style="cursor:pointer; width:16px; height:16px;">
         </td>
         <td style="padding:8px; font-size:10px; color:#999;">${tipoLabel[item.tipo]}</td>
         <td style="padding:8px; font-size:11px;">${item.nome}</td>
-        <td style="padding:8px; text-align:right; font-size:11px;">${qtyFmt} <span style="color:#999;">${item.un}</span></td>
-        <td style="padding:8px; text-align:right; font-size:11px; font-weight:700;">${fmtR(sub)}</td>
+        <td style="padding:8px; text-align:right;">
+          <input type="number" 
+                 class="sinapi-qty-input" 
+                 data-index="${itemIndex}" 
+                 value="${item.qty.toFixed(3)}" 
+                 step="0.001" 
+                 min="0"
+                 style="width:80px; padding:4px 6px; text-align:right; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:11px;"
+                 onchange="recalcularItemSINAPI(${itemIndex})">
+          <span style="color:#999; margin-left:4px; font-size:10px;">${item.un}</span>
+        </td>
+        <td style="padding:8px; text-align:right;">
+          <input type="number" 
+                 class="sinapi-preco-input" 
+                 data-index="${itemIndex}" 
+                 data-codigo="${item.codigo_sinapi}"
+                 value="${item.preco.toFixed(2)}" 
+                 step="0.01" 
+                 min="0"
+                 style="width:90px; padding:4px 6px; text-align:right; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:11px;"
+                 onchange="recalcularItemSINAPI(${itemIndex}); atualizarPrecoSINAPI('${item.codigo_sinapi}', this.value)">
+        </td>
+        <td class="sinapi-subtotal-${itemIndex}" style="padding:8px; text-align:right; font-size:11px; font-weight:700;">${fmtR(sub)}</td>
+        <td style="padding:4px; text-align:center; font-size:9px; color:#666;">
+          ${item.fonte === 'banco_dados' ? '✓ SQL' : '⚠ Manual'}
+        </td>
       </tr>`;
     itemIndex++;
   });
@@ -897,5 +921,91 @@ async function buscarPrecosBanco(codigos, uf) {
   } catch (error) {
     console.error('Erro ao buscar preços do banco:', error);
     return {};
+  }
+}
+
+
+// ══════════════════════════════════════════════
+//  RECALCULAR ITEM QUANDO QUANTIDADE OU PREÇO MUDAR
+// ══════════════════════════════════════════════
+function recalcularItemSINAPI(index) {
+  if (!ultimoResultadoSINAPI || !ultimoResultadoSINAPI.lista[index]) {
+    return;
+  }
+  
+  const qtyInput = document.querySelector(`.sinapi-qty-input[data-index="${index}"]`);
+  const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
+  const subtotalCell = document.querySelector(`.sinapi-subtotal-${index}`);
+  
+  if (!qtyInput || !precoInput || !subtotalCell) {
+    return;
+  }
+  
+  const novaQty = parseFloat(qtyInput.value) || 0;
+  const novoPreco = parseFloat(precoInput.value) || 0;
+  const novoSubtotal = novaQty * novoPreco;
+  
+  // Atualizar no objeto
+  ultimoResultadoSINAPI.lista[index].qty = novaQty;
+  ultimoResultadoSINAPI.lista[index].preco = novoPreco;
+  
+  // Atualizar display
+  subtotalCell.textContent = fmtR(novoSubtotal);
+  
+  // Recalcular total geral
+  let totalGeral = 0;
+  ultimoResultadoSINAPI.lista.forEach(item => {
+    totalGeral += item.qty * item.preco;
+  });
+  
+  ultimoResultadoSINAPI.totalGeral = totalGeral;
+  document.getElementById('sinapi-res-total').textContent = fmtR(totalGeral);
+}
+
+// ══════════════════════════════════════════════
+//  ATUALIZAR PREÇO NO BANCO DE DADOS
+// ══════════════════════════════════════════════
+async function atualizarPrecoSINAPI(codigo, novoPreco) {
+  if (!codigo || !novoPreco) {
+    return;
+  }
+  
+  const uf = document.getElementById('uf2')?.value || 'SP';
+  
+  try {
+    const response = await fetch('/?api=sinapi-atualizar-preco', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        codigo: codigo,
+        preco: parseFloat(novoPreco),
+        uf: uf
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log(`✓ Preço atualizado no banco: código ${codigo} = R$ ${novoPreco}`);
+      
+      // Mostrar feedback visual
+      const input = document.querySelector(`.sinapi-preco-input[data-codigo="${codigo}"]`);
+      if (input) {
+        input.style.borderColor = '#4CAF50';
+        input.style.background = 'rgba(76, 175, 80, 0.1)';
+        setTimeout(() => {
+          input.style.borderColor = '';
+          input.style.background = '';
+        }, 2000);
+      }
+    } else {
+      console.error('Erro ao atualizar preço:', data.error);
+      alert('Erro ao atualizar preço no banco de dados: ' + (data.error || 'Erro desconhecido'));
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar preço:', error);
+    alert('Erro ao comunicar com o servidor para atualizar o preço.');
   }
 }

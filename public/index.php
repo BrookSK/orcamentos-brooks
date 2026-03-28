@@ -71,6 +71,82 @@ if (strpos($requestUri, '/api/sinapi-precos') !== false || isset($_GET['api']) &
     }
 }
 
+// ============================================
+// ROTA DA API SINAPI - ATUALIZAR PREÇO
+// ============================================
+if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit;
+    }
+    
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+        exit;
+    }
+    
+    try {
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($input['codigo']) || !isset($input['preco'])) {
+            echo json_encode(['success' => false, 'error' => 'Código e preço são obrigatórios']);
+            exit;
+        }
+        
+        $codigo = trim($input['codigo']);
+        $preco = (float)$input['preco'];
+        $uf = $input['uf'] ?? 'SP';
+        
+        if (empty($codigo) || $preco < 0) {
+            echo json_encode(['success' => false, 'error' => 'Dados inválidos']);
+            exit;
+        }
+        
+        // Atualizar no banco de dados
+        $db = \App\Core\Database::getInstance();
+        $stmt = $db->prepare("
+            UPDATE sinapi_insumos 
+            SET preco_unit = :preco 
+            WHERE codigo = :codigo AND uf = :uf
+        ");
+        
+        $stmt->execute([
+            ':preco' => $preco,
+            ':codigo' => $codigo,
+            ':uf' => $uf
+        ]);
+        
+        $rowsAffected = $stmt->rowCount();
+        
+        if ($rowsAffected > 0) {
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Preço atualizado com sucesso',
+                'codigo' => $codigo,
+                'preco' => $preco,
+                'uf' => $uf
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false, 
+                'error' => 'Nenhum registro encontrado para atualizar'
+            ]);
+        }
+        exit;
+        
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
+}
+
 use App\Controllers\ItemController;
 use App\Controllers\OrcamentoController;
 
