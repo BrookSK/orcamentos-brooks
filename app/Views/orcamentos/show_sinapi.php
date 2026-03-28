@@ -291,7 +291,7 @@ function toggleAdicionarItem() {
 <div class="card">
     <div style="margin-bottom: 12px; display: flex; gap: 8px; align-items: center;">
         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-            <input type="checkbox" id="toggle-admin-columns-sinapi" style="width: auto;">
+            <input type="checkbox" id="toggle-admin-columns-sinapi" style="width: auto;" checked>
             <span style="font-weight: 600;">Mostrar colunas administrativas (custos, margens, % BDI)</span>
         </label>
     </div>
@@ -305,13 +305,13 @@ function toggleAdicionarItem() {
             <th>Descrição</th>
             <th style="width:80px">Unid</th>
             <th class="num" style="width:90px">Quant.</th>
-            <th class="num admin-col" style="width:90px; display:none;">Custo Mat.</th>
-            <th class="num admin-col" style="width:90px; display:none;">Custo M.O.</th>
-            <th class="num admin-col" style="width:90px; display:none;">Custo Equip.</th>
-            <th class="center admin-col" style="width:70px; display:none;">% BDI</th>
-            <th class="num admin-col" style="width:90px; display:none;">Margem Un.</th>
+            <th class="num admin-col" style="width:90px;">Custo Mat.</th>
+            <th class="num admin-col" style="width:90px;">Custo M.O.</th>
+            <th class="num admin-col" style="width:90px;">Custo Equip.</th>
+            <th class="center admin-col" style="width:70px;">% BDI</th>
+            <th class="num admin-col" style="width:90px;">Margem Un.</th>
             <th class="num" style="width:120px">Valor Unit.</th>
-            <th class="num admin-col" style="width:100px; display:none;">Lucro Total</th>
+            <th class="num admin-col" style="width:100px;">Lucro Total</th>
             <th class="num" style="width:120px">Valor Total</th>
             <th style="width:140px"></th>
         </tr>
@@ -429,13 +429,13 @@ function toggleAdicionarItem() {
                         <td style="white-space:pre-line;"><?php echo htmlspecialchars((string)$row['descricao']); ?></td>
                         <td class="center"><?php echo htmlspecialchars((string)$row['unidade']); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatNumber($quantidade); ?></td>
-                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($custoMaterialUnit); ?></td>
-                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($custoMaoObraUnit); ?></td>
-                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($custoEquipamentoUnit); ?></td>
-                        <td class="center admin-col" style="display:none;"><?php echo number_format($percentualBdi, 1, ',', '.'); ?>%</td>
-                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($margemUnit); ?></td>
+                        <td class="num admin-col"><?php echo OrcamentoItem::formatMoney($custoMaterialUnit); ?></td>
+                        <td class="num admin-col"><?php echo OrcamentoItem::formatMoney($custoMaoObraUnit); ?></td>
+                        <td class="num admin-col"><?php echo OrcamentoItem::formatMoney($custoEquipamentoUnit); ?></td>
+                        <td class="center admin-col"><?php echo number_format($percentualBdi, 1, ',', '.'); ?>%</td>
+                        <td class="num admin-col"><?php echo OrcamentoItem::formatMoney($margemUnit); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorCobranca); ?></td>
-                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($lucroTotal); ?></td>
+                        <td class="num admin-col"><?php echo OrcamentoItem::formatMoney($lucroTotal); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorTotal); ?></td>
                         <td>
                             <div class="row-actions">
@@ -451,8 +451,7 @@ function toggleAdicionarItem() {
                 <?php endforeach; ?>
 
                 <tr class="total-row">
-                    <td colspan="12" class="num admin-col-visible">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
-                    <td colspan="6" class="num admin-col-hidden" style="display:none;">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
+                    <td colspan="12" class="num">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
                     <td class="num"><?php echo OrcamentoItem::formatMoney($subtotalCategoria); ?></td>
                     <td></td>
                 </tr>
@@ -461,8 +460,7 @@ function toggleAdicionarItem() {
 
         <?php if (!empty($grouped)) : ?>
             <tr class="total-row">
-                <td colspan="12" class="num admin-col-visible">Total Geral</td>
-                <td colspan="6" class="num admin-col-hidden" style="display:none;">Total Geral</td>
+                <td colspan="12" class="num">Total Geral</td>
                 <td class="num"><?php echo OrcamentoItem::formatMoney($totalGeral); ?></td>
                 <td></td>
             </tr>
@@ -652,17 +650,11 @@ function adicionarAoOrcamentoComCategoria(grupoSelecionado, categoriaSelecionada
 // Toggle de colunas administrativas
 document.getElementById('toggle-admin-columns-sinapi').addEventListener('change', function() {
     const adminCols = document.querySelectorAll('.admin-col');
-    const adminColVisible = document.querySelectorAll('.admin-col-visible');
-    const adminColHidden = document.querySelectorAll('.admin-col-hidden');
     
     if (this.checked) {
         adminCols.forEach(col => col.style.display = '');
-        adminColVisible.forEach(col => col.style.display = 'none');
-        adminColHidden.forEach(col => col.style.display = '');
     } else {
         adminCols.forEach(col => col.style.display = 'none');
-        adminColVisible.forEach(col => col.style.display = '');
-        adminColHidden.forEach(col => col.style.display = 'none');
     }
 });
 
