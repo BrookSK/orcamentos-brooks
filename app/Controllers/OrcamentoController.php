@@ -1546,21 +1546,25 @@ final class OrcamentoController
             
             // Obter próximos códigos disponíveis por grupo (formato X.Y sequencial)
             $itensExistentes = OrcamentoItem::allByOrcamento($orcamentoId);
-            $maxCodigos = ['MATERIAIS' => ['major' => 0, 'minor' => 0], 'MÃO DE OBRA' => ['major' => 0, 'minor' => 0], 'EQUIPAMENTOS' => ['major' => 0, 'minor' => 0]];
+            $maxCodigos = [];
             
             foreach ($itensExistentes as $item) {
                 $grupo = (string)($item['grupo'] ?? '');
                 $codigo = (string)($item['codigo'] ?? '');
+                
+                // Inicializar grupo se não existir
+                if (!isset($maxCodigos[$grupo])) {
+                    $maxCodigos[$grupo] = ['major' => 0, 'minor' => 0];
+                }
+                
                 if (preg_match('/^(\d+)\.(\d+)/', $codigo, $m)) {
                     $major = (int)$m[1];
                     $minor = (int)$m[2];
-                    if (isset($maxCodigos[$grupo])) {
-                        if ($major > $maxCodigos[$grupo]['major']) {
-                            $maxCodigos[$grupo]['major'] = $major;
-                            $maxCodigos[$grupo]['minor'] = $minor;
-                        } elseif ($major === $maxCodigos[$grupo]['major'] && $minor > $maxCodigos[$grupo]['minor']) {
-                            $maxCodigos[$grupo]['minor'] = $minor;
-                        }
+                    if ($major > $maxCodigos[$grupo]['major']) {
+                        $maxCodigos[$grupo]['major'] = $major;
+                        $maxCodigos[$grupo]['minor'] = $minor;
+                    } elseif ($major === $maxCodigos[$grupo]['major'] && $minor > $maxCodigos[$grupo]['minor']) {
+                        $maxCodigos[$grupo]['minor'] = $minor;
                     }
                 }
             }
@@ -1568,7 +1572,9 @@ final class OrcamentoController
             // Inicializar contadores sequenciais
             $contadores = [];
             foreach ($maxCodigos as $grupo => $vals) {
-                if ($vals['major'] === 0) {
+                if (!isset($vals['major']) || !isset($vals['minor'])) {
+                    $contadores[$grupo] = ['major' => 1, 'minor' => 1];
+                } elseif ($vals['major'] === 0) {
                     $contadores[$grupo] = ['major' => 1, 'minor' => 1];
                 } else {
                     $contadores[$grupo] = ['major' => $vals['major'], 'minor' => $vals['minor'] + 1];
