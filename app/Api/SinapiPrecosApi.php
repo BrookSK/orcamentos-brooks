@@ -145,27 +145,23 @@ class SinapiPrecosApi
         try {
             $pdo = \App\Core\Database::pdo();
             
-            $sql = "SELECT codigo, descricao, unidade, tipo, preco_unit, uf, referencia, regime 
-                    FROM sinapi_insumos 
-                    WHERE 1=1";
-            
-            $params = [];
-            
             if (!empty($termo)) {
-                $sql .= " AND (codigo LIKE :termo OR descricao LIKE :termo)";
-                $params[':termo'] = '%' . $termo . '%';
+                $sql = "SELECT codigo, descricao, unidade, tipo, preco_unit, uf, referencia, regime 
+                        FROM sinapi_insumos 
+                        WHERE codigo LIKE ? OR descricao LIKE ?
+                        ORDER BY codigo 
+                        LIMIT ?";
+                $stmt = $pdo->prepare($sql);
+                $termoBusca = '%' . $termo . '%';
+                $stmt->execute([$termoBusca, $termoBusca, $limite]);
+            } else {
+                $sql = "SELECT codigo, descricao, unidade, tipo, preco_unit, uf, referencia, regime 
+                        FROM sinapi_insumos 
+                        ORDER BY codigo 
+                        LIMIT ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$limite]);
             }
-            
-            $sql .= " ORDER BY codigo LIMIT :limite";
-            
-            $stmt = $pdo->prepare($sql);
-            
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            $stmt->bindValue(':limite', $limite, \PDO::PARAM_INT);
-            
-            $stmt->execute();
             
             return $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
