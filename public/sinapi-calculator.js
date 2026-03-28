@@ -996,7 +996,13 @@ async function atualizarNomeSINAPI(codigo, novoNome, index) {
     return;
   }
   
-  // Debounce
+  // Atualizar objeto local IMEDIATAMENTE (antes de salvar no banco)
+  if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
+    ultimoResultadoSINAPI.lista[index].nome = novoNome.trim();
+    console.log(`✓ Nome atualizado localmente para index ${index}:`, novoNome.trim());
+  }
+  
+  // Debounce para salvar no banco
   if (updateNomeTimeouts[codigo]) {
     clearTimeout(updateNomeTimeouts[codigo]);
   }
@@ -1029,11 +1035,7 @@ async function atualizarNomeSINAPI(codigo, novoNome, index) {
         const data = await response.json();
         
         if (data.success) {
-          console.log(`✅ Nome atualizado!`);
-          
-          if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
-            ultimoResultadoSINAPI.lista[index].nome = novoNome.trim();
-          }
+          console.log(`✅ Nome salvo no banco!`);
           
           const input = document.querySelector(`.sinapi-nome-input[data-index="${index}"]`);
           if (input) {
