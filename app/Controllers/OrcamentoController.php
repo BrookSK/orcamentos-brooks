@@ -656,16 +656,25 @@ final class OrcamentoController
             ]);
             error_log('[orcamentos.show.error] id=' . $id . ' type=' . get_class($e) . ' message=' . $e->getMessage() . ' file=' . $e->getFile() . ':' . $e->getLine());
             http_response_code(500);
-            $debug = ((string)($_GET['debug'] ?? '') === '1') || ((string)getenv('APP_DEBUG') === '1');
-            if ($debug) {
-                header('Content-Type: text/plain; charset=utf-8');
-                echo "Exception: " . get_class($e) . "\n";
-                echo "Message: " . $e->getMessage() . "\n";
-                echo "File: " . $e->getFile() . ":" . $e->getLine() . "\n\n";
-                echo $e->getTraceAsString();
-                return;
-            }
-            echo 'Erro interno ao abrir o orçamento.';
+            
+            // Exibir erro detalhado na tela
+            echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Erro - Orçamento</title>';
+            echo '<style>body{font-family:monospace;padding:20px;background:#1a1a1a;color:#fff;}';
+            echo '.error-box{background:#2d1f1f;border:2px solid #ff4444;border-radius:8px;padding:20px;margin:20px 0;}';
+            echo '.error-title{color:#ff4444;font-size:20px;font-weight:bold;margin-bottom:10px;}';
+            echo '.error-message{color:#ffaa44;font-size:14px;margin:10px 0;padding:10px;background:#1a1a1a;border-radius:4px;}';
+            echo '.error-trace{color:#888;font-size:11px;margin-top:15px;padding:10px;background:#0a0a0a;border-radius:4px;overflow-x:auto;}';
+            echo '.btn{display:inline-block;padding:10px 20px;background:#4CAF50;color:#fff;text-decoration:none;border-radius:6px;margin-top:15px;}';
+            echo '</style></head><body>';
+            echo '<div class="error-box">';
+            echo '<div class="error-title">❌ Erro ao carregar orçamento</div>';
+            echo '<div class="error-message"><strong>Tipo:</strong> ' . htmlspecialchars(get_class($e)) . '</div>';
+            echo '<div class="error-message"><strong>Mensagem:</strong> ' . htmlspecialchars($e->getMessage()) . '</div>';
+            echo '<div class="error-message"><strong>Arquivo:</strong> ' . htmlspecialchars($e->getFile()) . '</div>';
+            echo '<div class="error-message"><strong>Linha:</strong> ' . $e->getLine() . '</div>';
+            echo '<div class="error-trace"><strong>Stack Trace:</strong><br><pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre></div>';
+            echo '<a href="/?route=orcamentos/index" class="btn">← Voltar para lista de orçamentos</a>';
+            echo '</div></body></html>';
         }
     }
 
@@ -1475,9 +1484,29 @@ final class OrcamentoController
             Logger::error('orcamentos.showSinapi.error', [
                 'id' => $id,
                 'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
             http_response_code(500);
-            echo 'Erro interno ao abrir o orçamento SINAPI.';
+            
+            // Exibir erro detalhado na tela
+            echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Erro - Orçamento SINAPI</title>';
+            echo '<style>body{font-family:monospace;padding:20px;background:#1a1a1a;color:#fff;}';
+            echo '.error-box{background:#2d1f1f;border:2px solid #ff4444;border-radius:8px;padding:20px;margin:20px 0;}';
+            echo '.error-title{color:#ff4444;font-size:20px;font-weight:bold;margin-bottom:10px;}';
+            echo '.error-message{color:#ffaa44;font-size:14px;margin:10px 0;padding:10px;background:#1a1a1a;border-radius:4px;}';
+            echo '.error-trace{color:#888;font-size:11px;margin-top:15px;padding:10px;background:#0a0a0a;border-radius:4px;overflow-x:auto;}';
+            echo '.btn{display:inline-block;padding:10px 20px;background:#4CAF50;color:#fff;text-decoration:none;border-radius:6px;margin-top:15px;}';
+            echo '</style></head><body>';
+            echo '<div class="error-box">';
+            echo '<div class="error-title">❌ Erro ao carregar orçamento SINAPI</div>';
+            echo '<div class="error-message"><strong>Mensagem:</strong> ' . htmlspecialchars($e->getMessage()) . '</div>';
+            echo '<div class="error-message"><strong>Arquivo:</strong> ' . htmlspecialchars($e->getFile()) . '</div>';
+            echo '<div class="error-message"><strong>Linha:</strong> ' . $e->getLine() . '</div>';
+            echo '<div class="error-trace"><strong>Stack Trace:</strong><br><pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre></div>';
+            echo '<a href="/?route=orcamentos/index" class="btn">← Voltar para lista de orçamentos</a>';
+            echo '</div></body></html>';
         }
     }
 
