@@ -75,17 +75,28 @@ if (strpos($requestUri, '/api/sinapi-precos') !== false || isset($_GET['api']) &
 // ROTA DA API SINAPI - ATUALIZAR PREÇO
 // ============================================
 if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
+    // Suprimir qualquer output anterior
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    ob_start();
+    
+    // Desabilitar display de erros para esta rota
+    ini_set('display_errors', '0');
+    
     header('Content-Type: application/json; charset=utf-8');
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
     
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        ob_end_clean();
         http_response_code(200);
         exit;
     }
     
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        ob_end_clean();
         http_response_code(405);
         echo json_encode(['success' => false, 'error' => 'Método não permitido'], JSON_UNESCAPED_UNICODE);
         exit;
@@ -96,11 +107,13 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
         $input = json_decode($rawInput, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'JSON inválido'], JSON_UNESCAPED_UNICODE);
             exit;
         }
         
         if (!isset($input['codigo']) || !isset($input['preco'])) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Código e preço são obrigatórios'], JSON_UNESCAPED_UNICODE);
             exit;
         }
@@ -111,6 +124,7 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
         $unidade = isset($input['unidade']) ? trim($input['unidade']) : null;
         
         if (empty($codigo) || $preco < 0) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'error' => 'Dados inválidos'], JSON_UNESCAPED_UNICODE);
             exit;
         }
@@ -124,6 +138,7 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
         $existing = $checkStmt->fetch(\PDO::FETCH_ASSOC);
         
         if (!$existing) {
+            ob_end_clean();
             echo json_encode([
                 'success' => false, 
                 'error' => 'Código SINAPI não encontrado',
@@ -160,6 +175,8 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
         
         $rowsAffected = $stmt->rowCount();
         
+        ob_end_clean();
+        
         if ($rowsAffected > 0) {
             echo json_encode([
                 'success' => true, 
@@ -172,14 +189,15 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
         } else {
             echo json_encode([
                 'success' => true, 
-                'message' => 'Nenhuma alteração (valores já eram os mesmos)'
+                'message' => 'Nenhuma alteração'
             ], JSON_UNESCAPED_UNICODE);
         }
         exit;
         
     } catch (Exception $e) {
+        ob_end_clean();
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Erro interno do servidor'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['success' => false, 'error' => 'Erro interno'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
