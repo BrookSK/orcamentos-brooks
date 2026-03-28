@@ -159,13 +159,25 @@ function toggleAdicionarItem() {
 </script>
 
 <div class="card">
-    <table>
+    <div style="margin-bottom: 12px; display: flex; gap: 8px; align-items: center;">
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="toggle-admin-columns" style="width: auto;">
+            <span style="font-weight: 600;">Mostrar colunas administrativas (custos, margens, % BDI)</span>
+        </label>
+    </div>
+    
+    <div style="overflow-x: auto;">
+    <table id="orcamento-table">
         <thead>
         <tr>
             <th style="width:90px">Código</th>
             <th>Descrição</th>
             <th class="num" style="width:90px">Quant.</th>
             <th style="width:80px">Unid</th>
+            <th class="num admin-col" style="width:100px; display:none;">Custo Mat.</th>
+            <th class="num admin-col" style="width:100px; display:none;">Custo M.O.</th>
+            <th class="num admin-col" style="width:80px; display:none;">% BDI</th>
+            <th class="num admin-col" style="width:100px; display:none;">Margem R$</th>
             <th class="num" style="width:120px">Valor Unit.</th>
             <th class="num" style="width:120px">Valor Total</th>
             <th style="width:140px"></th>
@@ -173,37 +185,85 @@ function toggleAdicionarItem() {
         </thead>
         <tbody>
         <?php if (empty($grouped)) : ?>
-            <tr><td colspan="7" class="muted">Nenhum item cadastrado neste orçamento.</td></tr>
+            <tr><td colspan="11" class="muted">Nenhum item cadastrado neste orçamento.</td></tr>
         <?php endif; ?>
+
+        <?php 
+        // Buscar margens globais do orçamento
+        $margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 0);
+        $margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 0);
+        ?>
 
         <?php foreach ($grouped as $grupo => $cats) : ?>
             <tr class="category-row">
-                <td colspan="7"><?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?></td>
+                <td colspan="11"><?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?></td>
             </tr>
 
             <?php foreach ($cats as $categoria => $rows) : ?>
                 <tr class="subtotal-row">
-                    <td colspan="7"><?php echo htmlspecialchars($categoria !== '' ? $categoria : 'SEM CATEGORIA'); ?></td>
+                    <td colspan="11"><?php echo htmlspecialchars($categoria !== '' ? $categoria : 'SEM CATEGORIA'); ?></td>
                 </tr>
 
                 <?php $subtotalCategoria = 0.0; ?>
                 <?php foreach ($rows as $row) : ?>
                     <?php
                         $quantidade = (float)($row['quantidade'] ?? 0);
+                        $custoMaterialTotal = (float)($row['custo_material'] ?? 0);
+                        $custoMaoObraTotal = (float)($row['custo_mao_obra'] ?? 0);
+                        $margemPersonalizada = (float)($row['margem_personalizada'] ?? 0);
+                        $usaMargemPersonalizada = (int)($row['usa_margem_personalizada'] ?? 0);
+                        $valorUnitario = (float)($row['valor_unitario'] ?? 0);
                         $valorCobranca = (float)($row['valor_cobranca'] ?? 0);
+                        
                         // Fallback para valor_unitario se valor_cobranca não existir
                         if ($valorCobranca == 0) {
-                            $valorCobranca = (float)($row['valor_unitario'] ?? 0);
+                            $valorCobranca = $valorUnitario;
                         }
+                        
+                        // Calcular custos unitários
+                        $custoMaterialUnit = $quantidade > 0 ? $custoMaterialTotal / $quantidade : 0;
+                        $custoMaoObraUnit = $quantidade > 0 ? $custoMaoObraTotal / $quantidade : 0;
+                        $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit;
+                        
+                        // Se não há custo total, usar valor_unitario como base
+                        if ($custoUnitTotal == 0) {
+                            $custoUnitTotal = $valorUnitario;
+                        }
+                        
+                        $margemUnit = $valorCobranca - $custoUnitTotal;
                         $valorTotal = round($quantidade * $valorCobranca, 2);
+                        
+                        // Calcular % BDI aplicado
+                        $percentualBdi = 0;
+                        if ($usaMargemPersonalizada && $margemPersonalizada > 0) {
+                            $percentualBdi = $margemPersonalizada;
+                        } elseif (!$usaMargemPersonalizada) {
+                            // Detectar se é mão de obra ou material pela categoria
+                            $categoriaUpper = strtoupper($categoria);
+                            if (strpos($categoriaUpper, 'MÃO DE OBRA') !== false || strpos($categoriaUpper, 'MAO DE OBRA') !== false) {
+                                $percentualBdi = $margemMaoObraGlobal;
+                            } else {
+                                $percentualBdi = $margemMateriaisGlobal;
+                            }
+                        } elseif ($custoUnitTotal > 0.01 && $valorCobranca > $custoUnitTotal) {
+                            $percentualBdi = (($valorCobranca - $custoUnitTotal) / $custoUnitTotal) * 100;
+                            if ($percentualBdi > 999) {
+                                $percentualBdi = 0;
+                            }
+                        }
+                        
                         $subtotalCategoria += $valorTotal;
                         $totalGeral += $valorTotal;
                     ?>
                     <tr>
                         <td class="muted"><?php echo htmlspecialchars((string)$row['codigo']); ?></td>
                         <td style="white-space:pre-line;"><?php echo htmlspecialchars((string)$row['descricao']); ?></td>
-                        <td class="num"><?php echo OrcamentoItem::formatNumber((float)$row['quantidade']); ?></td>
+                        <td class="num"><?php echo OrcamentoItem::formatNumber($quantidade); ?></td>
                         <td><?php echo htmlspecialchars((string)$row['unidade']); ?></td>
+                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($custoMaterialUnit); ?></td>
+                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($custoMaoObraUnit); ?></td>
+                        <td class="num admin-col" style="display:none;"><?php echo number_format($percentualBdi, 1, ',', '.'); ?>%</td>
+                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($margemUnit); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorCobranca); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorTotal); ?></td>
                         <td>
@@ -220,7 +280,8 @@ function toggleAdicionarItem() {
                 <?php endforeach; ?>
 
                 <tr class="total-row">
-                    <td colspan="5" class="num">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
+                    <td colspan="9" class="num admin-col-visible">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
+                    <td colspan="5" class="num admin-col-hidden" style="display:none;">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
                     <td class="num"><?php echo OrcamentoItem::formatMoney($subtotalCategoria); ?></td>
                     <td></td>
                 </tr>
@@ -229,11 +290,77 @@ function toggleAdicionarItem() {
 
         <?php if (!empty($grouped)) : ?>
             <tr class="total-row">
-                <td colspan="5" class="num">Total Geral</td>
+                <td colspan="9" class="num admin-col-visible">Total Geral</td>
+                <td colspan="5" class="num admin-col-hidden" style="display:none;">Total Geral</td>
                 <td class="num"><?php echo OrcamentoItem::formatMoney($totalGeral); ?></td>
                 <td></td>
             </tr>
         <?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
+
+<?php if (!empty($grouped)) : ?>
+<div class="card" style="padding:16px; margin-top:12px;">
+    <div style="font-weight:800; margin-bottom:12px; font-size:14px;">📊 Custos Administrativos e Impostos</div>
+    
+    <table style="width:100%; max-width:600px;">
+        <tbody>
+            <tr>
+                <td style="padding:8px 0; font-weight:600;">Subtotal da Obra:</td>
+                <td style="padding:8px 0; text-align:right; font-weight:600;"><?php echo OrcamentoItem::formatMoney($totalGeral); ?></td>
+            </tr>
+            <?php 
+            $taxaAdmin = (float)($orcamento['taxa_administracao'] ?? 0);
+            $impostos = (float)($orcamento['impostos'] ?? 0);
+            $valorTaxaAdmin = $totalGeral * ($taxaAdmin / 100);
+            $valorImpostos = $totalGeral * ($impostos / 100);
+            $totalComTaxas = $totalGeral + $valorTaxaAdmin + $valorImpostos;
+            ?>
+            <?php if ($taxaAdmin > 0) : ?>
+            <tr>
+                <td style="padding:8px 0; color:var(--muted);">Taxa de Administração (<?php echo number_format($taxaAdmin, 2, ',', '.'); ?>%):</td>
+                <td style="padding:8px 0; text-align:right; color:var(--muted);">+ <?php echo OrcamentoItem::formatMoney($valorTaxaAdmin); ?></td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($impostos > 0) : ?>
+            <tr>
+                <td style="padding:8px 0; color:var(--muted);">Impostos (<?php echo number_format($impostos, 2, ',', '.'); ?>%):</td>
+                <td style="padding:8px 0; text-align:right; color:var(--muted);">+ <?php echo OrcamentoItem::formatMoney($valorImpostos); ?></td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($taxaAdmin > 0 || $impostos > 0) : ?>
+            <tr style="border-top:2px solid rgba(255,255,255,0.1);">
+                <td style="padding:12px 0 8px; font-weight:800; font-size:16px;">TOTAL FINAL:</td>
+                <td style="padding:12px 0 8px; text-align:right; font-weight:800; font-size:16px; color:#4CAF50;"><?php echo OrcamentoItem::formatMoney($totalComTaxas); ?></td>
+            </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+    
+    <?php if ($taxaAdmin == 0 && $impostos == 0) : ?>
+    <div class="muted" style="font-size:12px; margin-top:8px;">
+        💡 Configure taxa de administração e impostos no cabeçalho do orçamento para visualizar o total final.
+    </div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
+
+<script>
+document.getElementById('toggle-admin-columns').addEventListener('change', function() {
+    const adminCols = document.querySelectorAll('.admin-col');
+    const adminColVisible = document.querySelectorAll('.admin-col-visible');
+    const adminColHidden = document.querySelectorAll('.admin-col-hidden');
+    
+    if (this.checked) {
+        adminCols.forEach(col => col.style.display = '');
+        adminColVisible.forEach(col => col.style.display = 'none');
+        adminColHidden.forEach(col => col.style.display = '');
+    } else {
+        adminCols.forEach(col => col.style.display = 'none');
+        adminColVisible.forEach(col => col.style.display = '');
+        adminColHidden.forEach(col => col.style.display = 'none');
+    }
+});
+</script>

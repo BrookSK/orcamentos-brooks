@@ -286,13 +286,12 @@ HTML;
 
     private static function gerarPaginasResumo(int $orcamentoId, array $orcamento): string
     {
-        // Cache cleared - 2026-03-27 20:30 - Correção de valores
+        // Cache cleared - 2026-03-28 - Correção para mostrar descrições detalhadas ao invés de grupos genéricos
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT codigo, grupo, SUM(quantidade * valor_cobranca) as valor_total '
+            'SELECT codigo, descricao, grupo, (quantidade * valor_cobranca) as valor_total '
             . 'FROM orcamento_itens WHERE orcamento_id = :id '
-            . 'GROUP BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), grupo '
-            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED)'
+            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED)'
         );
         $stmt->execute([':id' => $orcamentoId]);
         $itensAgrupados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -326,7 +325,7 @@ HTML;
             $html .= sprintf(
                 '<tr><td class="center">%d</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
                 $numero++,
-                htmlspecialchars((string)$item['grupo']),
+                htmlspecialchars((string)$item['descricao']),
                 self::formatarValor($valor),
                 number_format($pct, 2, ',', '.')
             );
@@ -357,7 +356,7 @@ HTML;
             $html .= sprintf(
                 '<tr><td class="center">%d</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
                 $numero++,
-                htmlspecialchars((string)$item['grupo']),
+                htmlspecialchars((string)$item['descricao']),
                 self::formatarValor($valor),
                 number_format($pct, 2, ',', '.')
             );
@@ -612,6 +611,10 @@ CSS;
 
     private static function gerarPaginaDetalhamentoAdmin(int $orcamentoId, array $orcamento): string
     {
+        // Buscar margens globais do orçamento
+        $margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 0);
+        $margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 0);
+        
         $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
         
         $grouped = [];
@@ -677,7 +680,17 @@ CSS;
                     if ($usaMargemPersonalizada && $margemPersonalizada > 0) {
                         $percentualMargemAplicada = $margemPersonalizada;
                     }
-                    // PRIORIDADE 2: Calcular baseado em custo vs valor de venda
+                    // PRIORIDADE 2: Se usa margem global, detectar qual margem aplicar baseado na categoria
+                    elseif (!$usaMargemPersonalizada) {
+                        // Detectar se é mão de obra ou material pela categoria
+                        $categoriaUpper = strtoupper($categoria);
+                        if (strpos($categoriaUpper, 'MÃO DE OBRA') !== false || strpos($categoriaUpper, 'MAO DE OBRA') !== false) {
+                            $percentualMargemAplicada = $margemMaoObraGlobal;
+                        } else {
+                            $percentualMargemAplicada = $margemMateriaisGlobal;
+                        }
+                    }
+                    // PRIORIDADE 3: Calcular baseado em custo vs valor de venda (fallback)
                     elseif ($custoUnitTotal > 0.01 && $valorCobrancaUnitario > $custoUnitTotal) {
                         $percentualMargemAplicada = (($valorCobrancaUnitario - $custoUnitTotal) / $custoUnitTotal) * 100;
                         // Limitar a 999% para evitar valores absurdos
@@ -685,7 +698,7 @@ CSS;
                             $percentualMargemAplicada = 0;
                         }
                     }
-                    // PRIORIDADE 3: Se valor_cobranca > valor_unitario, calcular margem simples
+                    // PRIORIDADE 4: Se valor_cobranca > valor_unitario, calcular margem simples
                     elseif ($valorUnitario > 0.01 && $valorCobrancaUnitario > $valorUnitario) {
                         $percentualMargemAplicada = (($valorCobrancaUnitario / $valorUnitario) - 1) * 100;
                         // Limitar a 999% para evitar valores absurdos
