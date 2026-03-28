@@ -39,21 +39,21 @@ const ELEMENTOS = [
       const mats = [];
 
       if (variante === 'furado_14') {
-        mats.push({ key:'tijolo_furado_14', codigo_sinapi:'4728', nome:'Tijolo cerâmico furado 9×14×19cm', qty: area*25*1.05, tipo:'material' });
+        mats.push({ key:'tijolo_furado_14', codigo_sinapi:'37593', nome:'Tijolo cerâmico furado 14×19×39cm', qty: area*25*1.05, tipo:'material' });
         mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento Portland CP II-E 32', qty: area*3.84, tipo:'material' });
-        mats.push({ key:'cal_hidratada', codigo_sinapi:'27219', nome:'Cal hidratada CH III', qty: area*2.04, tipo:'material' });
+        mats.push({ key:'cal_hidratada', codigo_sinapi:'1106', nome:'Cal hidratada CH I', qty: area*2.04, tipo:'material' });
         mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média lavada', qty: area*0.016, tipo:'material' });
       } else if (variante === 'furado_9') {
-        mats.push({ key:'tijolo_furado_9', codigo_sinapi:'4728', nome:'Tijolo cerâmico furado 9×14×19cm', qty: area*33*1.05, tipo:'material' });
+        mats.push({ key:'tijolo_furado_9', codigo_sinapi:'37592', nome:'Tijolo cerâmico furado 9×19×39cm', qty: area*33*1.05, tipo:'material' });
         mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento Portland CP II-E 32', qty: area*2.52, tipo:'material' });
-        mats.push({ key:'cal_hidratada', codigo_sinapi:'27219', nome:'Cal hidratada CH III', qty: area*1.34, tipo:'material' });
+        mats.push({ key:'cal_hidratada', codigo_sinapi:'1106', nome:'Cal hidratada CH I', qty: area*1.34, tipo:'material' });
         mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média lavada', qty: area*0.011, tipo:'material' });
       } else if (variante === 'macico_20') {
-        mats.push({ key:'tijolo_macico', codigo_sinapi:'27228', nome:'Tijolo maciço cerâmico 5×10×20cm', qty: area*75*1.05, tipo:'material' });
+        mats.push({ key:'tijolo_macico', codigo_sinapi:'7258', nome:'Tijolo maciço cerâmico 5×10×20cm', qty: area*75*1.05, tipo:'material' });
         mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento Portland CP II-E 32', qty: area*7.68, tipo:'material' });
         mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média lavada', qty: area*0.030, tipo:'material' });
       } else if (variante === 'bloco_14') {
-        mats.push({ key:'bloco_conc_14', codigo_sinapi:'5642', nome:'Bloco de concreto 14×19×39cm', qty: area*13*1.05, tipo:'material' });
+        mats.push({ key:'bloco_conc_14', codigo_sinapi:'25070', nome:'Bloco de concreto 14×19×39cm', qty: area*13*1.05, tipo:'material' });
         mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento Portland CP II-E 32', qty: area*2.00, tipo:'material' });
         mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média lavada', qty: area*0.008, tipo:'material' });
       }
@@ -65,10 +65,10 @@ const ELEMENTOS = [
       if (d.com_reboco) {
         // Chapisco (ambos lados)
         mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento — chapisco (2 faces)', qty: area*2*3.00, tipo:'material' });
-        mats.push({ key:'areia_grossa', codigo_sinapi:'369', nome:'Areia grossa — chapisco', qty: area*2*0.009, tipo:'material' });
+        mats.push({ key:'areia_grossa', codigo_sinapi:'367', nome:'Areia grossa — chapisco', qty: area*2*0.009, tipo:'material' });
         // Emboço / reboco (2 lados)
         mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento — reboco (2 faces)', qty: area*2*5.20, tipo:'material' });
-        mats.push({ key:'cal_hidratada', codigo_sinapi:'27219', nome:'Cal hidratada — reboco', qty: area*2*1.80, tipo:'material' });
+        mats.push({ key:'cal_hidratada', codigo_sinapi:'1106', nome:'Cal hidratada — reboco', qty: area*2*1.80, tipo:'material' });
         mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média — reboco', qty: area*2*0.022, tipo:'material' });
         mats.push({ key:'mo_pedreiro', codigo_sinapi:'88316', nome:'Pedreiro — chapisco+reboco', qty: area*2*0.70, tipo:'mao' });
         mats.push({ key:'mo_servente', codigo_sinapi:'88309', nome:'Servente — chapisco+reboco', qty: area*2*0.70, tipo:'mao' });
@@ -76,14 +76,14 @@ const ELEMENTOS = [
 
       if (d.com_pintura) {
         mats.push({ key:'massa_corrida', codigo_sinapi:'38448', nome:'Massa corrida PVA', qty: area*2*0.30, tipo:'material' });
-        mats.push({ key:'selador', codigo_sinapi:'38449', nome:'Selador acrílico', qty: area*2*0.10, tipo:'material' });
-        mats.push({ key:'tinta_latex', codigo_sinapi:'38450', nome:'Tinta látex acrílica', qty: area*2*0.48, tipo:'material' });
-        mats.push({ key:'mo_pintor', codigo_sinapi:'88318', nome:'Pintor — pintura', qty: area*2*0.35, tipo:'mao' });
+        mats.push({ key:'selador', codigo_sinapi:'6085', nome:'Selador acrílico', qty: area*2*0.10, tipo:'material' });
+        mats.push({ key:'tinta_latex', codigo_sinapi:'35692', nome:'Tinta látex acrílica', qty: area*2*0.48, tipo:'material' });
+        mats.push({ key:'mo_pintor', codigo_sinapi:'4783', nome:'Pintor — pintura', qty: area*2*0.35, tipo:'mao' });
         mats.push({ key:'mo_servente', codigo_sinapi:'88309', nome:'Servente — pintura', qty: area*2*0.10, tipo:'mao' });
       }
 
       // Betoneira
-      mats.push({ key:'eq_betoneira', codigo_sinapi:'5865', nome:'Betoneira 400L', qty: area*0.05, tipo:'equip' });
+      mats.push({ key:'eq_betoneira', codigo_sinapi:'10535', nome:'Betoneira 400L', qty: area*0.05, tipo:'equip' });
 
       return { qty: area, un: 'm²', mats };
     }
