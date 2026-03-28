@@ -345,21 +345,97 @@ function toggleAdicionarItem() {
                 <?php foreach ($rows as $row) : ?>
                     <?php
                         $quantidade = (float)($row['quantidade'] ?? 0);
+                        $custoMaterialTotal = (float)($row['custo_material'] ?? 0);
+                        $custoMaoObraTotal = (float)($row['custo_mao_obra'] ?? 0);
+                        $custoEquipamentoTotal = (float)($row['custo_equipamento'] ?? 0);
+                        $margemPersonalizada = (float)($row['margem_personalizada'] ?? 0);
+                        $usaMargemPersonalizada = (int)($row['usa_margem_personalizada'] ?? 0);
+                        $valorUnitario = (float)($row['valor_unitario'] ?? 0);
                         $valorCobranca = (float)($row['valor_cobranca'] ?? 0);
+                        
                         // Fallback para valor_unitario se valor_cobranca não existir
                         if ($valorCobranca == 0) {
-                            $valorCobranca = (float)($row['valor_unitario'] ?? 0);
+                            $valorCobranca = $valorUnitario;
                         }
+                        
+                        // Calcular custos unitários
+                        $custoMaterialUnit = 0;
+                        $custoMaoObraUnit = 0;
+                        $custoEquipamentoUnit = 0;
+                        
+                        if ($custoMaterialTotal > 0 && $quantidade > 0) {
+                            // Se custo é próximo do valor_unitario, provavelmente já é unitário
+                            if (abs($custoMaterialTotal - $valorUnitario) < 0.01) {
+                                $custoMaterialUnit = $custoMaterialTotal;
+                            } else {
+                                $custoMaterialUnit = $custoMaterialTotal / $quantidade;
+                            }
+                        }
+                        
+                        if ($custoMaoObraTotal > 0 && $quantidade > 0) {
+                            if (abs($custoMaoObraTotal - $valorUnitario) < 0.01) {
+                                $custoMaoObraUnit = $custoMaoObraTotal;
+                            } else {
+                                $custoMaoObraUnit = $custoMaoObraTotal / $quantidade;
+                            }
+                        }
+                        
+                        if ($custoEquipamentoTotal > 0 && $quantidade > 0) {
+                            if (abs($custoEquipamentoTotal - $valorUnitario) < 0.01) {
+                                $custoEquipamentoUnit = $custoEquipamentoTotal;
+                            } else {
+                                $custoEquipamentoUnit = $custoEquipamentoTotal / $quantidade;
+                            }
+                        }
+                        
+                        $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit + $custoEquipamentoUnit;
+                        
+                        // Se não há custo detalhado, usar valor_unitario como base de custo
+                        $custoBase = $custoUnitTotal > 0 ? $custoUnitTotal : $valorUnitario;
+                        
+                        $margemUnit = $valorCobranca - $custoBase;
                         $valorTotal = round($quantidade * $valorCobranca, 2);
+                        
+                        // Calcular % BDI aplicado
+                        $percentualBdi = 0;
+                        if ($usaMargemPersonalizada && $margemPersonalizada > 0) {
+                            $percentualBdi = $margemPersonalizada;
+                        } elseif (!$usaMargemPersonalizada) {
+                            // Detectar se é mão de obra, equipamento ou material pela categoria
+                            $categoriaUpper = strtoupper($categoria);
+                            if (strpos($categoriaUpper, 'MÃO DE OBRA') !== false || strpos($categoriaUpper, 'MAO DE OBRA') !== false) {
+                                $percentualBdi = $margemMaoObraGlobal;
+                            } elseif (strpos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                                $percentualBdi = $margemEquipamentosGlobal;
+                            } else {
+                                $percentualBdi = $margemMateriaisGlobal;
+                            }
+                        } elseif ($custoBase > 0.01 && $valorCobranca > $custoBase) {
+                            $percentualBdi = (($valorCobranca - $custoBase) / $custoBase) * 100;
+                            if ($percentualBdi > 999) {
+                                $percentualBdi = 0;
+                            }
+                        }
+                        
+                        // Calcular lucro total (margem unitária × quantidade)
+                        $lucroTotal = $margemUnit * $quantidade;
+                        
                         $subtotalCategoria += $valorTotal;
                         $totalGeral += $valorTotal;
                     ?>
-                    <tr>
+                    <tr class="item-row" draggable="true" data-item-id="<?php echo (int)$row['id']; ?>" data-ordem="<?php echo (int)($row['ordem'] ?? 0); ?>">
+                        <td class="drag-handle" style="cursor:move; text-align:center; width:30px; color:#666;">⋮⋮</td>
                         <td class="muted"><?php echo htmlspecialchars((string)$row['codigo']); ?></td>
                         <td style="white-space:pre-line;"><?php echo htmlspecialchars((string)$row['descricao']); ?></td>
-                        <td class="num"><?php echo OrcamentoItem::formatNumber((float)$row['quantidade']); ?></td>
-                        <td><?php echo htmlspecialchars((string)$row['unidade']); ?></td>
+                        <td class="center"><?php echo htmlspecialchars((string)$row['unidade']); ?></td>
+                        <td class="num"><?php echo OrcamentoItem::formatNumber($quantidade); ?></td>
+                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($custoMaterialUnit); ?></td>
+                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($custoMaoObraUnit); ?></td>
+                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($custoEquipamentoUnit); ?></td>
+                        <td class="center admin-col" style="display:none;"><?php echo number_format($percentualBdi, 1, ',', '.'); ?>%</td>
+                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($margemUnit); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorCobranca); ?></td>
+                        <td class="num admin-col" style="display:none;"><?php echo OrcamentoItem::formatMoney($lucroTotal); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorTotal); ?></td>
                         <td>
                             <div class="row-actions">
@@ -375,7 +451,8 @@ function toggleAdicionarItem() {
                 <?php endforeach; ?>
 
                 <tr class="total-row">
-                    <td colspan="5" class="num">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
+                    <td colspan="12" class="num admin-col-visible">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
+                    <td colspan="6" class="num admin-col-hidden" style="display:none;">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
                     <td class="num"><?php echo OrcamentoItem::formatMoney($subtotalCategoria); ?></td>
                     <td></td>
                 </tr>
@@ -384,14 +461,62 @@ function toggleAdicionarItem() {
 
         <?php if (!empty($grouped)) : ?>
             <tr class="total-row">
-                <td colspan="5" class="num">Total Geral</td>
+                <td colspan="12" class="num admin-col-visible">Total Geral</td>
+                <td colspan="6" class="num admin-col-hidden" style="display:none;">Total Geral</td>
                 <td class="num"><?php echo OrcamentoItem::formatMoney($totalGeral); ?></td>
                 <td></td>
             </tr>
         <?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
+
+<?php if (!empty($grouped)) : ?>
+<div class="card" style="padding:16px; margin-top:12px;">
+    <div style="font-weight:800; margin-bottom:12px; font-size:14px;">📊 Custos Administrativos e Impostos</div>
+    
+    <table style="width:100%; max-width:600px;">
+        <tbody>
+            <tr>
+                <td style="padding:8px 0; font-weight:600;">Subtotal da Obra:</td>
+                <td style="padding:8px 0; text-align:right; font-weight:600;"><?php echo OrcamentoItem::formatMoney($totalGeral); ?></td>
+            </tr>
+            <?php 
+            $taxaAdmin = (float)($orcamento['taxa_administracao'] ?? 0);
+            $impostos = (float)($orcamento['impostos'] ?? 0);
+            $valorTaxaAdmin = $totalGeral * ($taxaAdmin / 100);
+            $valorImpostos = $totalGeral * ($impostos / 100);
+            $totalComTaxas = $totalGeral + $valorTaxaAdmin + $valorImpostos;
+            ?>
+            <?php if ($taxaAdmin > 0) : ?>
+            <tr>
+                <td style="padding:8px 0; color:var(--muted);">Taxa de Administração (<?php echo number_format($taxaAdmin, 2, ',', '.'); ?>%):</td>
+                <td style="padding:8px 0; text-align:right; color:var(--muted);">+ <?php echo OrcamentoItem::formatMoney($valorTaxaAdmin); ?></td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($impostos > 0) : ?>
+            <tr>
+                <td style="padding:8px 0; color:var(--muted);">Impostos (<?php echo number_format($impostos, 2, ',', '.'); ?>%):</td>
+                <td style="padding:8px 0; text-align:right; color:var(--muted);">+ <?php echo OrcamentoItem::formatMoney($valorImpostos); ?></td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($taxaAdmin > 0 || $impostos > 0) : ?>
+            <tr style="border-top:2px solid rgba(255,255,255,0.1);">
+                <td style="padding:12px 0 8px; font-weight:800; font-size:16px;">TOTAL FINAL:</td>
+                <td style="padding:12px 0 8px; text-align:right; font-weight:800; font-size:16px; color:#4CAF50;"><?php echo OrcamentoItem::formatMoney($totalComTaxas); ?></td>
+            </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+    
+    <?php if ($taxaAdmin == 0 && $impostos == 0) : ?>
+    <div class="muted" style="font-size:12px; margin-top:8px;">
+        💡 Configure taxa de administração e impostos no cabeçalho do orçamento para visualizar o total final.
+    </div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
 
 
 <!-- Modal de Seleção de Categoria -->
@@ -521,4 +646,259 @@ function adicionarAoOrcamentoComCategoria(grupoSelecionado, categoriaSelecionada
         alert('Erro ao adicionar itens ao orçamento. Verifique o console.');
     });
 }
+</script>
+
+<script>
+// Toggle de colunas administrativas
+document.getElementById('toggle-admin-columns-sinapi').addEventListener('change', function() {
+    const adminCols = document.querySelectorAll('.admin-col');
+    const adminColVisible = document.querySelectorAll('.admin-col-visible');
+    const adminColHidden = document.querySelectorAll('.admin-col-hidden');
+    
+    if (this.checked) {
+        adminCols.forEach(col => col.style.display = '');
+        adminColVisible.forEach(col => col.style.display = 'none');
+        adminColHidden.forEach(col => col.style.display = '');
+    } else {
+        adminCols.forEach(col => col.style.display = 'none');
+        adminColVisible.forEach(col => col.style.display = '');
+        adminColHidden.forEach(col => col.style.display = 'none');
+    }
+});
+
+// Drag and Drop para reordenar itens e categorias
+(function() {
+    let draggedElement = null;
+    let draggedType = null; // 'item' ou 'category'
+    
+    // Configurar drag para itens
+    const itemRows = document.querySelectorAll('.item-row');
+    itemRows.forEach(row => {
+        setupItemDrag(row);
+    });
+    
+    // Configurar drag para categorias
+    const categoryHeaders = document.querySelectorAll('.category-header');
+    categoryHeaders.forEach(header => {
+        setupCategoryDrag(header);
+    });
+    
+    function setupItemDrag(row) {
+        row.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            draggedType = 'item';
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        row.addEventListener('dragend', function(e) {
+            this.style.opacity = '';
+            clearHighlights();
+        });
+        
+        row.addEventListener('dragover', function(e) {
+            if (draggedType === 'item' && draggedElement !== this) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                highlightDropZone(this, e);
+            }
+        });
+        
+        row.addEventListener('dragleave', function(e) {
+            this.style.borderTop = '';
+            this.style.borderBottom = '';
+        });
+        
+        row.addEventListener('drop', function(e) {
+            if (draggedType === 'item' && draggedElement !== this) {
+                e.stopPropagation();
+                
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    this.parentNode.insertBefore(draggedElement, this);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                }
+                
+                saveNewOrder();
+            }
+        });
+    }
+    
+    function setupCategoryDrag(header) {
+        header.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            draggedType = 'category';
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        header.addEventListener('dragend', function(e) {
+            this.style.opacity = '';
+            clearHighlights();
+        });
+        
+        header.addEventListener('dragover', function(e) {
+            if (draggedType === 'category' && draggedElement !== this) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                clearHighlights();
+                if (e.clientY < midpoint) {
+                    this.style.borderTop = '3px solid #2196F3';
+                } else {
+                    this.style.borderBottom = '3px solid #2196F3';
+                }
+            }
+        });
+        
+        header.addEventListener('dragleave', function(e) {
+            this.style.borderTop = '';
+            this.style.borderBottom = '';
+        });
+        
+        header.addEventListener('drop', function(e) {
+            if (draggedType === 'category' && draggedElement !== this) {
+                e.stopPropagation();
+                
+                // Coletar todos os elementos da categoria arrastada
+                const draggedCategory = draggedElement.dataset.categoria;
+                const draggedGrupo = draggedElement.dataset.grupo;
+                const elementsToMove = [draggedElement];
+                
+                let nextElement = draggedElement.nextElementSibling;
+                while (nextElement && nextElement.classList.contains('item-row')) {
+                    elementsToMove.push(nextElement);
+                    nextElement = nextElement.nextElementSibling;
+                }
+                
+                // Coletar linha de total se existir
+                if (nextElement && nextElement.classList.contains('total-row')) {
+                    elementsToMove.push(nextElement);
+                }
+                
+                // Determinar posição de inserção
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    // Inserir antes desta categoria
+                    elementsToMove.forEach(el => {
+                        this.parentNode.insertBefore(el, this);
+                    });
+                } else {
+                    // Inserir depois desta categoria (e seus itens)
+                    let insertAfter = this.nextElementSibling;
+                    while (insertAfter && (insertAfter.classList.contains('item-row') || insertAfter.classList.contains('total-row'))) {
+                        insertAfter = insertAfter.nextElementSibling;
+                    }
+                    
+                    elementsToMove.forEach(el => {
+                        if (insertAfter) {
+                            this.parentNode.insertBefore(el, insertAfter);
+                        } else {
+                            this.parentNode.appendChild(el);
+                        }
+                    });
+                }
+                
+                saveNewOrder();
+            }
+        });
+    }
+    
+    function highlightDropZone(element, e) {
+        clearHighlights();
+        const rect = element.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+        
+        if (e.clientY < midpoint) {
+            element.style.borderTop = '2px solid #4CAF50';
+        } else {
+            element.style.borderBottom = '2px solid #4CAF50';
+        }
+    }
+    
+    function clearHighlights() {
+        document.querySelectorAll('.item-row, .category-header').forEach(el => {
+            el.style.borderTop = '';
+            el.style.borderBottom = '';
+        });
+    }
+    
+    function saveNewOrder() {
+        // Coletar ordem de categorias e itens
+        const categories = [];
+        const categoryHeaders = document.querySelectorAll('.category-header');
+        
+        categoryHeaders.forEach((header, catIndex) => {
+            const categoria = header.dataset.categoria;
+            const grupo = header.dataset.grupo;
+            const items = [];
+            
+            // Coletar itens desta categoria
+            let nextElement = header.nextElementSibling;
+            while (nextElement && nextElement.classList.contains('item-row')) {
+                items.push({
+                    id: parseInt(nextElement.dataset.itemId),
+                    ordem: items.length + 1
+                });
+                nextElement = nextElement.nextElementSibling;
+            }
+            
+            categories.push({
+                categoria: categoria,
+                grupo: grupo,
+                ordem_categoria: catIndex + 1,
+                items: items
+            });
+        });
+        
+        // Mostrar indicador de carregamento
+        const loadingMsg = document.createElement('div');
+        loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#4CAF50;color:white;padding:12px 20px;border-radius:8px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
+        loadingMsg.textContent = 'Salvando nova ordem...';
+        document.body.appendChild(loadingMsg);
+        
+        // Enviar para o servidor
+        fetch('/?route=orcamentos/reorderItems', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                orcamento_id: <?php echo (int)$orcamento['id']; ?>,
+                categories: categories
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadingMsg.textContent = 'Ordem atualizada! Recarregando...';
+                loadingMsg.style.background = '#4CAF50';
+                
+                // Recarregar página após 500ms para mostrar códigos atualizados
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                loadingMsg.textContent = 'Erro ao salvar ordem';
+                loadingMsg.style.background = '#f44336';
+                setTimeout(() => loadingMsg.remove(), 3000);
+                console.error('Erro ao atualizar ordem:', data.error);
+            }
+        })
+        .catch(error => {
+            loadingMsg.textContent = 'Erro de conexão';
+            loadingMsg.style.background = '#f44336';
+            setTimeout(() => loadingMsg.remove(), 3000);
+            console.error('Erro:', error);
+        });
+    }
+})();
 </script>
