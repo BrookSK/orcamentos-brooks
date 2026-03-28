@@ -1696,3 +1696,88 @@ final class OrcamentoController
         exit;
     }
 }
+
+
+    public function reorderItems(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $json = file_get_contents('php://input');
+            $payload = json_decode($json, true);
+            
+            if (!$payload || !isset($payload['orcamento_id'])) {
+                echo json_encode(['success' => false, 'error' => 'Payload inválido']);
+                return;
+            }
+            
+            $orcamentoId = (int)$payload['orcamento_id'];
+            
+            // Verificar se orçamento existe
+            $orcamento = Orcamento::find($orcamentoId);
+            if (!$orcamento) {
+                echo json_encode(['success' => false, 'error' => 'Orçamento não encontrado']);
+                return;
+            }
+            
+            $pdo = \App\Core\Database::pdo();
+            
+            // Processar reordenação por categorias
+            if (isset($payload['categories']) && is_array($payload['categories'])) {
+                $categories = $payload['categories'];
+                
+                Logger::info('orcamentos.reorderItems.categories', [
+                    'orcamento_id' => $orcamentoId,
+                    'count_categories' => count($categories)
+                ]);
+                
+                $stmtUpdate = $pdo->prepare('UPDATE orcamento_itens SET ordem = :ordem, codigo = :codigo WHERE id = :id AND orcamento_id = :orcamento_id');
+                
+                $updatedCodes = [];
+                $totalUpdated = 0;
+                
+                foreach ($categories as $catData) {
+                    $ordemCategoria = (int)($catData['ordem_categoria'] ?? 0);
+                    $items = $catData['items'] ?? [];
+                    
+                    // Renumerar itens da categoria: categoria 1 = 1.1, 1.2, ...; categoria 4 = 4.1, 4.2, ...
+                    foreach ($items as $item) {
+                        $itemId = (int)($item['id'] ?? 0);
+                        $ordemItem = (int)($item['ordem'] ?? 0);
+                        
+                        // Código = ordem_categoria . ordem_item
+                        $newCode = $ordemCategoria . '.' . $ordemItem;
+                        
+                        $stmtUpdate->execute([
+                            ':id' => $itemId,
+                            ':ordem' => ($ordemCategoria * 1000) + $ordemItem, // Ordem global para manter sequência
+                            ':codigo' => $newCode,
+                            ':orcamento_id' => $orcamentoId
+                        ]);
+                        
+                        $updatedCodes[$itemId] = $newCode;
+                        $totalUpdated++;
+                    }
+                }
+                
+                Logger::info('orcamentos.reorderItems.success', [
+                    'count_categories' => count($categories),
+                    'total_items' => $totalUpdated
+                ]);
+                
+                echo json_encode([
+                    'success' => true,
+                    'count_categories' => count($categories),
+                    'total_items' => $totalUpdated,
+                    'updated_codes' => $updatedCodes
+                ]);
+                
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Estrutura de dados inválida']);
+            }
+            
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.reorderItems.error', ['message' => $e->getMessage()]);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
