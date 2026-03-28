@@ -370,6 +370,12 @@ function toggleAdicionarItem() {
                             } else {
                                 $custoMaterialUnit = $custoMaterialTotal / $quantidade;
                             }
+                            
+                            // Aplicar ajuste pro rata de materiais
+                            $ajusteProRata = (float)($orcamento['ajuste_prorata_materiais'] ?? 0);
+                            if ($ajusteProRata > 0) {
+                                $custoMaterialUnit = $custoMaterialUnit * (1 + ($ajusteProRata / 100));
+                            }
                         }
                         
                         if ($custoMaoObraTotal > 0 && $quantidade > 0) {

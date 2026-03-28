@@ -131,7 +131,21 @@ declare(strict_types=1);
                 </div>
             </div>
 
-            <div class="field full">
+            <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:4px;"></div>
+
+            <div class="field">
+                <label>% Ajuste Pro Rata de Materiais</label>
+                <input name="ajuste_prorata_materiais" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['ajuste_prorata_materiais'] ?? '0')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">
+                    Percentual de reajuste aplicado sobre o custo de materiais do SINAPI<br>
+                    <strong>Exemplo:</strong> Se o SINAPI traz R$ 100,00 e você digitar 1, o custo será R$ 101,00<br>
+                    <strong>Digite apenas o número:</strong> 1 para 1%, 2.5 para 2,5%, 5 para 5%<br>
+                    <strong style="color:#c00;">NÃO digite:</strong> 100, 0.01, ou 1%
+                </div>
+            </div>
+            <div class="field"></div>
+
+            <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:4px;"></div>
                 <label>Logo da Empresa (PNG)</label>
                 <input type="file" name="logo" accept="image/png">
                 <?php if (!empty($orcamento['logo_path'])) : ?>

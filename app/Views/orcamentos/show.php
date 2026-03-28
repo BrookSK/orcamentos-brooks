@@ -246,6 +246,12 @@ function toggleAdicionarItem() {
                                 // Custo é total, dividir pela quantidade
                                 $custoMaterialUnit = $custoMaterialPorQtd;
                             }
+                            
+                            // Aplicar ajuste pro rata de materiais
+                            $ajusteProRata = (float)($orcamento['ajuste_prorata_materiais'] ?? 0);
+                            if ($ajusteProRata > 0) {
+                                $custoMaterialUnit = $custoMaterialUnit * (1 + ($ajusteProRata / 100));
+                            }
                         }
                         
                         if ($custoMaoObraTotal > 0 && $quantidade > 0) {

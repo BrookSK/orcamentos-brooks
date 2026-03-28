@@ -231,6 +231,8 @@ final class Orcamento
             'percentual_impostos',
             'margem_mao_obra',
             'margem_materiais',
+            'margem_equipamentos',
+            'ajuste_prorata_materiais',
         ];
 
         $out = [];
@@ -244,6 +246,8 @@ final class Orcamento
         $out['percentual_impostos'] = $out['percentual_impostos'] !== '' ? self::parsePtBrNumber((string)$out['percentual_impostos']) : 0.0;
         $out['margem_mao_obra'] = $out['margem_mao_obra'] !== '' ? self::parsePtBrNumber((string)$out['margem_mao_obra']) : 0.0;
         $out['margem_materiais'] = $out['margem_materiais'] !== '' ? self::parsePtBrNumber((string)$out['margem_materiais']) : 0.0;
+        $out['margem_equipamentos'] = $out['margem_equipamentos'] !== '' ? self::parsePtBrNumber((string)$out['margem_equipamentos']) : 20.0;
+        $out['ajuste_prorata_materiais'] = $out['ajuste_prorata_materiais'] !== '' ? self::parsePtBrNumber((string)$out['ajuste_prorata_materiais']) : 0.0;
         
         // Garantir que tipo_orcamento seja sempre 'manual' ou 'sinapi'
         if (!in_array($out['tipo_orcamento'], ['manual', 'sinapi'], true)) {
