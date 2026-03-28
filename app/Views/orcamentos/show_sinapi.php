@@ -15,6 +15,11 @@ foreach ($itens as $it) {
 
 $totalGeral = 0.0;
 
+// Buscar margens globais do orçamento
+$margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 0);
+$margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 0);
+$margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
+
 ?><div class="card" style="padding:16px; margin-bottom:12px;">
     <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
         <div>
@@ -323,13 +328,6 @@ function toggleAdicionarItem() {
         <?php if (empty($grouped)) : ?>
             <tr><td colspan="14" class="muted">Nenhum item cadastrado. Use a Calculadora SINAPI acima para adicionar elementos construtivos.</td></tr>
         <?php endif; ?>
-
-        <?php 
-        // Buscar margens globais do orçamento
-        $margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 0);
-        $margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 0);
-        $margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
-        ?>
 
         <?php foreach ($grouped as $grupo => $cats) : ?>
             <tr class="category-row">
