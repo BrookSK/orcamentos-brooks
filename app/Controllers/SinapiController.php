@@ -6,6 +6,48 @@ namespace App\Controllers;
 
 class SinapiController
 {
+    public function diagnostico(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        
+        try {
+            $pdo = \App\Core\Database::pdo();
+            
+            // Contar total de registros
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM sinapi_insumos");
+            $total = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            // Contar betoneiras
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM sinapi_insumos WHERE descricao LIKE '%BETONEIRA%'");
+            $betoneiras = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            // Buscar código 10535
+            $stmt = $pdo->prepare("SELECT * FROM sinapi_insumos WHERE codigo = '10535'");
+            $stmt->execute();
+            $cod10535 = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            // Testar API listarInsumos
+            $resultadosAPI = \App\Api\SinapiPrecosApi::listarInsumos('BETONEIRA', 'SP', 10);
+            
+            echo json_encode([
+                'success' => true,
+                'total_registros' => $total['total'],
+                'total_betoneiras' => $betoneiras['total'],
+                'codigo_10535' => $cod10535 ? 'encontrado' : 'nao_encontrado',
+                'codigo_10535_uf' => $cod10535['uf'] ?? null,
+                'api_listar_count' => count($resultadosAPI),
+                'api_listar_sample' => array_slice($resultadosAPI, 0, 3)
+            ], JSON_UNESCAPED_UNICODE);
+            
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+    
     public function instalar(): void
     {
         set_time_limit(300); // 5 minutos
