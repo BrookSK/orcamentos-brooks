@@ -217,6 +217,54 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
     }
 }
 
+// ============================================
+// ROTA DA API SINAPI - ATUALIZAR DESCRIÇÃO
+// ============================================
+if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-descricao') {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    ob_start();
+    
+    header('Content-Type: application/json; charset=utf-8');
+    
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        ob_end_clean();
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'Método não permitido'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
+    try {
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        $codigo = trim($input['codigo'] ?? '');
+        $descricao = trim($input['descricao'] ?? '');
+        $uf = $input['uf'] ?? 'SP';
+        
+        if (empty($codigo) || empty($descricao)) {
+            ob_end_clean();
+            echo json_encode(['success' => false, 'error' => 'Dados inválidos'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        
+        $db = \App\Core\Database::pdo();
+        
+        $stmt = $db->prepare("UPDATE sinapi_insumos SET descricao = :descricao WHERE codigo = :codigo AND uf = :uf");
+        $stmt->execute([':descricao' => $descricao, ':codigo' => $codigo, ':uf' => $uf]);
+        
+        ob_end_clean();
+        echo json_encode(['success' => true, 'message' => 'Descrição atualizada'], JSON_UNESCAPED_UNICODE);
+        exit;
+        
+    } catch (Exception $e) {
+        ob_end_clean();
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
 use App\Controllers\ItemController;
 use App\Controllers\OrcamentoController;
 use App\Controllers\SinapiController;

@@ -748,7 +748,15 @@ async function renderResultadoSINAPI(result, d) {
           <input type="checkbox" class="sinapi-item-check" data-index="${itemIndex}" checked style="cursor:pointer; width:16px; height:16px;">
         </td>
         <td style="padding:8px; font-size:10px; color:#999;">${tipoLabel[item.tipo]}</td>
-        <td style="padding:8px; font-size:11px;">${item.nome}</td>
+        <td style="padding:8px; font-size:11px;">
+          <input type="text" 
+                 class="sinapi-nome-input" 
+                 data-index="${itemIndex}" 
+                 data-codigo="${codigoEscaped}"
+                 value="${item.nome}" 
+                 style="width:100%; padding:4px 6px; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:11px;"
+                 onchange="atualizarNomeSINAPI('${codigoEscaped}', this.value, ${itemIndex})">
+        </td>
         <td style="padding:8px; text-align:right;">
           <input type="number" 
                  class="sinapi-qty-input" 
@@ -974,6 +982,76 @@ function recalcularItemSINAPI(index) {
   
   ultimoResultadoSINAPI.totalGeral = totalGeral;
   document.getElementById('sinapi-res-total').textContent = fmtR(totalGeral);
+}
+
+// ══════════════════════════════════════════════
+//  ATUALIZAR NOME/DESCRIÇÃO NO BANCO DE DADOS
+// ══════════════════════════════════════════════
+let updateNomeTimeouts = {};
+
+async function atualizarNomeSINAPI(codigo, novoNome, index) {
+  if (!codigo || !novoNome) {
+    console.log('⚠ Código ou nome inválido:', codigo, novoNome);
+    return;
+  }
+  
+  // Debounce
+  if (updateNomeTimeouts[codigo]) {
+    clearTimeout(updateNomeTimeouts[codigo]);
+  }
+  
+  console.log(`⏱ Agendando atualização de nome para código ${codigo}...`);
+  
+  return new Promise((resolve) => {
+    updateNomeTimeouts[codigo] = setTimeout(async () => {
+      const uf = 'SP';
+      
+      const payload = {
+        codigo: codigo,
+        descricao: novoNome.trim(),
+        uf: uf
+      };
+      
+      console.log(`📤 Atualizando nome no banco:`, payload);
+      
+      try {
+        const response = await fetch('/?api=sinapi-atualizar-descricao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log(`✅ Nome atualizado!`);
+          
+          if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
+            ultimoResultadoSINAPI.lista[index].nome = novoNome.trim();
+          }
+          
+          const input = document.querySelector(`.sinapi-nome-input[data-index="${index}"]`);
+          if (input) {
+            input.style.borderColor = '#4CAF50';
+            input.style.background = 'rgba(76, 175, 80, 0.1)';
+            setTimeout(() => {
+              input.style.borderColor = '';
+              input.style.background = '';
+            }, 2000);
+          }
+        }
+        
+        resolve(data);
+      } catch (error) {
+        console.error('❌ Erro:', error);
+        resolve({ success: false, error: error.message });
+      }
+    }, 1500);
+  });
 }
 
 // ══════════════════════════════════════════════
