@@ -736,11 +736,12 @@ async function renderResultadoSINAPI(result, d) {
     if (item.tipo !== curTipo) {
       curTipo = item.tipo;
       const titulos = { material:'🧱 Materiais', mao:'👷 Mão de Obra', equip:'⚙️ Equipamentos' };
-      tbody += `<tr><td colspan="7" style="background:rgba(201,151,58,.1);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;color:#C9973A;text-transform:uppercase;">${titulos[curTipo]||curTipo}</td></tr>`;
+      tbody += `<tr><td colspan="8" style="background:rgba(201,151,58,.1);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;color:#C9973A;text-transform:uppercase;">${titulos[curTipo]||curTipo}</td></tr>`;
     }
     const sub = item.qty * item.preco;
     const qtyFmt = item.qty >= 100 ? fmt(item.qty,1) : fmt(item.qty,3);
     const codigoEscaped = String(item.codigo_sinapi || '').replace(/'/g, "\\'");
+    const unidadeEscaped = String(item.un || 'UN').replace(/'/g, "\\'");
     tbody += `
       <tr data-item-index="${itemIndex}">
         <td style="padding:8px; text-align:center;">
@@ -757,7 +758,16 @@ async function renderResultadoSINAPI(result, d) {
                  min="0"
                  style="width:80px; padding:4px 6px; text-align:right; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:11px;"
                  onchange="recalcularItemSINAPI(${itemIndex})">
-          <span style="color:#999; margin-left:4px; font-size:10px;">${item.un}</span>
+        </td>
+        <td style="padding:8px; text-align:center;">
+          <input type="text" 
+                 class="sinapi-un-input" 
+                 data-index="${itemIndex}" 
+                 data-codigo="${codigoEscaped}"
+                 value="${unidadeEscaped}" 
+                 maxlength="10"
+                 style="width:60px; padding:4px 6px; text-align:center; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:10px; text-transform:uppercase;"
+                 onchange="atualizarUnidadeSINAPI('${codigoEscaped}', this.value, ${itemIndex})">
         </td>
         <td style="padding:8px; text-align:right;">
           <input type="number" 
@@ -768,7 +778,7 @@ async function renderResultadoSINAPI(result, d) {
                  step="0.01" 
                  min="0"
                  style="width:90px; padding:4px 6px; text-align:right; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:11px;"
-                 onchange="recalcularItemSINAPI(${itemIndex}); atualizarPrecoSINAPI('${codigoEscaped}', this.value)">
+                 onchange="recalcularItemSINAPI(${itemIndex}); atualizarPrecoSINAPI('${codigoEscaped}', this.value, null)">
         </td>
         <td class="sinapi-subtotal-${itemIndex}" style="padding:8px; text-align:right; font-size:11px; font-weight:700;">${fmtR(sub)}</td>
         <td style="padding:4px; text-align:center; font-size:9px; color:#666;">
@@ -936,6 +946,7 @@ function recalcularItemSINAPI(index) {
   
   const qtyInput = document.querySelector(`.sinapi-qty-input[data-index="${index}"]`);
   const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
+  const unInput = document.querySelector(`.sinapi-un-input[data-index="${index}"]`);
   const subtotalCell = document.querySelector(`.sinapi-subtotal-${index}`);
   
   if (!qtyInput || !precoInput || !subtotalCell) {
@@ -944,11 +955,13 @@ function recalcularItemSINAPI(index) {
   
   const novaQty = parseFloat(qtyInput.value) || 0;
   const novoPreco = parseFloat(precoInput.value) || 0;
+  const novaUnidade = unInput ? unInput.value.trim().toUpperCase() : ultimoResultadoSINAPI.lista[index].un;
   const novoSubtotal = novaQty * novoPreco;
   
   // Atualizar no objeto
   ultimoResultadoSINAPI.lista[index].qty = novaQty;
   ultimoResultadoSINAPI.lista[index].preco = novoPreco;
+  ultimoResultadoSINAPI.lista[index].un = novaUnidade;
   
   // Atualizar display
   subtotalCell.textContent = fmtR(novoSubtotal);
@@ -966,7 +979,7 @@ function recalcularItemSINAPI(index) {
 // ══════════════════════════════════════════════
 //  ATUALIZAR PREÇO NO BANCO DE DADOS
 // ══════════════════════════════════════════════
-async function atualizarPrecoSINAPI(codigo, novoPreco) {
+async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
   if (!codigo || !novoPreco) {
     console.log('⚠ Código ou preço inválido:', codigo, novoPreco);
     return;
@@ -974,7 +987,17 @@ async function atualizarPrecoSINAPI(codigo, novoPreco) {
   
   const uf = 'SP'; // UF padrão para São Paulo
   
-  console.log(`📤 Enviando atualização: código=${codigo}, preço=${novoPreco}, uf=${uf}`);
+  const payload = {
+    codigo: codigo,
+    preco: parseFloat(novoPreco),
+    uf: uf
+  };
+  
+  if (unidade) {
+    payload.unidade = unidade.trim().toUpperCase();
+  }
+  
+  console.log(`📤 Enviando atualização:`, payload);
   
   try {
     const response = await fetch('/?api=sinapi-atualizar-preco', {
@@ -982,11 +1005,7 @@ async function atualizarPrecoSINAPI(codigo, novoPreco) {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        codigo: codigo,
-        preco: parseFloat(novoPreco),
-        uf: uf
-      })
+      body: JSON.stringify(payload)
     });
     
     console.log('📥 Resposta recebida:', response.status, response.statusText);
@@ -999,7 +1018,7 @@ async function atualizarPrecoSINAPI(codigo, novoPreco) {
     console.log('📊 Dados da resposta:', data);
     
     if (data.success) {
-      console.log(`✓ Preço atualizado no banco: código ${codigo} = R$ ${novoPreco}`);
+      console.log(`✓ Atualizado no banco: código ${codigo} = R$ ${novoPreco}${unidade ? ' (' + unidade + ')' : ''}`);
       
       // Mostrar feedback visual
       const input = document.querySelector(`.sinapi-preco-input[data-codigo="${codigo}"]`);
@@ -1012,11 +1031,46 @@ async function atualizarPrecoSINAPI(codigo, novoPreco) {
         }, 2000);
       }
     } else {
-      console.error('❌ Erro ao atualizar preço:', data.error);
-      alert('Erro ao atualizar preço no banco de dados: ' + (data.error || 'Erro desconhecido'));
+      console.error('❌ Erro ao atualizar:', data.error);
+      alert('Erro ao atualizar no banco de dados: ' + (data.error || 'Erro desconhecido'));
     }
   } catch (error) {
-    console.error('❌ Erro ao atualizar preço:', error);
+    console.error('❌ Erro ao atualizar:', error);
     alert('Erro ao comunicar com o servidor: ' + error.message);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  ATUALIZAR UNIDADE NO BANCO DE DADOS
+// ══════════════════════════════════════════════
+async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
+  if (!codigo || !novaUnidade) {
+    console.log('⚠ Código ou unidade inválida:', codigo, novaUnidade);
+    return;
+  }
+  
+  const unidadeFormatada = novaUnidade.trim().toUpperCase();
+  
+  // Atualizar no objeto local
+  if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
+    ultimoResultadoSINAPI.lista[index].un = unidadeFormatada;
+  }
+  
+  // Buscar o preço atual do input
+  const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
+  const precoAtual = precoInput ? parseFloat(precoInput.value) : 0;
+  
+  // Atualizar no banco com preço e unidade
+  await atualizarPrecoSINAPI(codigo, precoAtual, unidadeFormatada);
+  
+  // Feedback visual na unidade
+  const unInput = document.querySelector(`.sinapi-un-input[data-index="${index}"]`);
+  if (unInput) {
+    unInput.style.borderColor = '#4CAF50';
+    unInput.style.background = 'rgba(76, 175, 80, 0.1)';
+    setTimeout(() => {
+      unInput.style.borderColor = '';
+      unInput.style.background = '';
+    }, 2000);
   }
 }

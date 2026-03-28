@@ -128,6 +128,7 @@ $margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
                             <th style="padding:8px; text-align:left; font-size:10px; color:#999;">Tipo</th>
                             <th style="padding:8px; text-align:left; font-size:10px; color:#999;">Material / Insumo</th>
                             <th style="padding:8px; text-align:right; font-size:10px; color:#999;">Quantidade</th>
+                            <th style="padding:8px; text-align:center; font-size:10px; color:#999; width:70px;">Unid.</th>
                             <th style="padding:8px; text-align:right; font-size:10px; color:#999;">Valor Unit.</th>
                             <th style="padding:8px; text-align:right; font-size:10px; color:#999;">Subtotal</th>
                             <th style="padding:8px; text-align:center; font-size:10px; color:#999; width:60px;">Fonte</th>

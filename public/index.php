@@ -87,95 +87,99 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
     
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
-        echo json_encode(['success' => false, 'error' => 'Método não permitido']);
+        echo json_encode(['success' => false, 'error' => 'Método não permitido'], JSON_UNESCAPED_UNICODE);
         exit;
     }
     
     try {
         $rawInput = file_get_contents('php://input');
-        error_log("SINAPI UPDATE - Raw input: " . $rawInput);
-        
         $input = json_decode($rawInput, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
-            echo json_encode(['success' => false, 'error' => 'JSON inválido: ' . json_last_error_msg()]);
+            echo json_encode(['success' => false, 'error' => 'JSON inválido'], JSON_UNESCAPED_UNICODE);
             exit;
         }
         
         if (!isset($input['codigo']) || !isset($input['preco'])) {
-            echo json_encode(['success' => false, 'error' => 'Código e preço são obrigatórios', 'received' => $input]);
+            echo json_encode(['success' => false, 'error' => 'Código e preço são obrigatórios'], JSON_UNESCAPED_UNICODE);
             exit;
         }
         
         $codigo = trim($input['codigo']);
         $preco = (float)$input['preco'];
         $uf = $input['uf'] ?? 'SP';
-        
-        error_log("SINAPI UPDATE - Código: $codigo, Preço: $preco, UF: $uf");
+        $unidade = isset($input['unidade']) ? trim($input['unidade']) : null;
         
         if (empty($codigo) || $preco < 0) {
-            echo json_encode(['success' => false, 'error' => 'Dados inválidos', 'codigo' => $codigo, 'preco' => $preco]);
+            echo json_encode(['success' => false, 'error' => 'Dados inválidos'], JSON_UNESCAPED_UNICODE);
             exit;
         }
         
         // Atualizar no banco de dados
         $db = \App\Core\Database::getInstance();
         
-        // Primeiro verificar se o registro existe
-        $checkStmt = $db->prepare("SELECT codigo, preco_unit FROM sinapi_insumos WHERE codigo = :codigo AND uf = :uf");
+        // Verificar se o registro existe
+        $checkStmt = $db->prepare("SELECT codigo, preco_unit, unidade FROM sinapi_insumos WHERE codigo = :codigo AND uf = :uf");
         $checkStmt->execute([':codigo' => $codigo, ':uf' => $uf]);
         $existing = $checkStmt->fetch(\PDO::FETCH_ASSOC);
-        
-        error_log("SINAPI UPDATE - Registro existente: " . json_encode($existing));
         
         if (!$existing) {
             echo json_encode([
                 'success' => false, 
-                'error' => 'Código SINAPI não encontrado no banco de dados',
-                'codigo' => $codigo,
-                'uf' => $uf
-            ]);
+                'error' => 'Código SINAPI não encontrado',
+                'codigo' => $codigo
+            ], JSON_UNESCAPED_UNICODE);
             exit;
         }
         
-        $stmt = $db->prepare("
-            UPDATE sinapi_insumos 
-            SET preco_unit = :preco 
-            WHERE codigo = :codigo AND uf = :uf
-        ");
-        
-        $stmt->execute([
-            ':preco' => $preco,
-            ':codigo' => $codigo,
-            ':uf' => $uf
-        ]);
+        // Atualizar preço e opcionalmente unidade
+        if ($unidade !== null) {
+            $stmt = $db->prepare("
+                UPDATE sinapi_insumos 
+                SET preco_unit = :preco, unidade = :unidade 
+                WHERE codigo = :codigo AND uf = :uf
+            ");
+            $stmt->execute([
+                ':preco' => $preco,
+                ':unidade' => $unidade,
+                ':codigo' => $codigo,
+                ':uf' => $uf
+            ]);
+        } else {
+            $stmt = $db->prepare("
+                UPDATE sinapi_insumos 
+                SET preco_unit = :preco 
+                WHERE codigo = :codigo AND uf = :uf
+            ");
+            $stmt->execute([
+                ':preco' => $preco,
+                ':codigo' => $codigo,
+                ':uf' => $uf
+            ]);
+        }
         
         $rowsAffected = $stmt->rowCount();
-        
-        error_log("SINAPI UPDATE - Linhas afetadas: $rowsAffected");
         
         if ($rowsAffected > 0) {
             echo json_encode([
                 'success' => true, 
-                'message' => 'Preço atualizado com sucesso',
+                'message' => 'Atualizado com sucesso',
                 'codigo' => $codigo,
                 'preco' => $preco,
-                'preco_anterior' => $existing['preco_unit'],
-                'uf' => $uf
-            ]);
+                'unidade' => $unidade ?? $existing['unidade'],
+                'preco_anterior' => $existing['preco_unit']
+            ], JSON_UNESCAPED_UNICODE);
         } else {
             echo json_encode([
-                'success' => false, 
-                'error' => 'Nenhuma alteração realizada (preço já era o mesmo)',
-                'preco_atual' => $existing['preco_unit']
-            ]);
+                'success' => true, 
+                'message' => 'Nenhuma alteração (valores já eram os mesmos)'
+            ], JSON_UNESCAPED_UNICODE);
         }
         exit;
         
     } catch (Exception $e) {
-        error_log("SINAPI UPDATE - Erro: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        echo json_encode(['success' => false, 'error' => 'Erro interno do servidor'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
