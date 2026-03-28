@@ -1569,7 +1569,7 @@ final class OrcamentoController
                         'usa_margem_personalizada' => '1',
                     ];
                     
-                    OrcamentoItem::update($orcamentoId, (int)$item['id'], $data);
+                    OrcamentoItem::update((int)$item['id'], $data);
                     $count++;
                 }
             }
