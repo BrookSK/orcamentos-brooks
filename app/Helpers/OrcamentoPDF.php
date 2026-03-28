@@ -36,10 +36,133 @@ final class OrcamentoPDF
             }
         }
         
-        $html .= self::gerarPaginasResumo($orcamentoId, $orcamento);
+        // Gerar apenas RESUMO GERAL (página 4) - não duplicar páginas 1-3
+        $html .= self::gerarPaginaResumoGeral($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamentoAdmin($orcamentoId, $orcamento);
         $html .= self::gerarResumoFinal($orcamentoId, $orcamento);
         $html .= self::gerarRodapeHTML();
+        return $html;
+    }
+    
+    private static function gerarPaginaResumoGeral(int $orcamentoId, array $orcamento): string
+    {
+        // Buscar itens agrupados por CATEGORIA
+        $pdo = \App\Core\Database::pdo();
+        $stmt = $pdo->prepare(
+            'SELECT codigo, descricao, grupo, categoria, (quantidade * valor_cobranca) as valor_total '
+            . 'FROM orcamento_itens WHERE orcamento_id = :id '
+            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED)'
+        );
+        $stmt->execute([':id' => $orcamentoId]);
+        $itensAgrupados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // Agrupar por categoria
+        $categorias = [];
+        $totalGeral = 0;
+        
+        foreach ($itensAgrupados as $item) {
+            $categoria = trim((string)($item['categoria'] ?? 'SEM CATEGORIA'));
+            $valor = (float)$item['valor_total'];
+            
+            if (!isset($categorias[$categoria])) {
+                $categorias[$categoria] = [
+                    'itens' => [],
+                    'total' => 0
+                ];
+            }
+            
+            $categorias[$categoria]['itens'][] = $item;
+            $categorias[$categoria]['total'] += $valor;
+            $totalGeral += $valor;
+        }
+        
+        // Gerar página de RESUMO GERAL com áreas e totais por categoria
+        $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
+        $html .= '<div class="etapa-header">RESUMO GERAL</div>';
+        
+        // Tabela de total geral
+        $html .= '<table class="table-resumo" style="margin-top:15px;"><tbody>';
+        $html .= sprintf(
+            '<tr class="total-row"><td colspan="2">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
+            self::formatarValor($totalGeral)
+        );
+        $html .= '</tbody></table>';
+
+        // TABELAS DE ÁREAS
+        // Processar áreas personalizadas
+        $areasPersonalizadas = [];
+        $areaTotal = 0;
+        
+        if (!empty($orcamento['areas_personalizadas'])) {
+            $areasPersonalizadas = json_decode($orcamento['areas_personalizadas'], true);
+            if (is_array($areasPersonalizadas)) {
+                foreach ($areasPersonalizadas as $area) {
+                    $m2 = (float)($area['m2'] ?? 0);
+                    $fator = (float)($area['fator'] ?? 1);
+                    $areaTotal += $m2 * $fator;
+                }
+            }
+        }
+        
+        // Se não tiver áreas personalizadas ou área total for zero, usar área do orçamento
+        if ($areaTotal == 0) {
+            $areaTotal = (float)($orcamento['area_m2'] ?? 0);
+        }
+        
+        // Gerar tabela de áreas
+        $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
+        
+        if (!empty($areasPersonalizadas)) {
+            foreach ($areasPersonalizadas as $area) {
+                $nome = htmlspecialchars((string)($area['nome'] ?? ''));
+                $m2 = (float)($area['m2'] ?? 0);
+                $fator = (float)($area['fator'] ?? 1);
+                $m2xFator = $m2 * $fator;
+                
+                $html .= sprintf(
+                    '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+                    $nome,
+                    number_format($m2, 2, ',', '.'),
+                    number_format($fator, 2, ',', '.'),
+                    number_format($m2xFator, 2, ',', '.')
+                );
+            }
+        } else {
+            // Fallback: mostrar apenas área total
+            $html .= sprintf(
+                '<tr><td>ÁREA TOTAL</td><td>%s</td><td>1</td><td>%s</td></tr>',
+                number_format($areaTotal, 2, ',', '.'),
+                number_format($areaTotal, 2, ',', '.')
+            );
+        }
+        
+        $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
+        $html .= '</tbody></table>';
+        
+        // Gerar tabela de CATEGORIAS (usando dados reais do orçamento)
+        $html .= '<table class="table-areas" style="margin-top:15px;"><thead><tr><th>CATEGORIAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
+        
+        foreach ($categorias as $categoriaNome => $categoriaData) {
+            $html .= sprintf(
+                '<tr><td>%s</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
+                htmlspecialchars(strtoupper($categoriaNome)),
+                self::formatarValor($categoriaData['total']),
+                number_format($areaTotal, 2, ',', '.'),
+                self::formatarValor($areaTotal > 0 ? $categoriaData['total'] / $areaTotal : 0)
+            );
+        }
+        
+        $html .= sprintf(
+            '<tr class="total-row"><td>TOTAL GERAL:</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
+            self::formatarValor($totalGeral),
+            number_format($areaTotal, 2, ',', '.'),
+            self::formatarValor($areaTotal > 0 ? $totalGeral / $areaTotal : 0)
+        );
+        $html .= '</tbody></table>';
+        
+        $html .= '<div class="page-footer"><div>FOLHA: 1</div></div>';
+        $html .= '</div>';
+        
         return $html;
     }
     
