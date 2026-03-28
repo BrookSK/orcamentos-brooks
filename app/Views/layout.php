@@ -91,6 +91,13 @@ declare(strict_types=1);
             border-bottom: 1px solid rgba(255,255,255,.06);
             vertical-align: top;
             font-size: 13px;
+            word-wrap: break-word;
+            word-break: break-word;
+            max-width: 300px;
+        }
+        tbody td:last-child {
+            white-space: nowrap;
+            min-width: 120px;
         }
         tbody tr:hover td { background: rgba(255,255,255,.02); }
         .num { text-align: right; font-variant-numeric: tabular-nums; }
