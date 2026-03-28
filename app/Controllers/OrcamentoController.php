@@ -663,6 +663,17 @@ final class OrcamentoController
         }
 
         $data = OrcamentoItem::normalize($_POST);
+        
+        // Calcular valor_cobranca baseado no BDI
+        $valorUnitario = (float)($data['valor_unitario'] ?? 0);
+        $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
+        if ($percentualBdi > 0) {
+            $valorCobrancaCalculado = round($valorUnitario * (1 + $percentualBdi / 100), 2);
+            $data['valor_cobranca'] = (string)$valorCobrancaCalculado;
+        } else {
+            $data['valor_cobranca'] = (string)$valorUnitario;
+        }
+        
         $errors = OrcamentoItem::validate($data);
 
         if ($errors) {
@@ -755,6 +766,16 @@ final class OrcamentoController
 
         if (!array_key_exists('percentual_realizado', $_POST)) {
             $data['percentual_realizado'] = (float)($existing['percentual_realizado'] ?? 0);
+        }
+        
+        // Calcular valor_cobranca baseado no BDI
+        $valorUnitario = (float)($data['valor_unitario'] ?? 0);
+        $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
+        if ($percentualBdi > 0) {
+            $valorCobrancaCalculado = round($valorUnitario * (1 + $percentualBdi / 100), 2);
+            $data['valor_cobranca'] = (string)$valorCobrancaCalculado;
+        } else {
+            $data['valor_cobranca'] = (string)$valorUnitario;
         }
 
         $errors = OrcamentoItem::validate($data);

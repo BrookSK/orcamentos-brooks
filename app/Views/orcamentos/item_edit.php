@@ -98,6 +98,12 @@ declare(strict_types=1);
             </div>
 
             <div class="field">
+                <label>% BDI (Margem de Lucro)</label>
+                <input name="percentual_bdi" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['percentual_bdi'] ?? '0')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Benefícios e Despesas Indiretas (ex: 25 para 25%)</div>
+            </div>
+
+            <div class="field">
                 <label>% realizado</label>
                 <input name="percentual_realizado" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['percentual_realizado'] ?? '0')); ?>">
             </div>

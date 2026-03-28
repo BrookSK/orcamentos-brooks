@@ -279,6 +279,7 @@ final class OrcamentoItem
         $out['custo_mao_obra'] = self::parsePtBrNumber((string)($data['custo_mao_obra'] ?? '0'));
         $out['margem_lucro'] = self::parsePtBrNumber((string)($data['margem_lucro'] ?? '0'));
         $out['desconto_item'] = self::parsePtBrNumber((string)($data['desconto_item'] ?? '0'));
+        $out['percentual_bdi'] = self::parsePtBrNumber((string)($data['percentual_bdi'] ?? '0'));
 
         $percentualRealizado = self::parsePtBrNumber((string)($data['percentual_realizado'] ?? '0'));
         if ($percentualRealizado < 0) {
