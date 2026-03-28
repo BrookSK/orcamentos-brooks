@@ -174,6 +174,7 @@ declare(strict_types=1);
             <a class="btn" href="/?route=orcamentos/grupos">Grupos</a>
             <a class="btn" href="/?route=orcamentos/categorias">Categorias</a>
             <a class="btn" href="/?route=orcamentos/unidades">Unidades</a>
+            <a class="btn" href="/?route=sinapi/gerenciar">Itens SINAPI</a>
         </div>
     </header>
 

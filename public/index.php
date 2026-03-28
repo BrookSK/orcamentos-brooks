@@ -346,6 +346,9 @@ if ($controllerName === 'sinapi') {
     $allowed = [
         'instalar' => ['GET'],
         'diagnostico' => ['GET'],
+        'gerenciar' => ['GET'],
+        'atualizar' => ['POST'],
+        'excluir' => ['POST'],
     ];
 
     if (!isset($allowed[$action]) || !in_array($method, $allowed[$action], true)) {

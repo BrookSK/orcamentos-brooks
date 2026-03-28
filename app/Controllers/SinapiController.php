@@ -6,6 +6,138 @@ namespace App\Controllers;
 
 class SinapiController
 {
+    public function gerenciar(): void
+    {
+        $termo = $_GET['termo'] ?? '';
+        $tipo = $_GET['tipo'] ?? '';
+        $pagina = (int)($_GET['pagina'] ?? 1);
+        $limite = 50;
+        $offset = ($pagina - 1) * $limite;
+        
+        try {
+            $pdo = \App\Core\Database::pdo();
+            
+            // Construir query
+            $sql = "SELECT codigo, descricao, unidade, tipo, preco_unit, uf 
+                    FROM sinapi_insumos 
+                    WHERE 1=1";
+            $params = [];
+            
+            if (!empty($termo)) {
+                $sql .= " AND (codigo LIKE ? OR descricao LIKE ?)";
+                $params[] = '%' . $termo . '%';
+                $params[] = '%' . $termo . '%';
+            }
+            
+            if (!empty($tipo)) {
+                $sql .= " AND tipo = ?";
+                $params[] = $tipo;
+            }
+            
+            // Contar total
+            $countSql = "SELECT COUNT(*) as total FROM sinapi_insumos WHERE 1=1";
+            if (!empty($termo)) {
+                $countSql .= " AND (codigo LIKE ? OR descricao LIKE ?)";
+            }
+            if (!empty($tipo)) {
+                $countSql .= " AND tipo = ?";
+            }
+            
+            $stmtCount = $pdo->prepare($countSql);
+            $stmtCount->execute($params);
+            $total = $stmtCount->fetch(\PDO::FETCH_ASSOC)['total'];
+            
+            // Buscar itens
+            $sql .= " ORDER BY codigo LIMIT ? OFFSET ?";
+            $params[] = $limite;
+            $params[] = $offset;
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $itens = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            $totalPaginas = ceil($total / $limite);
+            
+            require __DIR__ . '/../Views/sinapi/gerenciar.php';
+            
+        } catch (\Exception $e) {
+            echo "Erro: " . $e->getMessage();
+        }
+    }
+    
+    public function atualizar(): void
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Método inválido']);
+            return;
+        }
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $codigo = trim($input['codigo'] ?? '');
+            $descricao = trim($input['descricao'] ?? '');
+            $unidade = trim($input['unidade'] ?? '');
+            $preco = (float)($input['preco'] ?? 0);
+            
+            if (empty($codigo)) {
+                echo json_encode(['success' => false, 'error' => 'Código obrigatório']);
+                return;
+            }
+            
+            $pdo = \App\Core\Database::pdo();
+            
+            $stmt = $pdo->prepare("
+                UPDATE sinapi_insumos 
+                SET descricao = ?, unidade = ?, preco_unit = ?
+                WHERE codigo = ?
+            ");
+            
+            $stmt->execute([$descricao, $unidade, $preco, $codigo]);
+            
+            echo json_encode(['success' => true]);
+            
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+    
+    public function excluir(): void
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Método inválido']);
+            return;
+        }
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $codigos = $input['codigos'] ?? [];
+            
+            if (empty($codigos) || !is_array($codigos)) {
+                echo json_encode(['success' => false, 'error' => 'Nenhum código fornecido']);
+                return;
+            }
+            
+            $pdo = \App\Core\Database::pdo();
+            
+            $placeholders = implode(',', array_fill(0, count($codigos), '?'));
+            $stmt = $pdo->prepare("DELETE FROM sinapi_insumos WHERE codigo IN ($placeholders)");
+            $stmt->execute($codigos);
+            
+            $count = $stmt->rowCount();
+            
+            echo json_encode(['success' => true, 'count' => $count]);
+            
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+    
     public function diagnostico(): void
     {
         header('Content-Type: application/json; charset=utf-8');
