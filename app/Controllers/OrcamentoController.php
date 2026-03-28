@@ -659,21 +659,47 @@ final class OrcamentoController
             
             // Exibir erro detalhado na tela
             echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Erro - Orçamento</title>';
-            echo '<style>body{font-family:monospace;padding:20px;background:#1a1a1a;color:#fff;}';
+            echo '<style>body{font-family:monospace;padding:20px;background:#1a1a1a;color:#fff;font-size:13px;}';
             echo '.error-box{background:#2d1f1f;border:2px solid #ff4444;border-radius:8px;padding:20px;margin:20px 0;}';
             echo '.error-title{color:#ff4444;font-size:20px;font-weight:bold;margin-bottom:10px;}';
-            echo '.error-message{color:#ffaa44;font-size:14px;margin:10px 0;padding:10px;background:#1a1a1a;border-radius:4px;}';
-            echo '.error-trace{color:#888;font-size:11px;margin-top:15px;padding:10px;background:#0a0a0a;border-radius:4px;overflow-x:auto;}';
+            echo '.error-message{color:#ffaa44;font-size:14px;margin:10px 0;padding:10px;background:#1a1a1a;border-radius:4px;word-break:break-all;}';
+            echo '.error-trace{color:#888;font-size:11px;margin-top:15px;padding:10px;background:#0a0a0a;border-radius:4px;overflow-x:auto;white-space:pre-wrap;}';
             echo '.btn{display:inline-block;padding:10px 20px;background:#4CAF50;color:#fff;text-decoration:none;border-radius:6px;margin-top:15px;}';
+            echo '.debug-section{margin-top:20px;padding:15px;background:#1a3a1a;border-radius:8px;}';
+            echo '.debug-title{color:#4CAF50;font-weight:bold;margin-bottom:10px;}';
             echo '</style></head><body>';
             echo '<div class="error-box">';
-            echo '<div class="error-title">❌ Erro ao carregar orçamento</div>';
+            echo '<div class="error-title">❌ Erro ao carregar orçamento ID: ' . $id . '</div>';
             echo '<div class="error-message"><strong>Tipo:</strong> ' . htmlspecialchars(get_class($e)) . '</div>';
             echo '<div class="error-message"><strong>Mensagem:</strong> ' . htmlspecialchars($e->getMessage()) . '</div>';
             echo '<div class="error-message"><strong>Arquivo:</strong> ' . htmlspecialchars($e->getFile()) . '</div>';
             echo '<div class="error-message"><strong>Linha:</strong> ' . $e->getLine() . '</div>';
-            echo '<div class="error-trace"><strong>Stack Trace:</strong><br><pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre></div>';
+            
+            // Debug adicional
+            echo '<div class="debug-section">';
+            echo '<div class="debug-title">🔍 Informações de Debug:</div>';
+            echo '<div class="error-message"><strong>PHP Version:</strong> ' . PHP_VERSION . '</div>';
+            echo '<div class="error-message"><strong>OPcache Enabled:</strong> ' . (function_exists('opcache_get_status') && opcache_get_status() ? 'Sim' : 'Não') . '</div>';
+            echo '<div class="error-message"><strong>Memory Limit:</strong> ' . ini_get('memory_limit') . '</div>';
+            echo '<div class="error-message"><strong>Max Execution Time:</strong> ' . ini_get('max_execution_time') . 's</div>';
+            
+            // Verificar se o orçamento existe
+            try {
+                $testOrcamento = \App\Models\Orcamento::find($id);
+                if ($testOrcamento) {
+                    echo '<div class="error-message"><strong>Orçamento encontrado:</strong> Sim (ID: ' . $id . ')</div>';
+                    echo '<div class="error-message"><strong>Tipo:</strong> ' . htmlspecialchars($testOrcamento['tipo_orcamento'] ?? 'N/A') . '</div>';
+                } else {
+                    echo '<div class="error-message"><strong>Orçamento encontrado:</strong> Não</div>';
+                }
+            } catch (\Throwable $e2) {
+                echo '<div class="error-message"><strong>Erro ao buscar orçamento:</strong> ' . htmlspecialchars($e2->getMessage()) . '</div>';
+            }
+            echo '</div>';
+            
+            echo '<div class="error-trace"><strong>Stack Trace:</strong><br>' . htmlspecialchars($e->getTraceAsString()) . '</div>';
             echo '<a href="/?route=orcamentos/index" class="btn">← Voltar para lista de orçamentos</a>';
+            echo '<a href="/limpar_cache.php" class="btn" style="background:#ff9800;">🧹 Limpar Cache</a>';
             echo '</div></body></html>';
         }
     }
