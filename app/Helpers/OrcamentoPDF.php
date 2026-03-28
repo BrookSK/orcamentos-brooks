@@ -661,13 +661,37 @@ CSS;
                     $custoMaterialUnit = $quantidade > 0 ? $custoMaterialTotal / $quantidade : 0;
                     $custoMaoObraUnit = $quantidade > 0 ? $custoMaoObraTotal / $quantidade : 0;
                     $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit;
+                    
+                    // Se não há custo total, usar valor_unitario como base
+                    if ($custoUnitTotal == 0) {
+                        $custoUnitTotal = $valorUnitario;
+                    }
+                    
                     $margemUnit = $valorCobrancaUnitario - $custoUnitTotal;
                     $valorTotal = $quantidade * $valorCobrancaUnitario;
                     
                     // Calcular % de margem aplicada
                     $percentualMargemAplicada = 0;
-                    if ($custoUnitTotal > 0) {
-                        $percentualMargemAplicada = (($valorCobrancaUnitario / $custoUnitTotal) - 1) * 100;
+                    
+                    // PRIORIDADE 1: Se usa margem personalizada, mostrar ela diretamente
+                    if ($usaMargemPersonalizada && $margemPersonalizada > 0) {
+                        $percentualMargemAplicada = $margemPersonalizada;
+                    }
+                    // PRIORIDADE 2: Calcular baseado em custo vs valor de venda
+                    elseif ($custoUnitTotal > 0.01 && $valorCobrancaUnitario > $custoUnitTotal) {
+                        $percentualMargemAplicada = (($valorCobrancaUnitario - $custoUnitTotal) / $custoUnitTotal) * 100;
+                        // Limitar a 999% para evitar valores absurdos
+                        if ($percentualMargemAplicada > 999) {
+                            $percentualMargemAplicada = 0;
+                        }
+                    }
+                    // PRIORIDADE 3: Se valor_cobranca > valor_unitario, calcular margem simples
+                    elseif ($valorUnitario > 0.01 && $valorCobrancaUnitario > $valorUnitario) {
+                        $percentualMargemAplicada = (($valorCobrancaUnitario / $valorUnitario) - 1) * 100;
+                        // Limitar a 999% para evitar valores absurdos
+                        if ($percentualMargemAplicada > 999) {
+                            $percentualMargemAplicada = 0;
+                        }
                     }
                     
                     $subtotalCategoria += $valorTotal;
