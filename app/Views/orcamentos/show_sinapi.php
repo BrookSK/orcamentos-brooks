@@ -289,31 +289,56 @@ function toggleAdicionarItem() {
 </script>
 
 <div class="card">
-    <table>
+    <div style="margin-bottom: 12px; display: flex; gap: 8px; align-items: center;">
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="toggle-admin-columns-sinapi" style="width: auto;">
+            <span style="font-weight: 600;">Mostrar colunas administrativas (custos, margens, % BDI)</span>
+        </label>
+    </div>
+    
+    <div style="overflow-x: auto;">
+    <table id="orcamento-table-sinapi">
         <thead>
         <tr>
+            <th style="width:30px;"></th>
             <th style="width:90px">Código</th>
             <th>Descrição</th>
-            <th class="num" style="width:90px">Quant.</th>
             <th style="width:80px">Unid</th>
+            <th class="num" style="width:90px">Quant.</th>
+            <th class="num admin-col" style="width:90px; display:none;">Custo Mat.</th>
+            <th class="num admin-col" style="width:90px; display:none;">Custo M.O.</th>
+            <th class="num admin-col" style="width:90px; display:none;">Custo Equip.</th>
+            <th class="center admin-col" style="width:70px; display:none;">% BDI</th>
+            <th class="num admin-col" style="width:90px; display:none;">Margem Un.</th>
             <th class="num" style="width:120px">Valor Unit.</th>
+            <th class="num admin-col" style="width:100px; display:none;">Lucro Total</th>
             <th class="num" style="width:120px">Valor Total</th>
             <th style="width:140px"></th>
         </tr>
         </thead>
         <tbody>
         <?php if (empty($grouped)) : ?>
-            <tr><td colspan="7" class="muted">Nenhum item cadastrado. Use a Calculadora SINAPI acima para adicionar elementos construtivos.</td></tr>
+            <tr><td colspan="14" class="muted">Nenhum item cadastrado. Use a Calculadora SINAPI acima para adicionar elementos construtivos.</td></tr>
         <?php endif; ?>
+
+        <?php 
+        // Buscar margens globais do orçamento
+        $margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 0);
+        $margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 0);
+        $margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
+        ?>
 
         <?php foreach ($grouped as $grupo => $cats) : ?>
             <tr class="category-row">
-                <td colspan="7"><?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?></td>
+                <td colspan="14"><?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?></td>
             </tr>
 
             <?php foreach ($cats as $categoria => $rows) : ?>
-                <tr class="subtotal-row">
-                    <td colspan="7"><?php echo htmlspecialchars($categoria !== '' ? $categoria : 'SEM CATEGORIA'); ?></td>
+                <tr class="subtotal-row category-header" draggable="true" data-categoria="<?php echo htmlspecialchars($categoria); ?>" data-grupo="<?php echo htmlspecialchars($grupo); ?>">
+                    <td colspan="14" style="cursor:move;">
+                        <span style="color:#666; margin-right:8px;">⋮⋮</span>
+                        <?php echo htmlspecialchars($categoria !== '' ? $categoria : 'SEM CATEGORIA'); ?>
+                    </td>
                 </tr>
 
                 <?php $subtotalCategoria = 0.0; ?>
