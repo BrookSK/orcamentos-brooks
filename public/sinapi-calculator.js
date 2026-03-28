@@ -688,10 +688,13 @@ async function renderResultadoSINAPI(result, d) {
     const uf = document.getElementById('uf2')?.value || 'SP';
     const precosBanco = await buscarPrecosBanco(codigosSinapi, uf);
     
+    console.log('📊 Preços do banco SINAPI:', precosBanco);
+    
     // Atualizar preços com valores do banco
     lista = lista.map(item => {
       const precoBanco = precosBanco[item.codigo_sinapi];
       if (precoBanco && precoBanco.preco > 0) {
+        console.log(`✓ Atualizando ${item.nome}: R$ ${item.preco} → R$ ${precoBanco.preco} (${precoBanco.unidade})`);
         return {
           ...item,
           preco: precoBanco.preco,
@@ -699,6 +702,7 @@ async function renderResultadoSINAPI(result, d) {
           fonte: 'banco_dados'
         };
       }
+      console.log(`⚠ Mantendo preço hardcoded para ${item.nome}: R$ ${item.preco}`);
       return { ...item, fonte: 'hardcoded' };
     });
   }
@@ -870,6 +874,8 @@ async function buscarPrecosBanco(codigos, uf) {
   
   try {
     const codigosStr = codigos.join(',');
+    console.log(`🔍 Buscando preços SINAPI: ${codigosStr} (UF: ${uf})`);
+    
     const response = await fetch(
       `/?api=sinapi-precos&codigos=${codigosStr}&uf=${uf}`
     );
@@ -880,6 +886,7 @@ async function buscarPrecosBanco(codigos, uf) {
     }
     
     const data = await response.json();
+    console.log('📦 Resposta da API:', data);
     
     if (data.success && data.precos) {
       console.log(`✓ ${Object.keys(data.precos).length} preços encontrados no banco de dados`);

@@ -184,11 +184,11 @@ declare(strict_types=1);
                         </div>
                         <div>
                             <label style="font-size:11px; color:#999;">m²</label>
-                            <input type="number" step="0.01" name="areas[<?php echo $index; ?>][m2]" value="<?php echo htmlspecialchars($area['m2'] ?? ''); ?>" placeholder="0.00" style="width:100%;">
+                            <input type="number" step="0.01" name="areas[<?php echo $index; ?>][m2]" value="<?php echo htmlspecialchars((string)($area['m2'] ?? '')); ?>" placeholder="0.00" style="width:100%;">
                         </div>
                         <div>
                             <label style="font-size:11px; color:#999;">Fator</label>
-                            <input type="number" step="0.01" name="areas[<?php echo $index; ?>][fator]" value="<?php echo htmlspecialchars($area['fator'] ?? '1'); ?>" placeholder="1" style="width:100%;">
+                            <input type="number" step="0.01" name="areas[<?php echo $index; ?>][fator]" value="<?php echo htmlspecialchars((string)($area['fator'] ?? '1')); ?>" placeholder="1" style="width:100%;">
                         </div>
                         <button type="button" class="btn-remove-area" style="background:#f44336; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-size:16px;" onclick="removerArea(this)">🗑️</button>
                     </div>
