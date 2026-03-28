@@ -742,6 +742,7 @@ async function renderResultadoSINAPI(result, d) {
     const qtyFmt = item.qty >= 100 ? fmt(item.qty,1) : fmt(item.qty,3);
     const codigoEscaped = String(item.codigo_sinapi || '').replace(/'/g, "\\'");
     const unidadeEscaped = String(item.un || 'UN').replace(/'/g, "\\'");
+    const nomeEscaped = String(item.nome || '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
     tbody += `
       <tr data-item-index="${itemIndex}">
         <td style="padding:8px; text-align:center;">
@@ -753,7 +754,7 @@ async function renderResultadoSINAPI(result, d) {
                  class="sinapi-nome-input" 
                  data-index="${itemIndex}" 
                  data-codigo="${codigoEscaped}"
-                 value="${item.nome}" 
+                 value="${nomeEscaped}" 
                  style="width:100%; padding:4px 6px; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:11px;"
                  onchange="atualizarNomeSINAPI('${codigoEscaped}', this.value, ${itemIndex})">
         </td>
