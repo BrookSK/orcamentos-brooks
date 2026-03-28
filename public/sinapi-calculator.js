@@ -681,7 +681,7 @@ async function renderResultadoSINAPI(result, d) {
   
   // Buscar preços do banco de dados
   const codigosSinapi = [...new Set(
-    lista.map(item => item.codigo_sinapi).filter(c => c && c !== item.key)
+    lista.map(item => item.codigo_sinapi).filter(c => c && c.trim() !== '')
   )];
   
   if (codigosSinapi.length > 0) {
