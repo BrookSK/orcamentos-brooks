@@ -39,51 +39,51 @@ const ELEMENTOS = [
       const mats = [];
 
       if (variante === 'furado_14') {
-        mats.push({ key:'tijolo_furado_14', nome:'Tijolo cerâmico furado 9×14×19cm', qty: area*25*1.05, tipo:'material' });
-        mats.push({ key:'cimento_cpii',     nome:'Cimento Portland CP II-E 32',       qty: area*3.84,     tipo:'material' });
-        mats.push({ key:'cal_hidratada',    nome:'Cal hidratada CH III',               qty: area*2.04,     tipo:'material' });
-        mats.push({ key:'areia_media',      nome:'Areia média lavada',                 qty: area*0.016,    tipo:'material' });
+        mats.push({ key:'tijolo_furado_14', codigo_sinapi:'4728', nome:'Tijolo cerâmico furado 9×14×19cm', qty: area*25*1.05, tipo:'material' });
+        mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento Portland CP II-E 32', qty: area*3.84, tipo:'material' });
+        mats.push({ key:'cal_hidratada', codigo_sinapi:'27219', nome:'Cal hidratada CH III', qty: area*2.04, tipo:'material' });
+        mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média lavada', qty: area*0.016, tipo:'material' });
       } else if (variante === 'furado_9') {
-        mats.push({ key:'tijolo_furado_9',  nome:'Tijolo cerâmico furado 9×14×19cm', qty: area*33*1.05, tipo:'material' });
-        mats.push({ key:'cimento_cpii',     nome:'Cimento Portland CP II-E 32',       qty: area*2.52,     tipo:'material' });
-        mats.push({ key:'cal_hidratada',    nome:'Cal hidratada CH III',               qty: area*1.34,     tipo:'material' });
-        mats.push({ key:'areia_media',      nome:'Areia média lavada',                 qty: area*0.011,    tipo:'material' });
+        mats.push({ key:'tijolo_furado_9', codigo_sinapi:'4728', nome:'Tijolo cerâmico furado 9×14×19cm', qty: area*33*1.05, tipo:'material' });
+        mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento Portland CP II-E 32', qty: area*2.52, tipo:'material' });
+        mats.push({ key:'cal_hidratada', codigo_sinapi:'27219', nome:'Cal hidratada CH III', qty: area*1.34, tipo:'material' });
+        mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média lavada', qty: area*0.011, tipo:'material' });
       } else if (variante === 'macico_20') {
-        mats.push({ key:'tijolo_macico',    nome:'Tijolo maciço cerâmico 5×10×20cm', qty: area*75*1.05, tipo:'material' });
-        mats.push({ key:'cimento_cpii',     nome:'Cimento Portland CP II-E 32',       qty: area*7.68,     tipo:'material' });
-        mats.push({ key:'areia_media',      nome:'Areia média lavada',                 qty: area*0.030,    tipo:'material' });
+        mats.push({ key:'tijolo_macico', codigo_sinapi:'27228', nome:'Tijolo maciço cerâmico 5×10×20cm', qty: area*75*1.05, tipo:'material' });
+        mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento Portland CP II-E 32', qty: area*7.68, tipo:'material' });
+        mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média lavada', qty: area*0.030, tipo:'material' });
       } else if (variante === 'bloco_14') {
-        mats.push({ key:'bloco_conc_14',    nome:'Bloco de concreto 14×19×39cm',      qty: area*13*1.05, tipo:'material' });
-        mats.push({ key:'cimento_cpii',     nome:'Cimento Portland CP II-E 32',        qty: area*2.00,     tipo:'material' });
-        mats.push({ key:'areia_media',      nome:'Areia média lavada',                  qty: area*0.008,    tipo:'material' });
+        mats.push({ key:'bloco_conc_14', codigo_sinapi:'5642', nome:'Bloco de concreto 14×19×39cm', qty: area*13*1.05, tipo:'material' });
+        mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento Portland CP II-E 32', qty: area*2.00, tipo:'material' });
+        mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média lavada', qty: area*0.008, tipo:'material' });
       }
 
       // Mão de obra assentamento
-      mats.push({ key:'mo_pedreiro', nome:'Pedreiro — assentamento', qty: area*0.62, tipo:'mao' });
-      mats.push({ key:'mo_servente', nome:'Servente — assentamento', qty: area*0.62, tipo:'mao' });
+      mats.push({ key:'mo_pedreiro', codigo_sinapi:'88316', nome:'Pedreiro — assentamento', qty: area*0.62, tipo:'mao' });
+      mats.push({ key:'mo_servente', codigo_sinapi:'88309', nome:'Servente — assentamento', qty: area*0.62, tipo:'mao' });
 
       if (d.com_reboco) {
         // Chapisco (ambos lados)
-        mats.push({ key:'cimento_cpii',  nome:'Cimento — chapisco (2 faces)', qty: area*2*3.00, tipo:'material' });
-        mats.push({ key:'areia_grossa',  nome:'Areia grossa — chapisco',       qty: area*2*0.009, tipo:'material' });
+        mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento — chapisco (2 faces)', qty: area*2*3.00, tipo:'material' });
+        mats.push({ key:'areia_grossa', codigo_sinapi:'369', nome:'Areia grossa — chapisco', qty: area*2*0.009, tipo:'material' });
         // Emboço / reboco (2 lados)
-        mats.push({ key:'cimento_cpii',  nome:'Cimento — reboco (2 faces)',    qty: area*2*5.20, tipo:'material' });
-        mats.push({ key:'cal_hidratada', nome:'Cal hidratada — reboco',         qty: area*2*1.80, tipo:'material' });
-        mats.push({ key:'areia_media',   nome:'Areia média — reboco',           qty: area*2*0.022, tipo:'material' });
-        mats.push({ key:'mo_pedreiro',   nome:'Pedreiro — chapisco+reboco',    qty: area*2*0.70, tipo:'mao' });
-        mats.push({ key:'mo_servente',   nome:'Servente — chapisco+reboco',    qty: area*2*0.70, tipo:'mao' });
+        mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento — reboco (2 faces)', qty: area*2*5.20, tipo:'material' });
+        mats.push({ key:'cal_hidratada', codigo_sinapi:'27219', nome:'Cal hidratada — reboco', qty: area*2*1.80, tipo:'material' });
+        mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média — reboco', qty: area*2*0.022, tipo:'material' });
+        mats.push({ key:'mo_pedreiro', codigo_sinapi:'88316', nome:'Pedreiro — chapisco+reboco', qty: area*2*0.70, tipo:'mao' });
+        mats.push({ key:'mo_servente', codigo_sinapi:'88309', nome:'Servente — chapisco+reboco', qty: area*2*0.70, tipo:'mao' });
       }
 
       if (d.com_pintura) {
-        mats.push({ key:'massa_corrida', nome:'Massa corrida PVA',             qty: area*2*0.30, tipo:'material' });
-        mats.push({ key:'selador',       nome:'Selador acrílico',               qty: area*2*0.10, tipo:'material' });
-        mats.push({ key:'tinta_latex',   nome:'Tinta látex acrílica',           qty: area*2*0.48, tipo:'material' });
-        mats.push({ key:'mo_pintor',     nome:'Pintor — pintura',               qty: area*2*0.35, tipo:'mao' });
-        mats.push({ key:'mo_servente',   nome:'Servente — pintura',             qty: area*2*0.10, tipo:'mao' });
+        mats.push({ key:'massa_corrida', codigo_sinapi:'38448', nome:'Massa corrida PVA', qty: area*2*0.30, tipo:'material' });
+        mats.push({ key:'selador', codigo_sinapi:'38449', nome:'Selador acrílico', qty: area*2*0.10, tipo:'material' });
+        mats.push({ key:'tinta_latex', codigo_sinapi:'38450', nome:'Tinta látex acrílica', qty: area*2*0.48, tipo:'material' });
+        mats.push({ key:'mo_pintor', codigo_sinapi:'88318', nome:'Pintor — pintura', qty: area*2*0.35, tipo:'mao' });
+        mats.push({ key:'mo_servente', codigo_sinapi:'88309', nome:'Servente — pintura', qty: area*2*0.10, tipo:'mao' });
       }
 
       // Betoneira
-      mats.push({ key:'eq_betoneira', nome:'Betoneira 400L', qty: area*0.05, tipo:'equip' });
+      mats.push({ key:'eq_betoneira', codigo_sinapi:'5865', nome:'Betoneira 400L', qty: area*0.05, tipo:'equip' });
 
       return { qty: area, un: 'm²', mats };
     }
@@ -652,7 +652,7 @@ function calcularSINAPI() {
 // ══════════════════════════════════════════════
 //  RENDER RESULTADO
 // ══════════════════════════════════════════════
-function renderResultadoSINAPI(result, d) {
+async function renderResultadoSINAPI(result, d) {
   const { qty, un, mats, nota } = result;
 
   // Consolidar materiais (agrupar por key+nome)
@@ -662,20 +662,46 @@ function renderResultadoSINAPI(result, d) {
     if (!mapa[k]) {
       const base = PRECOS_SINAPI[m.key] || {};
       mapa[k] = {
+        codigo_sinapi: m.codigo_sinapi || m.key,
         nome: m.nome,
         un: m.un || base.un || 'un',
         tipo: m.tipo || base.tipo || 'material',
         qty: 0,
         preco: m.precoOverride ?? base.preco ?? 0,
+        key: m.key
       };
     }
     mapa[k].qty += m.qty;
   });
 
-  const lista = Object.values(mapa).sort((a,b) => {
+  let lista = Object.values(mapa).sort((a,b) => {
     const ordem = { material:0, mao:1, equip:2 };
     return (ordem[a.tipo]||0) - (ordem[b.tipo]||0);
   });
+  
+  // Buscar preços do banco de dados
+  const codigosSinapi = [...new Set(
+    lista.map(item => item.codigo_sinapi).filter(c => c && c !== item.key)
+  )];
+  
+  if (codigosSinapi.length > 0) {
+    const uf = document.getElementById('uf2')?.value || 'SP';
+    const precosBanco = await buscarPrecosBanco(codigosSinapi, uf);
+    
+    // Atualizar preços com valores do banco
+    lista = lista.map(item => {
+      const precoBanco = precosBanco[item.codigo_sinapi];
+      if (precoBanco && precoBanco.preco > 0) {
+        return {
+          ...item,
+          preco: precoBanco.preco,
+          un: precoBanco.unidade || item.un,
+          fonte: 'banco_dados'
+        };
+      }
+      return { ...item, fonte: 'hardcoded' };
+    });
+  }
 
   // Totais
   let totalMat = 0, totalMao = 0, totalEquip = 0;
@@ -832,4 +858,37 @@ function selecionarTodosSINAPI(checked) {
   document.querySelectorAll('.sinapi-item-check').forEach(cb => {
     cb.checked = checked;
   });
+}
+
+// ══════════════════════════════════════════════
+//  BUSCAR PREÇOS DO BANCO DE DADOS
+// ══════════════════════════════════════════════
+async function buscarPrecosBanco(codigos, uf) {
+  if (!codigos || codigos.length === 0) {
+    return {};
+  }
+  
+  try {
+    const codigosStr = codigos.join(',');
+    const response = await fetch(
+      `/api/sinapi-precos.php?codigos=${codigosStr}&uf=${uf}`
+    );
+    
+    if (!response.ok) {
+      console.warn('Erro ao buscar preços do banco:', response.status);
+      return {};
+    }
+    
+    const data = await response.json();
+    
+    if (data.success && data.precos) {
+      console.log(`✓ ${Object.keys(data.precos).length} preços encontrados no banco de dados`);
+      return data.precos;
+    }
+    
+    return {};
+  } catch (error) {
+    console.error('Erro ao buscar preços do banco:', error);
+    return {};
+  }
 }
