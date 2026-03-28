@@ -1119,26 +1119,55 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
       console.log(`🔍 Buscando código alternativo com unidade ${unidadeFormatada}...`);
       console.log(`   Descrição base: ${descricaoAtual}`);
       
-      // Extrair palavras-chave da descrição (primeiras 3-4 palavras significativas)
-      const palavrasChave = descricaoAtual
+      // Extrair palavra-chave principal (primeira palavra significativa)
+      const palavraChavePrincipal = descricaoAtual
         .split(' ')
-        .filter(p => p.length > 3)
-        .slice(0, 4)
+        .filter(p => p.length > 4 && !['CAPACIDADE', 'NOMINAL', 'MOTOR', 'POTENCIA'].includes(p.toUpperCase()))
+        .slice(0, 1)
         .join(' ');
       
-      console.log(`   Palavras-chave: ${palavrasChave}`);
+      console.log(`   Palavra-chave principal: ${palavraChavePrincipal}`);
       
-      // Buscar no banco por descrição similar
-      const searchResponse = await fetch(`/?api=sinapi-precos&listar=1&termo=${encodeURIComponent(palavrasChave)}&uf=${uf}&limite=20`);
+      // Buscar no banco por descrição similar com limite maior
+      const searchResponse = await fetch(`/?api=sinapi-precos&listar=1&termo=${encodeURIComponent(palavraChavePrincipal)}&uf=${uf}&limite=50`);
       const searchData = await searchResponse.json();
       
-      console.log(`📋 Encontrados ${searchData.total} resultados similares`);
+      console.log(`📋 Encontrados ${searchData.total} resultados similares para "${palavraChavePrincipal}"`);
       
       if (searchData.success && searchData.insumos && searchData.insumos.length > 0) {
-        // Procurar um item com a unidade desejada
-        const itemComUnidade = searchData.insumos.find(item => 
-          item.unidade === unidadeFormatada
-        );
+        console.log(`📋 Resultados encontrados:`);
+        searchData.insumos.slice(0, 10).forEach(item => {
+          console.log(`   - ${item.codigo}: ${item.descricao} (${item.unidade}) - R$ ${item.preco_unit}`);
+        });
+        
+        // Se buscar por H, priorizar CHP (Custo Horário Produtivo - aluguel)
+        let itemComUnidade;
+        
+        if (unidadeFormatada === 'H') {
+          console.log(`🎯 Buscando custo horário de aluguel (CHP)...`);
+          
+          // Primeiro tentar encontrar CHP DIURNO (custo de aluguel)
+          itemComUnidade = searchData.insumos.find(item => 
+            item.unidade === 'CHP' && 
+            item.descricao.toUpperCase().includes('CHP DIURNO')
+          );
+          
+          // Se não encontrar CHP, buscar H mas excluir componentes
+          if (!itemComUnidade) {
+            console.log(`⚠ CHP não encontrado, buscando H (excluindo componentes)...`);
+            const componentesExcluir = ['DEPRECIAÇÃO', 'DEPRECIAÇAO', 'JUROS', 'MANUTENÇÃO', 'MANUTENCAO', 'MATERIAIS NA OPERAÇÃO', 'MATERIAIS NA OPERACAO'];
+            
+            itemComUnidade = searchData.insumos.find(item => 
+              item.unidade === 'H' &&
+              !componentesExcluir.some(comp => item.descricao.toUpperCase().includes(comp))
+            );
+          }
+        } else {
+          // Para outras unidades, busca normal
+          itemComUnidade = searchData.insumos.find(item => 
+            item.unidade === unidadeFormatada
+          );
+        }
         
         if (itemComUnidade) {
           console.log(`✅ Código alternativo encontrado!`);
@@ -1148,6 +1177,7 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
           console.log(`   Preço: R$ ${itemComUnidade.preco_unit || itemComUnidade.preco}`);
           
           const novoPreco = parseFloat(itemComUnidade.preco_unit || itemComUnidade.preco);
+          const novaUnidadeReal = itemComUnidade.unidade; // Pode ser CHP se buscou por H
           
           // Atualizar todos os campos
           const precoInput = document.querySelector(`.sinapi-preco-input[data-index="${index}"]`);
@@ -1163,8 +1193,10 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
           }
           
           if (unInput) {
-            unInput.value = itemComUnidade.unidade;
+            // Mostrar H para o usuário, mas internamente é CHP
+            unInput.value = unidadeFormatada === 'H' && novaUnidadeReal === 'CHP' ? 'H' : novaUnidadeReal;
             unInput.setAttribute('data-codigo', itemComUnidade.codigo);
+            unInput.setAttribute('data-unidade-real', novaUnidadeReal); // Guardar unidade real
             // Atualizar o onchange para usar o novo código
             unInput.setAttribute('onchange', `atualizarUnidadeSINAPI('${itemComUnidade.codigo}', this.value, ${index})`);
           }
@@ -1177,7 +1209,7 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
           if (ultimoResultadoSINAPI && ultimoResultadoSINAPI.lista[index]) {
             ultimoResultadoSINAPI.lista[index].codigo_sinapi = itemComUnidade.codigo;
             ultimoResultadoSINAPI.lista[index].preco = novoPreco;
-            ultimoResultadoSINAPI.lista[index].un = itemComUnidade.unidade;
+            ultimoResultadoSINAPI.lista[index].un = novaUnidadeReal; // Guardar unidade real (CHP)
             ultimoResultadoSINAPI.lista[index].nome = itemComUnidade.descricao;
             ultimoResultadoSINAPI.lista[index].fonte = 'banco_dados';
           }
