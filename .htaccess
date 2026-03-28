@@ -2,11 +2,9 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-
-    # Servir arquivos da API diretamente (não passar pelo index.php)
-    RewriteCond %{REQUEST_URI} ^/api/.*\.php$
-    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
-    RewriteRule ^(.*)$ public/$1 [L]
+    
+    # Redirecionar /api/* para public/api/*
+    RewriteRule ^api/(.*)$ public/api/$1 [L,QSA]
 
     # If the requested resource exists as a file or directory, serve it directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -14,5 +12,5 @@ Options -Indexes
     RewriteRule ^ - [L]
 
     # Otherwise, route everything to the /public front controller
-    RewriteRule ^ public/index.php [L]
+    RewriteRule ^ public/index.php [L,QSA]
 </IfModule>

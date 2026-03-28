@@ -1,9 +1,4 @@
-# Allow direct access to API files
+# Desabilitar rewrite para arquivos da API
 <IfModule mod_rewrite.c>
     RewriteEngine Off
 </IfModule>
-
-# Set proper content type for PHP files
-<FilesMatch "\.php$">
-    SetHandler application/x-httpd-php
-</FilesMatch>

@@ -2,12 +2,6 @@
 
 declare(strict_types=1);
 
-// Permitir acesso direto a arquivos da API
-if (preg_match('#^/api/#', $_SERVER['REQUEST_URI'] ?? '')) {
-    // Não processar, deixar o arquivo ser executado diretamente
-    return;
-}
-
 require __DIR__ . '/../app/bootstrap.php';
 
 use App\Controllers\ItemController;
