@@ -1085,6 +1085,13 @@ async function atualizarPrecoSINAPI(codigo, novoPreco, unidade) {
 //  ATUALIZAR UNIDADE NO BANCO DE DADOS
 // ══════════════════════════════════════════════
 async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('🔧 INICIANDO atualizarUnidadeSINAPI');
+  console.log('   Código:', codigo);
+  console.log('   Nova Unidade:', novaUnidade);
+  console.log('   Index:', index);
+  console.log('═══════════════════════════════════════════════════════');
+  
   if (!codigo || !novaUnidade) {
     console.log('⚠ Código ou unidade inválida:', codigo, novaUnidade);
     return;
@@ -1096,7 +1103,10 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
   // Buscar o item atual no banco
   try {
     const uf = 'SP';
+    console.log(`📡 Fazendo requisição: /?api=sinapi-precos&codigo=${codigo}&uf=${uf}`);
     const response = await fetch(`/?api=sinapi-precos&codigo=${codigo}&uf=${uf}`);
+    
+    console.log(`📡 Status da resposta: ${response.status} ${response.statusText}`);
     
     if (!response.ok) {
       console.error('❌ Erro na resposta:', response.status);
@@ -1109,6 +1119,9 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
     if (data.success) {
       const unidadeBanco = data.unidade;
       const descricaoAtual = data.descricao;
+      
+      console.log(`   Unidade no banco: ${unidadeBanco}`);
+      console.log(`   Unidade desejada: ${unidadeFormatada}`);
       
       if (unidadeBanco === unidadeFormatada) {
         console.log(`✓ Unidade ${unidadeFormatada} já é a correta para este código`);
