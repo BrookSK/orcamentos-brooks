@@ -682,11 +682,26 @@ final class OrcamentoController
 
         $data = OrcamentoItem::normalize($_POST);
         
-        // Calcular valor_cobranca baseado no BDI
+        // Determinar qual margem usar
+        $usaMargemPersonalizada = (int)($data['usa_margem_personalizada'] ?? 0);
+        $categoria = (string)($data['categoria'] ?? '');
+        
+        if ($usaMargemPersonalizada) {
+            // Usar margem personalizada do item
+            $margem = (float)($data['margem_personalizada'] ?? 0);
+        } else {
+            // Usar margem global do orçamento baseada na categoria
+            if (stripos($categoria, 'mão de obra') !== false || stripos($categoria, 'mao de obra') !== false) {
+                $margem = (float)($orcamento['margem_mao_obra'] ?? 0);
+            } else {
+                $margem = (float)($orcamento['margem_materiais'] ?? 0);
+            }
+        }
+        
+        // Calcular valor_cobranca = valor_unitario × (1 + margem/100)
         $valorUnitario = (float)($data['valor_unitario'] ?? 0);
-        $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
-        if ($percentualBdi > 0) {
-            $valorCobrancaCalculado = round($valorUnitario * (1 + $percentualBdi / 100), 2);
+        if ($margem > 0) {
+            $valorCobrancaCalculado = round($valorUnitario * (1 + $margem / 100), 2);
             $data['valor_cobranca'] = (string)$valorCobrancaCalculado;
         } else {
             $data['valor_cobranca'] = (string)$valorUnitario;
@@ -786,11 +801,26 @@ final class OrcamentoController
             $data['percentual_realizado'] = (float)($existing['percentual_realizado'] ?? 0);
         }
         
-        // Calcular valor_cobranca baseado no BDI
+        // Determinar qual margem usar
+        $usaMargemPersonalizada = (int)($data['usa_margem_personalizada'] ?? 0);
+        $categoria = (string)($data['categoria'] ?? '');
+        
+        if ($usaMargemPersonalizada) {
+            // Usar margem personalizada do item
+            $margem = (float)($data['margem_personalizada'] ?? 0);
+        } else {
+            // Usar margem global do orçamento baseada na categoria
+            if (stripos($categoria, 'mão de obra') !== false || stripos($categoria, 'mao de obra') !== false) {
+                $margem = (float)($orcamento['margem_mao_obra'] ?? 0);
+            } else {
+                $margem = (float)($orcamento['margem_materiais'] ?? 0);
+            }
+        }
+        
+        // Calcular valor_cobranca = valor_unitario × (1 + margem/100)
         $valorUnitario = (float)($data['valor_unitario'] ?? 0);
-        $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
-        if ($percentualBdi > 0) {
-            $valorCobrancaCalculado = round($valorUnitario * (1 + $percentualBdi / 100), 2);
+        if ($margem > 0) {
+            $valorCobrancaCalculado = round($valorUnitario * (1 + $margem / 100), 2);
             $data['valor_cobranca'] = (string)$valorCobrancaCalculado;
         } else {
             $data['valor_cobranca'] = (string)$valorUnitario;
@@ -1415,6 +1445,8 @@ final class OrcamentoController
             $orcamentoId = (int)$payload['orcamento_id'];
             $elementoNome = (string)($payload['elemento_nome'] ?? 'Elemento SINAPI');
             $percentualBdi = (float)($payload['percentual_bdi'] ?? 25.0);
+            $grupoSelecionado = (string)($payload['grupo_selecionado'] ?? '');
+            $categoriaSelecionada = (string)($payload['categoria_selecionada'] ?? '');
             $itens = $payload['itens'];
             
             if (!is_array($itens) || empty($itens)) {
@@ -1492,39 +1524,77 @@ final class OrcamentoController
             }
             
             $count = 0;
+            
+            // Agrupar itens por tipo (material, mao, equip)
+            $itensPorTipo = ['material' => [], 'mao' => [], 'equip' => []];
             foreach ($itens as $item) {
                 $tipo = (string)($item['tipo'] ?? 'material');
-                $mapping = $tipoMap[$tipo] ?? $tipoMap['material'];
+                if (!isset($itensPorTipo[$tipo])) {
+                    $itensPorTipo[$tipo] = [];
+                }
+                $itensPorTipo[$tipo][] = $item;
+            }
+            
+            // Processar cada tipo separadamente
+            foreach ($itensPorTipo as $tipo => $itensDoTipo) {
+                if (empty($itensDoTipo)) {
+                    continue;
+                }
                 
-                $grupo = $mapping['grupo'];
-                $categoria = $mapping['categoria'];
+                // Determinar grupo e categoria
+                if ($grupoSelecionado !== '' && $categoriaSelecionada !== '') {
+                    // Usar seleção do usuário, mas adicionar sufixo baseado no tipo
+                    if ($tipo === 'material') {
+                        $grupo = $grupoSelecionado;
+                        $categoria = $categoriaSelecionada . ' - MATERIAIS';
+                    } elseif ($tipo === 'mao') {
+                        $grupo = $grupoSelecionado;
+                        $categoria = $categoriaSelecionada . ' - MÃO DE OBRA';
+                    } else {
+                        $grupo = $grupoSelecionado;
+                        $categoria = $categoriaSelecionada . ' - EQUIPAMENTOS';
+                    }
+                } else {
+                    // Fallback para lógica antiga
+                    $mapping = $tipoMap[$tipo] ?? $tipoMap['material'];
+                    $grupo = $mapping['grupo'];
+                    $categoria = $mapping['categoria'];
+                }
+                
+                // Obter código sequencial para este grupo
                 $codigo = $contadores[$grupo]['major'] . '.' . $contadores[$grupo]['minor'];
-                $contadores[$grupo]['minor']++;
                 
-                $quantidade = (float)($item['qty'] ?? 0);
-                $preco = (float)($item['preco'] ?? 0);
-                
-                // Calcular valor unitário com BDI
-                $valorUnitarioComBdi = round($preco * (1 + $percentualBdi / 100), 2);
-                
-                $data = [
-                    'grupo' => $grupo,
-                    'categoria' => $categoria,
-                    'codigo' => $codigo,
-                    'descricao' => (string)($item['nome'] ?? ''),
-                    'quantidade' => (string)$quantidade,
-                    'unidade' => (string)($item['un'] ?? 'un'),
-                    'custo_material' => $tipo === 'material' ? (string)($quantidade * $preco) : '0',
-                    'custo_mao_obra' => $tipo === 'mao' ? (string)($quantidade * $preco) : '0',
-                    'valor_unitario' => (string)$preco,
-                    'valor_cobranca' => (string)$valorUnitarioComBdi,
-                    'percentual_bdi' => (string)$percentualBdi,
-                    'etapa' => $etapaDestino,
-                    'ordem' => '0',
-                ];
-                
-                OrcamentoItem::create($orcamentoId, $data);
-                $count++;
+                foreach ($itensDoTipo as $item) {
+                    $quantidade = (float)($item['qty'] ?? 0);
+                    $preco = (float)($item['preco'] ?? 0);
+                    
+                    // Calcular valor unitário com BDI
+                    $valorUnitarioComBdi = round($preco * (1 + $percentualBdi / 100), 2);
+                    
+                    $data = [
+                        'grupo' => $grupo,
+                        'categoria' => $categoria,
+                        'codigo' => $codigo,
+                        'descricao' => (string)($item['nome'] ?? ''),
+                        'quantidade' => (string)$quantidade,
+                        'unidade' => (string)($item['un'] ?? 'un'),
+                        'custo_material' => $tipo === 'material' ? (string)($quantidade * $preco) : '0',
+                        'custo_mao_obra' => $tipo === 'mao' ? (string)($quantidade * $preco) : '0',
+                        'valor_unitario' => (string)$preco,
+                        'valor_cobranca' => (string)$valorUnitarioComBdi,
+                        'margem_personalizada' => (string)$percentualBdi,
+                        'usa_margem_personalizada' => '1',
+                        'etapa' => $etapaDestino,
+                        'ordem' => '0',
+                    ];
+                    
+                    OrcamentoItem::create($orcamentoId, $data);
+                    $count++;
+                    
+                    // Incrementar código para próximo item
+                    $contadores[$grupo]['minor']++;
+                    $codigo = $contadores[$grupo]['major'] . '.' . $contadores[$grupo]['minor'];
+                }
             }
             
             Logger::info('orcamentos.addFromSinapi.success', ['count' => $count]);

@@ -95,7 +95,8 @@ final class OrcamentoItem
         $margemLucro = (float)($data['margem_lucro'] ?? 0);
         $descontoItem = (float)($data['desconto_item'] ?? 0);
         $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
-        $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
+        $margemPersonalizada = (float)($data['margem_personalizada'] ?? 0);
+        $usaMargemPersonalizada = (int)($data['usa_margem_personalizada'] ?? 0);
         
         // Se valor_cobranca foi passado explicitamente (SINAPI), usar ele
         // Caso contrário, calcular baseado em custos + margem + desconto
@@ -106,8 +107,8 @@ final class OrcamentoItem
         }
 
         $stmt = $pdo->prepare(
-            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, percentual_bdi) '
-            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :percentual_bdi)'
+            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, margem_personalizada, usa_margem_personalizada) '
+            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :margem_personalizada, :usa_margem_personalizada)'
         );
 
         $stmt->execute([
@@ -128,7 +129,8 @@ final class OrcamentoItem
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
             ':percentual_realizado' => $percentualRealizado,
-            ':percentual_bdi' => $percentualBdi,
+            ':margem_personalizada' => $margemPersonalizada,
+            ':usa_margem_personalizada' => $usaMargemPersonalizada,
         ]);
 
         return (int)$pdo->lastInsertId();
@@ -154,7 +156,8 @@ final class OrcamentoItem
         $margemLucro = (float)($data['margem_lucro'] ?? 0);
         $descontoItem = (float)($data['desconto_item'] ?? 0);
         $percentualRealizado = (float)($data['percentual_realizado'] ?? 0);
-        $percentualBdi = (float)($data['percentual_bdi'] ?? 0);
+        $margemPersonalizada = (float)($data['margem_personalizada'] ?? 0);
+        $usaMargemPersonalizada = (int)($data['usa_margem_personalizada'] ?? 0);
         if ($percentualRealizado < 0) {
             $percentualRealizado = 0;
         }
@@ -188,7 +191,8 @@ final class OrcamentoItem
             . ' margem_lucro = :margem_lucro,'
             . ' desconto_item = :desconto_item,'
             . ' percentual_realizado = :percentual_realizado,'
-            . ' percentual_bdi = :percentual_bdi'
+            . ' margem_personalizada = :margem_personalizada,'
+            . ' usa_margem_personalizada = :usa_margem_personalizada'
             . ' WHERE id = :id'
         );
 
@@ -210,7 +214,8 @@ final class OrcamentoItem
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
             ':percentual_realizado' => $percentualRealizado,
-            ':percentual_bdi' => $percentualBdi,
+            ':margem_personalizada' => $margemPersonalizada,
+            ':usa_margem_personalizada' => $usaMargemPersonalizada,
         ]);
     }
 
@@ -279,7 +284,8 @@ final class OrcamentoItem
         $out['custo_mao_obra'] = self::parsePtBrNumber((string)($data['custo_mao_obra'] ?? '0'));
         $out['margem_lucro'] = self::parsePtBrNumber((string)($data['margem_lucro'] ?? '0'));
         $out['desconto_item'] = self::parsePtBrNumber((string)($data['desconto_item'] ?? '0'));
-        $out['percentual_bdi'] = self::parsePtBrNumber((string)($data['percentual_bdi'] ?? '0'));
+        $out['margem_personalizada'] = self::parsePtBrNumber((string)($data['margem_personalizada'] ?? '0'));
+        $out['usa_margem_personalizada'] = (int)($data['usa_margem_personalizada'] ?? 0);
 
         $percentualRealizado = self::parsePtBrNumber((string)($data['percentual_realizado'] ?? '0'));
         if ($percentualRealizado < 0) {

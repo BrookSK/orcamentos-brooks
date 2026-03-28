@@ -92,15 +92,23 @@ declare(strict_types=1);
             </div>
 
             <div class="field">
-                <label>Valor unitário</label>
+                <label>Valor unitário (custo)</label>
                 <input name="valor_unitario" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['valor_unitario'] ?? '')); ?>">
                 <?php if (!empty($errors['valor_unitario'])) : ?><div class="error"><?php echo htmlspecialchars((string)$errors['valor_unitario']); ?></div><?php endif; ?>
+                <div class="muted" style="font-size:12px;margin-top:4px;">Custo base do item (sem margem)</div>
             </div>
 
             <div class="field">
-                <label>% BDI (Margem de Lucro)</label>
-                <input name="percentual_bdi" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['percentual_bdi'] ?? '0')); ?>">
-                <div class="muted" style="font-size:12px;margin-top:4px;">Benefícios e Despesas Indiretas (ex: 25 para 25%)</div>
+                <label>
+                    <input type="checkbox" name="usa_margem_personalizada" value="1" <?php echo !empty($item['usa_margem_personalizada']) ? 'checked' : ''; ?> style="width:auto;margin-right:6px;">
+                    Usar margem personalizada
+                </label>
+            </div>
+
+            <div class="field">
+                <label>% Margem Personalizada</label>
+                <input name="margem_personalizada" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['margem_personalizada'] ?? '0')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Deixe 0 para usar margem global do orçamento (ex: 25 para 25%)</div>
             </div>
 
             <div class="field">

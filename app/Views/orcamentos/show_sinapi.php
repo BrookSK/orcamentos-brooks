@@ -127,7 +127,7 @@ $totalGeral = 0.0;
                 </table>
             </div>
 
-            <button class="btn primary" style="width:100%; padding:14px; font-size:14px;" onclick="adicionarAoOrcamento()">
+            <button class="btn primary" style="width:100%; padding:14px; font-size:14px;" onclick="abrirModalCategoria()">
                 ✓ Adicionar itens selecionados ao orçamento
             </button>
             <button onclick="voltarStep1SINAPI()" style="width:100%; margin-top:8px; padding:10px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.04); cursor:pointer; color:#999; font-size:12px;">
@@ -365,3 +365,129 @@ function toggleAdicionarItem() {
         </tbody>
     </table>
 </div>
+
+
+<!-- Modal de Seleção de Categoria -->
+<div id="modal-categoria" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#1a1916; border-radius:12px; padding:24px; max-width:500px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <div style="font-size:18px; font-weight:800; margin-bottom:16px; color:#C9973A;">
+            📋 Selecione a Categoria
+        </div>
+        <div style="font-size:13px; color:#999; margin-bottom:20px;">
+            Escolha o grupo e categoria onde os itens serão adicionados no orçamento:
+        </div>
+        
+        <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:12px; color:#C9973A; font-weight:600; margin-bottom:8px;">
+                Grupo
+            </label>
+            <select id="modal-grupo-select" style="width:100%; padding:10px 12px; border-radius:6px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); color:#fff; font-size:14px;">
+                <?php foreach ($grupos as $g) : ?>
+                    <option value="<?php echo htmlspecialchars((string)$g); ?>"><?php echo htmlspecialchars((string)$g); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        
+        <div style="margin-bottom:24px;">
+            <label style="display:block; font-size:12px; color:#C9973A; font-weight:600; margin-bottom:8px;">
+                Categoria
+            </label>
+            <select id="modal-categoria-select" style="width:100%; padding:10px 12px; border-radius:6px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); color:#fff; font-size:14px;">
+                <?php foreach ($categorias as $c) : ?>
+                    <option value="<?php echo htmlspecialchars((string)$c); ?>"><?php echo htmlspecialchars((string)$c); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        
+        <div style="display:flex; gap:12px;">
+            <button onclick="fecharModalCategoria()" style="flex:1; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.04); cursor:pointer; color:#999; font-size:14px;">
+                Cancelar
+            </button>
+            <button onclick="confirmarCategoria()" class="btn primary" style="flex:1; padding:12px; font-size:14px;">
+                Confirmar e Adicionar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalCategoria() {
+    const modal = document.getElementById('modal-categoria');
+    modal.style.display = 'flex';
+}
+
+function fecharModalCategoria() {
+    const modal = document.getElementById('modal-categoria');
+    modal.style.display = 'none';
+}
+
+function confirmarCategoria() {
+    const grupo = document.getElementById('modal-grupo-select').value;
+    const categoria = document.getElementById('modal-categoria-select').value;
+    
+    // Chamar função original passando grupo e categoria
+    adicionarAoOrcamentoComCategoria(grupo, categoria);
+    
+    fecharModalCategoria();
+}
+
+// Função modificada para receber grupo e categoria
+function adicionarAoOrcamentoComCategoria(grupoSelecionado, categoriaSelecionada) {
+    if (!ultimoResultadoSINAPI || !ultimoResultadoSINAPI.mats) {
+        alert('Nenhum resultado para adicionar. Calcule um elemento primeiro.');
+        return;
+    }
+
+    const checkboxes = document.querySelectorAll('.sinapi-mat-check');
+    const itensSelecionados = [];
+    
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            const idx = parseInt(cb.dataset.idx, 10);
+            const mat = ultimoResultadoSINAPI.mats[idx];
+            if (mat) {
+                itensSelecionados.push(mat);
+            }
+        }
+    });
+
+    if (itensSelecionados.length === 0) {
+        alert('Selecione pelo menos um item para adicionar.');
+        return;
+    }
+
+    const bdiInput = document.getElementById('sinapi-bdi-input');
+    const percentualBdi = parseFloat(bdiInput ? bdiInput.value : 25);
+
+    const orcamentoId = <?php echo (int)$orcamento['id']; ?>;
+    const elementoNome = elementoAtualSINAPI ? elementoAtualSINAPI.nome : 'Elemento SINAPI';
+
+    const payload = {
+        orcamento_id: orcamentoId,
+        elemento_nome: elementoNome,
+        percentual_bdi: percentualBdi,
+        grupo_selecionado: grupoSelecionado,
+        categoria_selecionada: categoriaSelecionada,
+        itens: itensSelecionados
+    };
+
+    fetch('/?route=orcamentos/addFromSinapi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Itens adicionados com sucesso!');
+            window.location.reload();
+        } else {
+            alert('Erro ao adicionar itens: ' + (data.error || 'desconhecido'));
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Erro de rede ao adicionar itens.');
+    });
+}
+</script>
