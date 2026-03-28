@@ -145,7 +145,6 @@ class SinapiPrecosApi
         try {
             $pdo = \App\Core\Database::pdo();
             
-            // Remover filtro de UF para ser mais flexível
             $sql = "SELECT codigo, descricao, unidade, tipo, preco_unit, uf, referencia, regime 
                     FROM sinapi_insumos 
                     WHERE 1=1";
@@ -157,9 +156,7 @@ class SinapiPrecosApi
                 $params[':termo'] = '%' . $termo . '%';
             }
             
-            // Priorizar registros do estado solicitado
-            $sql .= " ORDER BY (uf = :uf) DESC, codigo LIMIT :limite";
-            $params[':uf'] = $uf;
+            $sql .= " ORDER BY codigo LIMIT :limite";
             
             $stmt = $pdo->prepare($sql);
             
