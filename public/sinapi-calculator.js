@@ -59,8 +59,8 @@ const ELEMENTOS = [
       }
 
       // Mão de obra assentamento
-      mats.push({ key:'mo_pedreiro', codigo_sinapi:'88316', nome:'Pedreiro — assentamento', qty: area*0.62, tipo:'mao' });
-      mats.push({ key:'mo_servente', codigo_sinapi:'88309', nome:'Servente — assentamento', qty: area*0.62, tipo:'mao' });
+      mats.push({ key:'mo_pedreiro', codigo_sinapi:'88309', nome:'Pedreiro — assentamento', qty: area*0.62, tipo:'mao' });
+      mats.push({ key:'mo_servente', codigo_sinapi:'88316', nome:'Servente — assentamento', qty: area*0.62, tipo:'mao' });
 
       if (d.com_reboco) {
         // Chapisco (ambos lados)
@@ -70,8 +70,8 @@ const ELEMENTOS = [
         mats.push({ key:'cimento_cpii', codigo_sinapi:'1379', nome:'Cimento — reboco (2 faces)', qty: area*2*5.20, tipo:'material' });
         mats.push({ key:'cal_hidratada', codigo_sinapi:'1106', nome:'Cal hidratada — reboco', qty: area*2*1.80, tipo:'material' });
         mats.push({ key:'areia_media', codigo_sinapi:'370', nome:'Areia média — reboco', qty: area*2*0.022, tipo:'material' });
-        mats.push({ key:'mo_pedreiro', codigo_sinapi:'88316', nome:'Pedreiro — chapisco+reboco', qty: area*2*0.70, tipo:'mao' });
-        mats.push({ key:'mo_servente', codigo_sinapi:'88309', nome:'Servente — chapisco+reboco', qty: area*2*0.70, tipo:'mao' });
+        mats.push({ key:'mo_pedreiro', codigo_sinapi:'88309', nome:'Pedreiro — chapisco+reboco', qty: area*2*0.70, tipo:'mao' });
+        mats.push({ key:'mo_servente', codigo_sinapi:'88316', nome:'Servente — chapisco+reboco', qty: area*2*0.70, tipo:'mao' });
       }
 
       if (d.com_pintura) {
@@ -79,7 +79,7 @@ const ELEMENTOS = [
         mats.push({ key:'selador', codigo_sinapi:'6085', nome:'Selador acrílico', qty: area*2*0.10, tipo:'material' });
         mats.push({ key:'tinta_latex', codigo_sinapi:'35692', nome:'Tinta látex acrílica', qty: area*2*0.48, tipo:'material' });
         mats.push({ key:'mo_pintor', codigo_sinapi:'4783', nome:'Pintor — pintura', qty: area*2*0.35, tipo:'mao' });
-        mats.push({ key:'mo_servente', codigo_sinapi:'88309', nome:'Servente — pintura', qty: area*2*0.10, tipo:'mao' });
+        mats.push({ key:'mo_servente', codigo_sinapi:'88316', nome:'Servente — pintura', qty: area*2*0.10, tipo:'mao' });
       }
 
       // Betoneira
