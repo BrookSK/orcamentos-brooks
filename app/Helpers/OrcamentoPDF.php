@@ -286,6 +286,7 @@ HTML;
 
     private static function gerarPaginasResumo(int $orcamentoId, array $orcamento): string
     {
+        // Cache cleared - 2026-03-27 20:30 - Correção de valores
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
             'SELECT codigo, grupo, SUM(quantidade * valor_cobranca) as valor_total '
