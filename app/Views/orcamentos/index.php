@@ -8,7 +8,10 @@ declare(strict_types=1);
             <div style="font-weight:800;">Orçamentos</div>
             <div class="muted" style="font-size:12px; margin-top:4px;">Crie e gerencie orçamentos com itens e exportação</div>
         </div>
-        <a class="btn primary" href="/?route=orcamentos/create">Novo orçamento</a>
+        <div style="display:flex; gap:8px;">
+            <a class="btn primary" href="/?route=orcamentos/create">Novo orçamento Manual</a>
+            <a class="btn" style="background:#C9973A; color:#000; font-weight:600;" href="/?route=orcamentos/createSinapi">🧮 Novo orçamento SINAPI</a>
+        </div>
     </div>
 
     <table>
@@ -29,7 +32,12 @@ declare(strict_types=1);
         <?php foreach (($orcamentos ?? []) as $o) : ?>
             <tr>
                 <td class="muted"><?php echo (int)$o['id']; ?></td>
-                <td><?php echo htmlspecialchars((string)$o['numero_proposta']); ?></td>
+                <td>
+                    <?php echo htmlspecialchars((string)$o['numero_proposta']); ?>
+                    <?php if (($o['tipo_orcamento'] ?? 'manual') === 'sinapi') : ?>
+                        <span style="display:inline-block;margin-left:6px;padding:2px 6px;background:#C9973A;color:#000;font-size:9px;font-weight:700;border-radius:4px;letter-spacing:0.5px;">SINAPI</span>
+                    <?php endif; ?>
+                </td>
                 <td><?php echo htmlspecialchars((string)$o['cliente_nome']); ?></td>
                 <td><?php echo htmlspecialchars((string)($o['obra_nome'] ?? '')); ?></td>
                 <td>

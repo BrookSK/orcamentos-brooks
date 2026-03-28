@@ -601,6 +601,13 @@ final class OrcamentoController
                 return;
             }
 
+            // Redirecionar para view correta baseado no tipo
+            $tipoOrcamento = (string)($orcamento['tipo_orcamento'] ?? 'manual');
+            if ($tipoOrcamento === 'sinapi') {
+                $this->redirect('/?route=orcamentos/showSinapi&id=' . $id);
+                return;
+            }
+
             $itens = OrcamentoItem::allByOrcamento($id);
 
             $this->render('orcamentos/show', [
@@ -1169,6 +1176,137 @@ final class OrcamentoController
         $webPath = '/uploads/logos/' . $base . '.' . $ext;
         Logger::info('orcamentos.logo_upload.success', ['path' => $webPath]);
         return $webPath;
+    }
+
+    public function createSinapi(): void
+    {
+        Logger::info('orcamentos.createSinapi');
+        $this->render('orcamentos/create_sinapi', [
+            'orcamento' => [
+                'numero_proposta' => 'P 000 00',
+                'cliente_nome' => 'Cliente Teste',
+                'arquiteto_nome' => 'Arquiteto Teste',
+                'obra_nome' => 'Obra Teste',
+                'endereco_obra' => 'Endereço Teste, 123',
+                'local_obra' => 'Cidade/UF',
+                'data' => date('Y-m-d'),
+                'referencia' => '00',
+                'area_m2' => '0,00',
+                'contrato' => 'Administração',
+                'tipo' => 'Administração',
+                'prazo_dias' => '0',
+                'rev' => '00',
+                'empresa_nome' => 'Empresa Teste',
+                'empresa_endereco' => 'Endereço da empresa (teste)',
+                'empresa_telefone' => '(00) 0000-0000',
+                'empresa_email' => '',
+                'logo_path' => '',
+            ],
+            'errors' => [],
+        ]);
+    }
+
+    public function storeSinapi(): void
+    {
+        Logger::info('orcamentos.storeSinapi.start');
+        $data = Orcamento::normalize($_POST);
+        
+        $data['logo_path'] = '';
+        $data['capa_path_1'] = '';
+        $data['capa_path_2'] = '';
+        $data['capa_path_3'] = '';
+        $data['capa_path_4'] = '';
+        $data['tipo_orcamento'] = 'sinapi';
+        
+        if (!empty($_FILES['logo']['tmp_name'])) {
+            $uploadDir = __DIR__ . '/../../public/uploads/logos/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $ext = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+            $filename = bin2hex(random_bytes(8)) . '.' . $ext;
+            $targetPath = $uploadDir . $filename;
+            if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetPath)) {
+                $data['logo_path'] = '/public/uploads/logos/' . $filename;
+                Logger::info('orcamentos.storeSinapi.logo_uploaded', ['path' => $data['logo_path']]);
+            }
+        }
+        
+        for ($i = 1; $i <= 4; $i++) {
+            if (!empty($_FILES['capa_' . $i]['tmp_name'])) {
+                $uploadDir = __DIR__ . '/../../public/uploads/capas/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $ext = pathinfo($_FILES['capa_' . $i]['name'], PATHINFO_EXTENSION);
+                $filename = bin2hex(random_bytes(8)) . '.' . $ext;
+                $targetPath = $uploadDir . $filename;
+                if (move_uploaded_file($_FILES['capa_' . $i]['tmp_name'], $targetPath)) {
+                    $data['capa_path_' . $i] = '/public/uploads/capas/' . $filename;
+                    Logger::info('orcamentos.storeSinapi.capa_uploaded', ['index' => $i, 'path' => $data['capa_path_' . $i]]);
+                }
+            }
+        }
+        
+        $errors = Orcamento::validate($data);
+        if ($errors) {
+            Logger::warning('orcamentos.storeSinapi.validation_failed', ['errors' => $errors]);
+            $this->render('orcamentos/create_sinapi', [
+                'orcamento' => $data,
+                'errors' => $errors,
+            ]);
+            return;
+        }
+
+        $id = Orcamento::create($data);
+        Logger::info('orcamentos.storeSinapi.created', ['id' => $id, 'numero_proposta' => $data['numero_proposta'] ?? null]);
+
+        $this->redirect('/?route=orcamentos/showSinapi&id=' . $id);
+    }
+
+    public function showSinapi(): void
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        Logger::info('orcamentos.showSinapi', ['id' => $id]);
+
+        try {
+            $orcamento = Orcamento::find($id);
+            if (!$orcamento) {
+                Logger::warning('orcamentos.showSinapi.not_found', ['id' => $id]);
+                $this->redirect('/?route=orcamentos/index');
+                return;
+            }
+
+            $itens = OrcamentoItem::allByOrcamento($id);
+
+            $this->render('orcamentos/show_sinapi', [
+                'orcamento' => $orcamento,
+                'itens' => $itens,
+                'grupos' => OrcamentoOpcao::namesByTipo('grupo'),
+                'categorias' => OrcamentoOpcao::namesByTipo('categoria'),
+                'unidades' => OrcamentoOpcao::namesByTipo('unidade'),
+                'item' => [
+                    'grupo' => 'MATERIAIS',
+                    'categoria' => 'ALVENARIA',
+                    'codigo' => '1.1',
+                    'descricao' => '',
+                    'quantidade' => '0',
+                    'unidade' => 'un',
+                    'valor_unitario' => '0',
+                    'custo_material' => '0',
+                    'custo_mao_obra' => '0',
+                    'ordem' => '0',
+                ],
+                'errors' => [],
+            ]);
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.showSinapi.error', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+            http_response_code(500);
+            echo 'Erro interno ao abrir o orçamento SINAPI.';
+        }
     }
 
     private function render(string $view, array $params = []): void

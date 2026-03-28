@@ -64,10 +64,10 @@ final class Orcamento
 
         $stmt = $pdo->prepare(
             'INSERT INTO orcamentos ('
-            . ' numero_proposta, cliente_nome, arquiteto_nome, obra_nome, endereco_obra, local_obra, data, referencia, area_m2, contrato, tipo, prazo_dias, rev,'
+            . ' numero_proposta, cliente_nome, arquiteto_nome, obra_nome, endereco_obra, local_obra, data, referencia, area_m2, contrato, tipo, tipo_orcamento, prazo_dias, rev,'
             . ' empresa_nome, empresa_endereco, empresa_telefone, empresa_email, logo_path, capa_path_1, capa_path_2, capa_path_3, capa_path_4, created_at, updated_at'
             . ') VALUES ('
-            . ' :numero_proposta, :cliente_nome, :arquiteto_nome, :obra_nome, :endereco_obra, :local_obra, :data, :referencia, :area_m2, :contrato, :tipo, :prazo_dias, :rev,'
+            . ' :numero_proposta, :cliente_nome, :arquiteto_nome, :obra_nome, :endereco_obra, :local_obra, :data, :referencia, :area_m2, :contrato, :tipo, :tipo_orcamento, :prazo_dias, :rev,'
             . ' :empresa_nome, :empresa_endereco, :empresa_telefone, :empresa_email, :logo_path, :capa_path_1, :capa_path_2, :capa_path_3, :capa_path_4, :created_at, :updated_at'
             . ')'
         );
@@ -84,6 +84,7 @@ final class Orcamento
             ':area_m2' => $data['area_m2'] !== '' ? (float)$data['area_m2'] : null,
             ':contrato' => $data['contrato'] !== '' ? (string)$data['contrato'] : null,
             ':tipo' => $data['tipo'] !== '' ? (string)$data['tipo'] : null,
+            ':tipo_orcamento' => $data['tipo_orcamento'] ?? 'manual',
             ':prazo_dias' => $data['prazo_dias'] !== '' ? (int)$data['prazo_dias'] : null,
             ':rev' => $data['rev'] !== '' ? (string)$data['rev'] : null,
             ':empresa_nome' => $data['empresa_nome'] !== '' ? (string)$data['empresa_nome'] : null,
@@ -120,6 +121,7 @@ final class Orcamento
             . ' area_m2 = :area_m2,'
             . ' contrato = :contrato,'
             . ' tipo = :tipo,'
+            . ' tipo_orcamento = :tipo_orcamento,'
             . ' prazo_dias = :prazo_dias,'
             . ' rev = :rev,'
             . ' empresa_nome = :empresa_nome,'
@@ -148,6 +150,7 @@ final class Orcamento
             ':area_m2' => $data['area_m2'] !== '' ? (float)$data['area_m2'] : null,
             ':contrato' => $data['contrato'] !== '' ? (string)$data['contrato'] : null,
             ':tipo' => $data['tipo'] !== '' ? (string)$data['tipo'] : null,
+            ':tipo_orcamento' => $data['tipo_orcamento'] ?? 'manual',
             ':prazo_dias' => $data['prazo_dias'] !== '' ? (int)$data['prazo_dias'] : null,
             ':rev' => $data['rev'] !== '' ? (string)$data['rev'] : null,
             ':empresa_nome' => $data['empresa_nome'] !== '' ? (string)$data['empresa_nome'] : null,
@@ -198,6 +201,7 @@ final class Orcamento
             'area_m2',
             'contrato',
             'tipo',
+            'tipo_orcamento',
             'prazo_dias',
             'rev',
             'empresa_nome',

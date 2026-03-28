@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimativa de Materiais — SINAPI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f5f4ef;
+  --card: #ffffff;
+  --card2: #fafaf7;
+  --bdr: #e2e0d8;
+  --bdr2: #d0cec4;
+  --txt: #1a1916;
+  --sub: #7a7870;
+  --lbl: #4a4840;
+  --acc: #c8782a;
+  --acc-light: #fdf3e8;
+  --acc-dark: #9e5a18;
+  --green: #2a7a4a;
+  --green-light: #e8f5ee;
+  --blue: #2a5a9e;
+  --blue-light: #e8eef8;
+  --red: #9e2a2a;
+  --red-light: #f8e8e8;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow2: 0 4px 24px rgba(0,0,0,0.10);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt); font-family: 'Outfit', sans-serif; min-height: 100vh; }
+
+/* ── HEADER ── */
+.header {
+  background: var(--txt);
+  padding: 20px 32px;
+  display: flex; align-items: center; gap: 16px;
+}
+.header-badge {
+  background: var(--acc); color: #fff;
+  font-weight: 800; font-size: 11px; letter-spacing: 2px;
+  padding: 5px 10px; border-radius: 4px;
+}
+.header h1 { color: #fff; font-size: 17px; font-weight: 600; }
+.header-sub { color: #888; font-size: 12px; margin-top: 2px; }
+.header-right { margin-left: auto; display: flex; gap: 10px; }
+.btn-header {
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+  padding: 8px 18px; border-radius: 6px; cursor: pointer; border: none; transition: .15s;
+}
+.btn-header.primary { background: var(--acc); color: #fff; }
+.btn-header.primary:hover { background: var(--acc-dark); }
+.btn-header.ghost { background: rgba(255,255,255,.1); color: #ccc; border: 1px solid rgba(255,255,255,.15); }
+.btn-header.ghost:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+/* ── MAIN ── */
+.container { max-width: 1180px; margin: 0 auto; padding: 32px 24px; }
+
+/* ── STEP TITLE ── */
+.step-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--acc);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.step-title {
+  font-size: 22px; font-weight: 800; color: var(--txt); margin-bottom: 20px;
+}
+
+/* ── ELEMENT GRID ── */
+.element-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px;
+  margin-bottom: 36px;
+}
+.element-card {
+  background: var(--card); border: 2px solid var(--bdr); border-radius: 12px;
+  padding: 18px 14px; cursor: pointer; transition: .15s; text-align: center;
+  position: relative;
+}
+.element-card:hover { border-color: var(--acc); transform: translateY(-2px); box-shadow: var(--shadow2); }
+.element-card.selected { border-color: var(--acc); background: var(--acc-light); }
+.element-card.selected::after {
+  content: '✓'; position: absolute; top: 8px; right: 10px;
+  color: var(--acc); font-weight: 800; font-size: 12px;
+}
+.element-icon { font-size: 32px; margin-bottom: 10px; line-height: 1; }
+.element-name { font-size: 13px; font-weight: 700; color: var(--txt); line-height: 1.3; }
+.element-sub { font-size: 10px; color: var(--sub); margin-top: 4px; }
+
+/* ── DIMENSIONS FORM ── */
+.dims-section {
+  background: var(--card); border: 1px solid var(--bdr); border-radius: 14px;
+  padding: 28px; margin-bottom: 28px; box-shadow: var(--shadow);
+}
+.dims-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+.dims-element-icon { font-size: 40px; line-height: 1; }
+.dims-element-name { font-size: 19px; font-weight: 800; color: var(--txt); }
+.dims-element-desc { font-size: 12px; color: var(--sub); margin-top: 4px; line-height: 1.5; }
+
+.dims-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.field { }
+.field label {
+  display: block; font-size: 11px; font-weight: 600; color: var(--lbl);
+  letter-spacing: .5px; margin-bottom: 7px; text-transform: uppercase;
+}
+.field-wrap { position: relative; }
+.field-wrap input {
+  width: 100%; background: var(--bg); border: 2px solid var(--bdr);
+  border-radius: 8px; color: var(--txt); font-family: 'JetBrains Mono', monospace;
+  font-size: 16px; padding: 11px 14px; outline: none; transition: .15s;
+  font-weight: 500;
+}
+.field-wrap input:focus { border-color: var(--acc); background: #fff; }
+.field-wrap .unit {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; font-weight: 600; color: var(--acc); pointer-events: none;
+}
+.field-hint { font-size: 10px; color: var(--sub); margin-top: 5px; }
+
+/* variantes extras */
+.extras-section {
+  border-top: 1px solid var(--bdr); padding-top: 18px; margin-top: 4px;
+}
+.extras-title { font-size: 11px; font-weight: 700; color: var(--sub); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+.extras-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.extra-opt { }
+.extra-opt label {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  font-size: 12px; color: var(--lbl); text-transform: none; letter-spacing: 0; margin: 0;
+  font-weight: 400;
+}
+.extra-opt input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--acc); flex-shrink: 0; }
+.extra-opt select {
+  width: 100%; background: var(--bg); border: 2px solid var(--bdr);
+  border-radius: 8px; color: var(--txt); font-family: 'Outfit', sans-serif;
+  font-size: 13px; padding: 9px 12px; outline: none; margin-top: 4px;
+}
+.extra-opt select:focus { border-color: var(--acc); }
+
+.calc-btn {
+  width: 100%; padding: 15px; background: var(--acc); border: none; border-radius: 10px;
+  color: #fff; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: .15s; display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 8px;
+}
+.calc-btn:hover { background: var(--acc-dark); }
+
+/* ── RESULTADO ── */
+#resultado { display: none; }
+#resultado.show { display: block; }
+
+.result-banner {
+  background: linear-gradient(135deg, var(--txt) 0%, #2d2a24 100%);
+  border-radius: 14px; padding: 28px 32px; margin-bottom: 24px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;
+  color: #fff;
+}
+.rb-item .rb-label { font-size: 10px; letter-spacing: 2px; color: #888; text-transform: uppercase; margin-bottom: 8px; }
+.rb-item .rb-val { font-size: 28px; font-weight: 800; color: var(--acc); font-family: 'JetBrains Mono', monospace; }
+.rb-item .rb-unit { font-size: 12px; color: #888; margin-top: 4px; }
+
+/* ── MATERIAIS TABLE ── */
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-head h2 { font-size: 15px; font-weight: 800; color: var(--txt); }
+.section-head .badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  background: var(--acc-light); color: var(--acc); padding: 4px 10px; border-radius: 20px;
+}
+
+.mat-table-wrap {
+  background: var(--card); border: 1px solid var(--bdr); border-radius: 14px;
+  overflow: hidden; box-shadow: var(--shadow); margin-bottom: 28px;
+}
+.mat-table { width: 100%; border-collapse: collapse; }
+.mat-table thead th {
+  background: var(--card2); padding: 12px 18px;
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--sub);
+  text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--bdr);
+}
+.mat-table thead th:last-child { text-align: right; }
+.mat-table thead th:nth-child(3),
+.mat-table thead th:nth-child(4) { text-align: right; }
+
+.mat-table tbody tr { border-bottom: 1px solid var(--bdr); transition: .1s; }
+.mat-table tbody tr:last-child { border-bottom: none; }
+.mat-table tbody tr:hover { background: var(--acc-light); }
+.mat-table tbody tr.subtotal-row {
+  background: var(--card2); font-weight: 700;
+  border-top: 2px solid var(--bdr); border-bottom: none;
+}
+.mat-table td { padding: 13px 18px; font-size: 13px; color: var(--txt); vertical-align: middle; }
+.mat-table td:nth-child(3),
+.mat-table td:nth-child(4) { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.mat-table td:last-child { text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.td-qty { color: var(--blue); font-weight: 600 !important; }
+.td-unit { color: var(--sub); font-size: 11px; }
+.td-price { color: var(--sub); }
+.td-total { color: var(--green) !important; font-size: 13px !important; }
+.td-total.highlight { color: var(--acc-dark) !important; font-size: 15px !important; }
+.td-name-main { font-weight: 500; font-size: 13px; }
+.td-name-sub { font-size: 10px; color: var(--sub); margin-top: 2px; letter-spacing: .5px; }
+
+.td-tipo {
+  display: inline-block; padding: 3px 8px; border-radius: 4px;
+  font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+}
+.tipo-material { background: var(--blue-light); color: var(--blue); }
+.tipo-mao { background: var(--green-light); color: var(--green); }
+.tipo-equip { background: var(--red-light); color: var(--red); }
+
+/* total card */
+.total-card {
+  background: var(--txt); color: #fff; border-radius: 14px;
+  padding: 28px 32px; margin-bottom: 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 20px;
+}
+.total-card-left h3 { font-size: 13px; color: #aaa; font-weight: 400; margin-bottom: 6px; }
+.total-card-left .big-price {
+  font-size: 42px; font-weight: 800; color: var(--acc);
+  font-family: 'JetBrains Mono', monospace; line-height: 1;
+}
+.total-card-left .big-price-sub { font-size: 13px; color: #888; margin-top: 6px; }
+.total-card-right { display: flex; flex-direction: column; gap: 12px; }
+.total-split { display: flex; justify-content: space-between; align-items: center; gap: 40px; }
+.total-split-label { font-size: 12px; color: #aaa; }
+.total-split-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: #fff; }
+
+/* notes */
+.notes-box {
+  background: #fffbf5; border: 1px solid #f0d9b8; border-left: 4px solid var(--acc);
+  border-radius: 10px; padding: 16px 20px; font-size: 12px; color: var(--lbl);
+  line-height: 1.7; margin-bottom: 24px;
+}
+.notes-box strong { color: var(--acc); }
+
+/* chart bars */
+.chart-section {
+  background: var(--card); border: 1px solid var(--bdr); border-radius: 14px;
+  padding: 24px 28px; margin-bottom: 28px; box-shadow: var(--shadow);
+}
+.chart-row { display: grid; grid-template-columns: 200px 1fr 120px; align-items: center; gap: 14px; margin-bottom: 10px; }
+.chart-row:last-child { margin-bottom: 0; }
+.chart-label { font-size: 12px; color: var(--lbl); text-align: right; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chart-track { height: 14px; background: var(--bg); border-radius: 7px; overflow: hidden; }
+.chart-fill { height: 100%; border-radius: 7px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.chart-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--txt); font-weight: 600; text-align: right; }
+
+@media(max-width:700px) {
+  .result-banner { grid-template-columns: 1fr; }
+  .total-card { flex-direction: column; }
+  .chart-row { grid-template-columns: 120px 1fr 90px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">SINAPI</div>
+  <div>
+    <h1>Estimativa de Materiais para Obras</h1>
+    <div class="header-sub">Quantitativos + Custos estimados — 8ª Ed. Fev/2026</div>
+  </div>
+  <div class="header-right">
+    <button class="btn-header primary" onclick="exportarPDF()">↓ Imprimir / Salvar PDF</button>
+    <button class="btn-header ghost" onclick="resetar()">↺ Nova Estimativa</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- STEP 1: ESCOLHA O ELEMENTO -->
+  <div id="step1">
+    <div class="step-label">Passo 1</div>
+    <div class="step-title">O que você vai construir?</div>
+
+    <div class="element-grid" id="element-grid">
+      <!-- preenchido via JS -->
+    </div>
+  </div>
+
+  <!-- STEP 2: DIMENSÕES -->
+  <div id="step2" style="display:none">
+    <div class="step-label">Passo 2</div>
+    <div class="step-title">Informe as medidas</div>
+
+    <div class="dims-section">
+      <div class="dims-header">
+        <div class="dims-element-icon" id="el-icon"></div>
+        <div>
+          <div class="dims-element-name" id="el-name"></div>
+          <div class="dims-element-desc" id="el-desc"></div>
+        </div>
+        <button onclick="voltarStep1()" style="margin-left:auto;font-family:'Outfit',sans-serif;font-size:12px;padding:8px 16px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);cursor:pointer;color:var(--sub)">← Voltar</button>
+      </div>
+
+      <div class="dims-grid" id="dims-fields"></div>
+
+      <div id="extras-container"></div>
+
+      <button class="calc-btn" onclick="calcular()">
+        <span>📋</span> Gerar Estimativa de Materiais
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div id="resultado">
+    <div class="result-banner">
+      <div class="rb-item">
+        <div class="rb-label">Elemento</div>
+        <div class="rb-val" id="res-el" style="font-size:18px;font-family:'Outfit',sans-serif"></div>
+        <div class="rb-unit" id="res-dims"></div>
+      </div>
+      <div class="rb-item">
+        <div class="rb-label">Quantidade calculada</div>
+        <div class="rb-val" id="res-qty"></div>
+        <div class="rb-unit" id="res-qty-un"></div>
+      </div>
+      <div class="rb-item">
+        <div class="rb-label">Total de insumos</div>
+        <div class="rb-val" id="res-total-itens"></div>
+        <div class="rb-unit">itens distintos</div>
+      </div>
+    </div>
+
+    <!-- Custo total -->
+    <div class="total-card" id="total-card">
+      <div class="total-card-left">
+        <h3>Estimativa de custo total</h3>
+        <div class="big-price" id="total-geral">R$ —</div>
+        <div class="big-price-sub" id="total-sub">incluindo materiais + mão de obra</div>
+      </div>
+      <div class="total-card-right" id="total-splits"></div>
+    </div>
+
+    <!-- Gráfico -->
+    <div class="chart-section" id="chart-section">
+      <div class="section-head">
+        <h2>Composição do custo</h2>
+      </div>
+      <div id="chart-bars"></div>
+    </div>
+
+    <!-- Tabela de materiais -->
+    <div class="section-head">
+      <h2>Lista completa de materiais e insumos</h2>
+      <div class="badge" id="mat-count-badge">— itens</div>
+    </div>
+    <div class="mat-table-wrap">
+      <table class="mat-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Material / Insumo</th>
+            <th>Qtd. necessária</th>
+            <th>Preço unit. ref.</th>
+            <th>Subtotal estimado</th>
+          </tr>
+        </thead>
+        <tbody id="mat-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="notes-box" id="notes-box">
+      <strong>⚠ Atenção:</strong> Os preços são referências SINAPI (Fev/2026), variando por região.
+      As quantidades incluem perdas normais (5–12%). Consulte fornecedores locais para preços atualizados.
+    </div>
+
+    <div style="text-align:center;margin-bottom:32px">
+      <button onclick="resetar()" style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:12px 28px;border:2px solid var(--bdr);border-radius:10px;background:var(--bg);cursor:pointer;color:var(--lbl);transition:.15s" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--lbl)'">
+        ← Calcular outro elemento
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  PREÇOS SINAPI REF (R$ / unidade)
+//  Fonte: SINAPI Fev/2026 — referência nacional
+// ══════════════════════════════════════════════
+const PRECOS = {
+  // Materiais básicos
+  'cimento_cpii':     { nome: 'Cimento Portland CP II-E 32 (50kg)', un: 'kg',  preco: 0.78  },
+  'cal_hidratada':    { nome: 'Cal hidratada CH III (20kg)', un: 'kg',           preco: 0.62  },
+  'areia_media':      { nome: 'Areia média lavada', un: 'm³',                    preco: 98.00 },
+  'areia_grossa':     { nome: 'Areia grossa lavada', un: 'm³',                   preco: 95.00 },
+  'brita_1':          { nome: 'Brita 1 (9,5–19mm)', un: 'm³',                   preco: 148.00},
+  'brita_0':          { nome: 'Brita 0 (pedrisco)', un: 'm³',                    preco: 140.00},
+  'pedra_rachao':     { nome: 'Pedra rachão', un: 'm³',                          preco: 85.00 },
+  // Blocos / tijolos
+  'tijolo_furado_14': { nome: 'Tijolo cerâmico furado 9×14×19cm', un: 'un',     preco: 1.05  },
+  'tijolo_furado_9':  { nome: 'Tijolo cerâmico furado 9×14×19cm (meia vez)', un:'un', preco: 1.05 },
+  'tijolo_macico':    { nome: 'Tijolo maciço cerâmico 5×10×20cm', un: 'un',      preco: 0.90  },
+  'bloco_conc_14':    { nome: 'Bloco de concreto 14×19×39cm', un: 'un',         preco: 3.80  },
+  'bloco_conc_19':    { nome: 'Bloco de concreto 19×19×39cm (estrutural)', un:'un', preco: 5.20 },
+  // Aço
+  'aco_ca50_8':       { nome: 'Barra de aço CA-50 ø8,0mm', un: 'kg',            preco: 8.20  },
+  'aco_ca50_10':      { nome: 'Barra de aço CA-50 ø10,0mm', un: 'kg',           preco: 8.10  },
+  'aco_ca50_12':      { nome: 'Barra de aço CA-50 ø12,5mm', un: 'kg',           preco: 8.00  },
+  'aco_ca60_5':       { nome: 'Fio de aço CA-60 ø5,0mm', un: 'kg',              preco: 8.50  },
+  'tela_soldada_q92': { nome: 'Tela soldada Q-92 (2,4×6,0m)', un: 'm²',         preco: 18.50 },
+  // Madeira / forma
+  'tabua_pinus_form': { nome: 'Tábua de pinus 2,5×20cm beneficiada', un: 'm²',  preco: 38.00 },
+  'compens_10mm':     { nome: 'Compensado resinado 10mm (forma)', un: 'm²',      preco: 52.00 },
+  'pontalete_3x3':    { nome: 'Pontalete pinus 7×7cm (escora)', un: 'm',         preco: 4.80  },
+  'caibro_pinus':     { nome: 'Caibro pinus 5×5cm beneficiado', un: 'm',         preco: 5.60  },
+  'ripa_pinus':       { nome: 'Ripa pinus 2,5×5cm beneficiada', un: 'm',         preco: 2.90  },
+  'tercas_pinus':     { nome: 'Terça pinus 5×10cm', un: 'm',                     preco: 9.20  },
+  'prego_18x30':      { nome: 'Prego com cabeça 18×30', un: 'kg',               preco: 14.50 },
+  // Argamassa
+  'arg_ind_reboco':   { nome: 'Argamassa industrializada p/ reboco (saco 20kg)', un: 'kg', preco: 0.62 },
+  'arg_ind_assent':   { nome: 'Argamassa industrializada p/ assentamento (20kg)', un: 'kg', preco: 0.68 },
+  'arg_colante_ac2':  { nome: 'Argamassa colante AC II (saco 20kg)', un: 'kg',   preco: 0.82 },
+  'rejunte_normal':   { nome: 'Rejunte normal (caixa 1kg)', un: 'kg',            preco: 4.50 },
+  // Telhas
+  'telha_ceramica':   { nome: 'Telha cerâmica capa-canal', un: 'un',             preco: 2.80  },
+  'telha_fibrocim':   { nome: 'Telha ondulada fibrocimento 6mm', un: 'm²',       preco: 28.50 },
+  // Impermeabilização
+  'manta_asf_3mm':    { nome: 'Manta asfáltica APP 3mm', un: 'm²',              preco: 32.00 },
+  'primer_asf':       { nome: 'Primer asfáltico base solvente', un: 'l',         preco: 8.50  },
+  // Piso / revestimento
+  'piso_ceramico':    { nome: 'Piso cerâmico / porcelanato (60×60cm)', un: 'm²', preco: 38.00 },
+  'azulejo':          { nome: 'Azulejo cerâmico (20×20cm)', un: 'm²',            preco: 24.00 },
+  // Tinta
+  'tinta_latex':      { nome: 'Tinta látex acrílica (lata 18l)', un: 'l',        preco: 12.50 },
+  'massa_corrida':    { nome: 'Massa corrida PVA (galão 25kg)', un: 'kg',         preco: 3.20  },
+  'selador':          { nome: 'Selador acrílico', un: 'l',                        preco: 9.80  },
+  // Concreto usinado (alternativa)
+  'concreto_15mpa':   { nome: 'Concreto usinado fck=15MPa (m³)', un: 'm³',       preco: 380.00},
+  'concreto_20mpa':   { nome: 'Concreto usinado fck=20MPa (m³)', un: 'm³',       preco: 420.00},
+  'concreto_25mpa':   { nome: 'Concreto usinado fck=25MPa (m³)', un: 'm³',       preco: 455.00},
+  // MÃO DE OBRA (custo horário médio SINAPI, incluindo encargos ~115%)
+  'mo_pedreiro':      { nome: 'Pedreiro (h/mão de obra)', un: 'h',               preco: 24.80, tipo: 'mao' },
+  'mo_servente':      { nome: 'Servente (h/mão de obra)', un: 'h',               preco: 16.50, tipo: 'mao' },
+  'mo_carpinteiro':   { nome: 'Carpinteiro (h/mão de obra)', un: 'h',            preco: 26.50, tipo: 'mao' },
+  'mo_armador':       { nome: 'Armador / Ferreiro (h/mão de obra)', un: 'h',     preco: 25.50, tipo: 'mao' },
+  'mo_pintor':        { nome: 'Pintor (h/mão de obra)', un: 'h',                 preco: 22.00, tipo: 'mao' },
+  'mo_encanador':     { nome: 'Encanador (h/mão de obra)', un: 'h',              preco: 28.00, tipo: 'mao' },
+  // Equipamentos
+  'eq_betoneira':     { nome: 'Betoneira 400L (hora)', un: 'h',                  preco: 12.00, tipo: 'equip' },
+  'eq_vibrador':      { nome: 'Vibrador de imersão (hora)', un: 'h',             preco: 4.50,  tipo: 'equip' },
+  'eq_andaime':       { nome: 'Andaime tubular (m².mês)', un: 'm²',              preco: 18.00, tipo: 'equip' },
+};
+
+// ══════════════════════════════════════════════
+//  ELEMENTOS CONSTRUTIVOS
+// ══════════════════════════════════════════════
+const ELEMENTOS = [
+  // ─── MUROS E PAREDES ───
+  {
+    id: 'muro_tijolo_furado',
+    icon: '🧱', nome: 'Muro de tijolo cerâmico furado', cat: 'Alvenaria',
+    desc: 'Muro externo com tijolo furado 9×14×19cm (e=14cm), chapisco + reboco, sem fundação',
+    dims: [
+      { id:'comp', label:'Comprimento', unit:'m', hint:'largura total do muro', default:10 },
+      { id:'alt',  label:'Altura',      unit:'m', hint:'do piso até o topo',   default:2 },
+    ],
+    extras: [
+      { id:'com_reboco', label:'Incluir chapisco + reboco (ambos os lados)', type:'check', default:true },
+      { id:'com_pintura', label:'Incluir pintura látex (2 demãos)', type:'check', default:false },
+      { id:'tipo_tijolo', label:'Tipo de tijolo', type:'select',
+        options:[
+          {val:'furado_14', label:'Furado 14cm (parede normal)'},
+          {val:'furado_9',  label:'Furado 9cm (meia vez / divisória)'},
+          {val:'macico_20', label:'Maciço 20cm (muro externo resistente)'},
+          {val:'bloco_14',  label:'Bloco de concreto 14cm'},
+        ], default:'furado_14' },
+    ],
+    calcFn(d) {
+      const area = d.comp * d.alt;
+      const variante = d.tipo_tijolo || 'furado_14';
+      const mats = [];
+
+      if (variante === 'furado_14') {
+        mats.push({ key:'tijolo_furado_14', nome:'Tijolo cerâmico furado 9×14×19cm', qty: area*25*1.05, tipo:'material' });
+        mats.push({ key:'cimento_cpii',     nome:'Cimento Portland CP II-E 32',       qty: area*3.84,     tipo:'material' });
+        mats.push({ key:'cal_hidratada',    nome:'Cal hidratada CH III',               qty: area*2.04,     tipo:'material' });
+        mats.push({ key:'areia_media',      nome:'Areia média lavada',                 qty: area*0.016,    tipo:'material' });
+      } else if (variante === 'furado_9') {
+        mats.push({ key:'tijolo_furado_9',  nome:'Tijolo cerâmico furado 9×14×19cm', qty: area*33*1.05, tipo:'material' });
+        mats.push({ key:'cimento_cpii',     nome:'Cimento Portland CP II-E 32',       qty: area*2.52,     tipo:'material' });
+        mats.push({ key:'cal_hidratada',    nome:'Cal hidratada CH III',               qty: area*1.34,     tipo:'material' });
+        mats.push({ key:'areia_media',      nome:'Areia média lavada',                 qty: area*0.011,    tipo:'material' });
+      } else if (variante === 'macico_20') {
+        mats.push({ key:'tijolo_macico',    nome:'Tijolo maciço cerâmico 5×10×20cm', qty: area*75*1.05, tipo:'material' });
+        mats.push({ key:'cimento_cpii',     nome:'Cimento Portland CP II-E 32',       qty: area*7.68,     tipo:'material' });
+        mats.push({ key:'areia_media',      nome:'Areia média lavada',                 qty: area*0.030,    tipo:'material' });
+      } else if (variante === 'bloco_14') {
+        mats.push({ key:'bloco_conc_14',    nome:'Bloco de concreto 14×19×39cm',      qty: area*13*1.05, tipo:'material' });
+        mats.push({ key:'cimento_cpii',     nome:'Cimento Portland CP II-E 32',        qty: area*2.00,     tipo:'material' });
+        mats.push({ key:'areia_media',      nome:'Areia média lavada',                  qty: area*0.008,    tipo:'material' });
+      }
+
+      // Mão de obra assentamento
+      mats.push({ key:'mo_pedreiro', nome:'Pedreiro — assentamento', qty: area*0.62, tipo:'mao' });
+      mats.push({ key:'mo_servente', nome:'Servente — assentamento', qty: area*0.62, tipo:'mao' });
+
+      if (d.com_reboco) {
+        // Chapisco (ambos lados)
+        mats.push({ key:'cimento_cpii',  nome:'Cimento — chapisco (2 faces)', qty: area*2*3.00, tipo:'material' });
+        mats.push({ key:'areia_grossa',  nome:'Areia grossa — chapisco',       qty: area*2*0.009, tipo:'material' });
+        // Emboço / reboco (2 lados)
+        mats.push({ key:'cimento_cpii',  nome:'Cimento — reboco (2 faces)',    qty: area*2*5.20, tipo:'material' });
+        mats.push({ key:'cal_hidratada', nome:'Cal hidratada — reboco',         qty: area*2*1.80, tipo:'material' });
+        mats.push({ key:'areia_media',   nome:'Areia média — reboco',           qty: area*2*0.022, tipo:'material' });
+        mats.push({ key:'mo_pedreiro',   nome:'Pedreiro — chapisco+reboco',    qty: area*2*0.70, tipo:'mao' });
+        mats.push({ key:'mo_servente',   nome:'Servente — chapisco+reboco',    qty: area*2*0.70, tipo:'mao' });
+      }
+
+      if (d.com_pintura) {
+        mats.push({ key:'massa_corrida', nome:'Massa corrida PVA',             qty: area*2*0.30, tipo:'material' });
+        mats.push({ key:'selador',       nome:'Selador acrílico',               qty: area*2*0.10, tipo:'material' });
+        mats.push({ key:'tinta_latex',   nome:'Tinta látex acrílica',           qty: area*2*0.48, tipo:'material' });
+        mats.push({ key:'mo_pintor',     nome:'Pintor — pintura',               qty: area*2*0.35, tipo:'mao' });
+        mats.push({ key:'mo_servente',   nome:'Servente — pintura',             qty: area*2*0.10, tipo:'mao' });
+      }
+
+      // Betoneira
+      mats.push({ key:'eq_betoneira', nome:'Betoneira 400L', qty: area*0.05, tipo:'equip' });
+
+      return { qty: area, un: 'm²', mats };
+    }
+  },
+  // ─── LAJE ───
+  {
+    id: 'laje_macica',
+    icon: '🏗️', nome: 'Laje maciça concreto armado', cat: 'Estrutura',
+    desc: 'Laje maciça e=10cm, fck=20MPa, incluindo forma, armação e concretagem',
+    dims: [
+      { id:'comp', label:'Comprimento', unit:'m', hint:'comprimento do cômodo/ambiente', default:5 },
+      { id:'larg', label:'Largura',     unit:'m', hint:'largura do cômodo/ambiente',     default:4 },
+    ],
+    extras: [
+      { id:'tipo_laje', label:'Tipo de laje', type:'select',
+        options:[
+          {val:'macica_10',  label:'Maciça e=10cm (residencial leve)'},
+          {val:'macica_12',  label:'Maciça e=12cm (residencial)'},
+          {val:'premoldada', label:'Pré-moldada vigota+lajota (econômica)'},
+        ], default:'macica_10' },
+      { id:'concreto_usinado', label:'Usar concreto usinado (mais rápido)', type:'check', default:false },
+    ],
+    calcFn(d) {
+      const area = d.comp * d.larg;
+      const esp = d.tipo_laje === 'macica_12' ? 0.12 : 0.10;
+      const vol = area * esp;
+      const mats = [];
+
+      if (d.tipo_laje === 'premoldada') {
+        mats.push({ key:'bloco_conc_14',    nome:'Lajota EPS / cerâmica (enchimento)',  qty: area*8,      tipo:'material' });
+        mats.push({ key:'aco_ca50_8',       nome:'Vigota pré-moldada (≈estimativa em kg ferragem)', qty: area*1.50, tipo:'material' });
+        mats.push({ key:'cimento_cpii',     nome:'Cimento — capa de concreto 4cm',      qty: area*8.50,   tipo:'material' });
+        mats.push({ key:'areia_media',      nome:'Areia média — capa',                   qty: area*0.022,  tipo:'material' });
+        mats.push({ key:'brita_1',          nome:'Brita 1 — capa',                       qty: area*0.024,  tipo:'material' });
+        mats.push({ key:'aco_ca60_5',       nome:'Fio CA-60 ø4,2mm (capa)',              qty: area*1.50,   tipo:'material' });
+        mats.push({ key:'pontalete_3x3',    nome:'Pontalete pinus 7×7cm (escoramento)',  qty: area*1.20,   tipo:'material' });
+        mats.push({ key:'mo_pedreiro',      nome:'Pedreiro — montagem e concretagem',    qty: area*1.00,   tipo:'mao' });
+        mats.push({ key:'mo_servente',      nome:'Servente',                              qty: area*1.50,   tipo:'mao' });
+        mats.push({ key:'mo_carpinteiro',   nome:'Carpinteiro — escoramento',             qty: area*0.50,   tipo:'mao' });
+      } else {
+        // Forma
+        mats.push({ key:'compens_10mm',    nome:'Compensado resinado 10mm (forma)',     qty: area*1.05,   tipo:'material' });
+        mats.push({ key:'pontalete_3x3',   nome:'Pontalete pinus 7×7cm (escoramento)', qty: area*1.50,   tipo:'material' });
+        mats.push({ key:'prego_18x30',     nome:'Prego com cabeça 18×30',               qty: area*0.20,   tipo:'material' });
+        // Armação
+        const kg_aco = esp === 0.12 ? 9.00 : 7.00;
+        mats.push({ key:'aco_ca50_8',      nome:'Aço CA-50 ø8,0mm (armação principal)', qty: area*kg_aco, tipo:'material' });
+        mats.push({ key:'aco_ca60_5',      nome:'Fio CA-60 (distribuição)',              qty: area*2.00,   tipo:'material' });
+        // Concreto
+        if (d.concreto_usinado) {
+          mats.push({ key:'concreto_20mpa', nome:'Concreto usinado fck=20MPa',           qty: vol*1.05,    tipo:'material' });
+        } else {
+          mats.push({ key:'cimento_cpii',   nome:'Cimento Portland CP II-E 32',          qty: vol*355,     tipo:'material' });
+          mats.push({ key:'areia_media',    nome:'Areia média lavada',                    qty: vol*0.68,    tipo:'material' });
+          mats.push({ key:'brita_1',        nome:'Brita 1 (9,5–19mm)',                   qty: vol*0.77,    tipo:'material' });
+          mats.push({ key:'eq_betoneira',   nome:'Betoneira 400L',                        qty: vol*2.50,    tipo:'equip' });
+        }
+        mats.push({ key:'eq_vibrador',      nome:'Vibrador de imersão',                  qty: vol*1.50,    tipo:'equip' });
+        mats.push({ key:'mo_pedreiro',      nome:'Pedreiro — concretagem',               qty: area*2.20,   tipo:'mao' });
+        mats.push({ key:'mo_servente',      nome:'Servente',                              qty: area*3.30,   tipo:'mao' });
+        mats.push({ key:'mo_carpinteiro',   nome:'Carpinteiro — forma',                  qty: area*0.80,   tipo:'mao' });
+        mats.push({ key:'mo_armador',       nome:'Armador — ferragem',                   qty: area*0.60,   tipo:'mao' });
+      }
+
+      return { qty: area, un: 'm²', mats };
+    }
+  },
+  // ─── PISO ───
+  {
+    id: 'piso_ceramico',
+    icon: '🟫', nome: 'Piso cerâmico / porcelanato', cat: 'Pisos',
+    desc: 'Assentamento sobre contrapiso existente, argamassa AC III, rejunte e arremate',
+    dims: [
+      { id:'comp', label:'Comprimento', unit:'m', default:6 },
+      { id:'larg', label:'Largura',     unit:'m', default:4 },
+    ],
+    extras: [
+      { id:'com_contrapiso', label:'Incluir contrapiso 5cm', type:'check', default:true },
+      { id:'tipo_piso', label:'Tipo de piso', type:'select',
+        options:[
+          {val:'ceramico',    label:'Cerâmico (30×30 a 60×60cm)'},
+          {val:'porcelanato', label:'Porcelanato polido (60×60cm+)'},
+        ], default:'ceramico' },
+    ],
+    calcFn(d) {
+      const area = d.comp * d.larg;
+      const mats = [];
+      const preco_piso = d.tipo_piso === 'porcelanato' ? 58.00 : 38.00;
+
+      if (d.com_contrapiso) {
+        mats.push({ key:'cimento_cpii',   nome:'Cimento — contrapiso 5cm',  qty: area*8.33,  tipo:'material' });
+        mats.push({ key:'areia_grossa',   nome:'Areia grossa — contrapiso', qty: area*0.040, tipo:'material' });
+        mats.push({ key:'mo_pedreiro',    nome:'Pedreiro — contrapiso',     qty: area*0.40,  tipo:'mao' });
+        mats.push({ key:'mo_servente',    nome:'Servente — contrapiso',     qty: area*0.80,  tipo:'mao' });
+      }
+
+      // Assentamento
+      mats.push({
+        key: d.tipo_piso === 'porcelanato' ? 'piso_ceramico' : 'piso_ceramico',
+        nome: d.tipo_piso === 'porcelanato' ? 'Porcelanato polido (m²)' : 'Piso cerâmico (m²)',
+        qty: area*1.05, tipo:'material',
+        precoOverride: preco_piso
+      });
+      mats.push({ key:'arg_colante_ac2',  nome:'Argamassa colante AC III',  qty: area*5.50,  tipo:'material' });
+      mats.push({ key:'rejunte_normal',   nome:'Rejunte flexível',           qty: area*0.50,  tipo:'material' });
+      mats.push({ key:'mo_pedreiro',      nome:'Pedreiro — assentamento',   qty: area*0.75,  tipo:'mao' });
+      mats.push({ key:'mo_servente',      nome:'Servente',                   qty: area*0.37,  tipo:'mao' });
+      mats.push({ key:'eq_betoneira',     nome:'Betoneira (contrapiso)',     qty: area*0.08,  tipo:'equip' });
+
+      return { qty: area, un: 'm²', mats };
+    }
+  },
+  // ─── REBOCO / REVESTIMENTO ───
+  {
+    id: 'revestimento_parede',
+    icon: '🪣', nome: 'Revestimento de parede', cat: 'Revestimento',
+    desc: 'Chapisco, emboço e reboco interno ou azulejo, com preparo de superfície',
+    dims: [
+      { id:'comp', label:'Comprimento total da parede', unit:'m', default:12 },
+      { id:'alt',  label:'Altura',                       unit:'m', default:2.8 },
+    ],
+    extras: [
+      { id:'tipo_rev', label:'Tipo de revestimento', type:'select',
+        options:[
+          {val:'reboco',  label:'Chapisco + reboco (argamassa)'},
+          {val:'azulejo', label:'Chapisco + reboco + azulejo'},
+          {val:'gesso',   label:'Chapisco + gesso projetado'},
+        ], default:'reboco' },
+      { id:'com_pintura', label:'Incluir pintura (só para reboco/gesso)', type:'check', default:false },
+    ],
+    calcFn(d) {
+      const area = d.comp * d.alt;
+      const mats = [];
+
+      // Chapisco (sempre)
+      mats.push({ key:'cimento_cpii', nome:'Cimento — chapisco',  qty: area*3.00,  tipo:'material' });
+      mats.push({ key:'areia_grossa', nome:'Areia grossa — chapisco', qty: area*0.009, tipo:'material' });
+      mats.push({ key:'mo_pedreiro',  nome:'Pedreiro — chapisco',  qty: area*0.20,  tipo:'mao' });
+      mats.push({ key:'mo_servente',  nome:'Servente — chapisco',  qty: area*0.20,  tipo:'mao' });
+
+      if (d.tipo_rev === 'reboco' || d.tipo_rev === 'azulejo') {
+        mats.push({ key:'cimento_cpii',   nome:'Cimento — emboço/reboco',  qty: area*5.20,   tipo:'material' });
+        mats.push({ key:'cal_hidratada',  nome:'Cal hidratada — reboco',    qty: area*1.80,   tipo:'material' });
+        mats.push({ key:'areia_media',    nome:'Areia média — reboco',      qty: area*0.022,  tipo:'material' });
+        mats.push({ key:'mo_pedreiro',    nome:'Pedreiro — reboco',         qty: area*0.50,   tipo:'mao' });
+        mats.push({ key:'mo_servente',    nome:'Servente — reboco',         qty: area*0.50,   tipo:'mao' });
+      }
+
+      if (d.tipo_rev === 'gesso') {
+        mats.push({ key:'arg_ind_reboco', nome:'Gesso em pó (saco 20kg)',   qty: area*8.00,   tipo:'material' });
+        mats.push({ key:'mo_pedreiro',    nome:'Gesseiro',                   qty: area*0.25,   tipo:'mao' });
+        mats.push({ key:'mo_servente',    nome:'Servente',                   qty: area*0.20,   tipo:'mao' });
+      }
+
+      if (d.tipo_rev === 'azulejo') {
+        mats.push({ key:'azulejo',       nome:'Azulejo cerâmico',           qty: area*1.05,   tipo:'material' });
+        mats.push({ key:'arg_colante_ac2',nome:'Argamassa colante AC II',   qty: area*4.50,   tipo:'material' });
+        mats.push({ key:'rejunte_normal', nome:'Rejunte normal',             qty: area*0.35,   tipo:'material' });
+        mats.push({ key:'mo_pedreiro',    nome:'Pedreiro — assentamento',   qty: area*0.70,   tipo:'mao' });
+        mats.push({ key:'mo_servente',    nome:'Servente',                   qty: area*0.35,   tipo:'mao' });
+      }
+
+      if (d.com_pintura && d.tipo_rev !== 'azulejo') {
+        mats.push({ key:'massa_corrida',  nome:'Massa corrida PVA',         qty: area*0.30,   tipo:'material' });
+        mats.push({ key:'selador',        nome:'Selador acrílico',           qty: area*0.10,   tipo:'material' });
+        mats.push({ key:'tinta_latex',    nome:'Tinta látex acrílica',       qty: area*0.48,   tipo:'material' });
+        mats.push({ key:'mo_pintor',      nome:'Pintor',                     qty: area*0.35,   tipo:'mao' });
+        mats.push({ key:'mo_servente',    nome:'Servente',                   qty: area*0.10,   tipo:'mao' });
+      }
+
+      mats.push({ key:'eq_betoneira',    nome:'Betoneira 400L',             qty: area*0.04,   tipo:'equip' });
+
+      return { qty: area, un: 'm²', mats };
+    }
+  },
+  // ─── TELHADO ───
+  {
+    id: 'telhado',
+    icon: '🏠', nome: 'Telhado', cat: 'Cobertura',
+    desc: 'Estrutura de madeira + telhas, para coberturas residenciais',
+    dims: [
+      { id:'comp', label:'Comprimento', unit:'m', default:8, hint:'projeção horizontal' },
+      { id:'larg', label:'Largura',     unit:'m', default:6, hint:'projeção horizontal' },
+      { id:'incl', label:'Inclinação',  unit:'%', default:30, hint:'ex: 30% para 2 águas' },
+    ],
+    extras: [
+      { id:'tipo_telha', label:'Tipo de telha', type:'select',
+        options:[
+          {val:'ceramica',    label:'Cerâmica capa-canal'},
+          {val:'fibrocimento',label:'Fibrocimento ondulada 6mm'},
+          {val:'metalica',    label:'Metálica trapezoidal'},
+        ], default:'ceramica' },
+      { id:'com_forro', label:'Incluir forro de PVC', type:'check', default:false },
+    ],
+    calcFn(d) {
+      const area_proj = d.comp * d.larg;
+      const fator_inc = 1 + (d.incl / 100) * 0.5;
+      const area_real = area_proj * fator_inc;
+      const mats = [];
+
+      // Estrutura de madeira (comum a todos)
+      mats.push({ key:'tercas_pinus',  nome:'Terça pinus 5×10cm',          qty: area_real*0.60, tipo:'material' });
+      mats.push({ key:'caibro_pinus',  nome:'Caibro pinus 5×5cm',           qty: area_real*1.20, tipo:'material' });
+      mats.push({ key:'ripa_pinus',    nome:'Ripa pinus 2,5×5cm',           qty: area_real*2.50, tipo:'material' });
+      mats.push({ key:'prego_18x30',   nome:'Prego com cabeça 18×30',       qty: area_real*0.15, tipo:'material' });
+      mats.push({ key:'mo_carpinteiro',nome:'Carpinteiro — estrutura madeira', qty: area_real*0.55, tipo:'mao' });
+      mats.push({ key:'mo_servente',   nome:'Servente',                      qty: area_real*0.55, tipo:'mao' });
+
+      if (d.tipo_telha === 'ceramica') {
+        mats.push({ key:'telha_ceramica', nome:'Telha cerâmica capa-canal', qty: area_real*16*1.05, tipo:'material' });
+      } else if (d.tipo_telha === 'fibrocimento') {
+        mats.push({ key:'telha_fibrocim', nome:'Telha fibrocimento ondulada 6mm', qty: area_real*1.12, tipo:'material' });
+      } else {
+        mats.push({
+          key:'telha_ceramica', nome:'Telha metálica trapezoidal galv.',
+          qty: area_real*1.10, tipo:'material',
+          precoOverride: 68.00
+        });
+      }
+
+      if (d.com_forro) {
+        mats.push({
+          key:'piso_ceramico', nome:'Régua de PVC p/ forro',
+          qty: area_proj*1.08, tipo:'material',
+          precoOverride: 22.00
+        });
+        mats.push({ key:'mo_carpinteiro', nome:'Carpinteiro — forro',       qty: area_proj*0.40, tipo:'mao' });
+        mats.push({ key:'mo_servente',    nome:'Servente — forro',           qty: area_proj*0.20, tipo:'mao' });
+      }
+
+      mats.push({ key:'eq_andaime',    nome:'Andaime tubular',               qty: area_real*0.20, tipo:'equip' });
+
+      return { qty: area_real, un: 'm²', mats, nota: `Área projetada: ${fmt(area_proj,2)} m² · Área real de telhado: ${fmt(area_real,2)} m²` };
+    }
+  },
+  // ─── FUNDAÇÃO CORRIDA ───
+  {
+    id: 'fundacao_corrida',
+    icon: '⛏️', nome: 'Fundação corrida de concreto', cat: 'Fundação',
+    desc: 'Baldrame / sapata corrida em concreto simples, para muros e construções simples',
+    dims: [
+      { id:'comp', label:'Comprimento total', unit:'m', default:20, hint:'soma de todos os trechos' },
+      { id:'larg', label:'Largura',           unit:'m', default:0.4, hint:'ex: 0,40m' },
+      { id:'alt',  label:'Altura / Profund.', unit:'m', default:0.6, hint:'profundidade mínima 60cm' },
+    ],
+    extras: [
+      { id:'tipo_fund', label:'Tipo', type:'select',
+        options:[
+          {val:'conc_simples', label:'Concreto simples fck=15MPa'},
+          {val:'conc_armado',  label:'Concreto armado fck=20MPa'},
+        ], default:'conc_simples' },
+      { id:'com_escav', label:'Incluir escavação manual', type:'check', default:true },
+    ],
+    calcFn(d) {
+      const vol = d.comp * d.larg * d.alt;
+      const mats = [];
+
+      if (d.com_escav) {
+        mats.push({ key:'mo_servente', nome:'Servente — escavação manual', qty: vol*3.30, tipo:'mao' });
+      }
+
+      if (d.tipo_fund === 'conc_simples') {
+        mats.push({ key:'cimento_cpii', nome:'Cimento Portland CP II-E 32', qty: vol*210, tipo:'material' });
+        mats.push({ key:'areia_media',  nome:'Areia média lavada',           qty: vol*0.56, tipo:'material' });
+        mats.push({ key:'brita_1',      nome:'Brita 1',                      qty: vol*0.61, tipo:'material' });
+      } else {
+        mats.push({ key:'cimento_cpii', nome:'Cimento Portland CP II-E 32', qty: vol*320, tipo:'material' });
+        mats.push({ key:'areia_media',  nome:'Areia média lavada',           qty: vol*0.62, tipo:'material' });
+        mats.push({ key:'brita_1',      nome:'Brita 1',                      qty: vol*0.72, tipo:'material' });
+        mats.push({ key:'aco_ca50_8',   nome:'Aço CA-50 ø8,0mm',            qty: vol*40,   tipo:'material' });
+        mats.push({ key:'tabua_pinus_form',nome:'Tábua pinus — forma lateral', qty: d.comp*2*d.alt*0.90, tipo:'material' });
+        mats.push({ key:'mo_armador',   nome:'Armador',                      qty: vol*5.00, tipo:'mao' });
+      }
+
+      mats.push({ key:'mo_pedreiro',  nome:'Pedreiro — fundação',           qty: vol*4.50, tipo:'mao' });
+      mats.push({ key:'mo_servente',  nome:'Servente',                       qty: vol*9.00, tipo:'mao' });
+      mats.push({ key:'eq_betoneira', nome:'Betoneira 400L',                 qty: vol*2.00, tipo:'equip' });
+
+      return { qty: vol, un: 'm³', mats };
+    }
+  },
+  // ─── CONTRAPISO ───
+  {
+    id: 'contrapiso',
+    icon: '🟩', nome: 'Contrapiso (regularização)', cat: 'Pisos',
+    desc: 'Regularização em argamassa traço 1:4, espessura 5cm, desempenado',
+    dims: [
+      { id:'comp', label:'Comprimento', unit:'m', default:8 },
+      { id:'larg', label:'Largura',     unit:'m', default:5 },
+    ],
+    extras: [
+      { id:'esp', label:'Espessura', type:'select',
+        options:[
+          {val:'4', label:'4 cm'},
+          {val:'5', label:'5 cm'},
+          {val:'7', label:'7 cm'},
+        ], default:'5' },
+    ],
+    calcFn(d) {
+      const area = d.comp * d.larg;
+      const esp = parseFloat(d.esp || 5) / 100;
+      const vol = area * esp;
+      const mats = [];
+      mats.push({ key:'cimento_cpii', nome:'Cimento Portland CP II-E 32', qty: vol*333,   tipo:'material' });
+      mats.push({ key:'areia_grossa', nome:'Areia grossa lavada',          qty: vol*0.80,  tipo:'material' });
+      mats.push({ key:'mo_pedreiro',  nome:'Pedreiro — contrapiso',        qty: area*0.40, tipo:'mao' });
+      mats.push({ key:'mo_servente',  nome:'Servente',                      qty: area*0.80, tipo:'mao' });
+      mats.push({ key:'eq_betoneira', nome:'Betoneira 400L',                qty: vol*2.00,  tipo:'equip' });
+      return { qty: area, un: 'm²', mats };
+    }
+  },
+  // ─── PINTURA ───
+  {
+    id: 'pintura',
+    icon: '🎨', nome: 'Pintura', cat: 'Pintura',
+    desc: 'Paredes e teto — massa corrida, selador e tinta látex/acrílica',
+    dims: [
+      { id:'comp', label:'Comprimento total de parede', unit:'m', default:24 },
+      { id:'alt',  label:'Altura (parede)',              unit:'m', default:2.8 },
+    ],
+    extras: [
+      { id:'com_teto', label:'Incluir teto (mesma área de planta)', type:'check', default:false },
+      { id:'area_teto_comp', label:'Comprimento do teto (m)', type:'input_cond', condition:'com_teto', default:6 },
+      { id:'area_teto_larg', label:'Largura do teto (m)',     type:'input_cond', condition:'com_teto', default:5 },
+      { id:'tipo_tinta', label:'Tipo de tinta', type:'select',
+        options:[
+          {val:'latex_pva',  label:'Látex PVA (econômica)'},
+          {val:'acrilica',   label:'Látex acrílica (melhor qualidade)'},
+          {val:'textura',    label:'Textura acrílica rústica'},
+        ], default:'acrilica' },
+    ],
+    calcFn(d) {
+      let area = d.comp * d.alt;
+      if (d.com_teto) {
+        area += parseFloat(d.area_teto_comp||6) * parseFloat(d.area_teto_larg||5);
+      }
+      const mats = [];
+      mats.push({ key:'massa_corrida', nome:'Massa corrida PVA',     qty: area*0.30, tipo:'material' });
+      mats.push({ key:'selador',       nome:'Selador acrílico',       qty: area*0.10, tipo:'material' });
+      if (d.tipo_tinta === 'latex_pva') {
+        mats.push({ key:'tinta_latex', nome:'Tinta látex PVA (2 demãos)', qty: area*0.44, tipo:'material', precoOverride:8.50 });
+      } else if (d.tipo_tinta === 'acrilica') {
+        mats.push({ key:'tinta_latex', nome:'Tinta látex acrílica (2 demãos)', qty: area*0.48, tipo:'material' });
+      } else {
+        mats.push({ key:'tinta_latex', nome:'Massa textura acrílica (2kg/m²)', qty: area*1.80, tipo:'material', precoOverride:5.20 });
+        mats.push({ key:'tinta_latex', nome:'Tinta acabamento textura',         qty: area*0.30, tipo:'material', precoOverride:12.50 });
+      }
+      mats.push({ key:'mo_pintor',   nome:'Pintor (2 demãos)',  qty: area*0.35, tipo:'mao' });
+      mats.push({ key:'mo_servente', nome:'Servente — pintura', qty: area*0.10, tipo:'mao' });
+      return { qty: area, un: 'm²', mats };
+    }
+  },
+  // ─── IMPERMEABILIZAÇÃO ───
+  {
+    id: 'impermeabilizacao',
+    icon: '💧', nome: 'Impermeabilização', cat: 'Impermeab.',
+    desc: 'Manta asfáltica, argamassa cristalizante ou emulsão betuminosa',
+    dims: [
+      { id:'comp', label:'Comprimento', unit:'m', default:5 },
+      { id:'larg', label:'Largura',     unit:'m', default:4 },
+    ],
+    extras: [
+      { id:'tipo_imp', label:'Sistema', type:'select',
+        options:[
+          {val:'manta',       label:'Manta asfáltica APP 3mm'},
+          {val:'cristaliz',   label:'Argamassa cristalizante bicomp.'},
+          {val:'emulsao',     label:'Emulsão betuminosa + geotêxtil'},
+        ], default:'manta' },
+    ],
+    calcFn(d) {
+      const area = d.comp * d.larg;
+      const mats = [];
+      if (d.tipo_imp === 'manta') {
+        mats.push({ key:'manta_asf_3mm', nome:'Manta asfáltica APP 3mm',    qty: area*1.15, tipo:'material' });
+        mats.push({ key:'primer_asf',    nome:'Primer asfáltico base solv.', qty: area*0.30, tipo:'material' });
+        mats.push({ key:'mo_pedreiro',   nome:'Impermeabilizador',            qty: area*0.55, tipo:'mao' });
+        mats.push({ key:'mo_servente',   nome:'Servente',                     qty: area*0.27, tipo:'mao' });
+      } else if (d.tipo_imp === 'cristaliz') {
+        mats.push({ key:'arg_ind_assent', nome:'Argamassa impermeabilizante bicomp.', qty: area*4.00, tipo:'material', precoOverride:12.50 });
+        mats.push({ key:'mo_pedreiro',    nome:'Aplicador',                    qty: area*0.45, tipo:'mao' });
+        mats.push({ key:'mo_servente',    nome:'Servente',                      qty: area*0.22, tipo:'mao' });
+      } else {
+        mats.push({ key:'primer_asf',    nome:'Emulsão betuminosa',           qty: area*1.20, tipo:'material', precoOverride:11.00 });
+        mats.push({ key:'manta_asf_3mm', nome:'Geotêxtil 200g/m²',           qty: area*1.10, tipo:'material', precoOverride:8.50 });
+        mats.push({ key:'mo_pedreiro',   nome:'Aplicador',                    qty: area*0.30, tipo:'mao' });
+        mats.push({ key:'mo_servente',   nome:'Servente',                     qty: area*0.20, tipo:'mao' });
+      }
+      return { qty: area, un: 'm²', mats };
+    }
+  },
+  // ─── CALÇADA ───
+  {
+    id: 'calcada',
+    icon: '🚶', nome: 'Calçada de concreto', cat: 'Pisos',
+    desc: 'Piso externo de concreto simples e=8cm, desempenado, com juntas de dilatação',
+    dims: [
+      { id:'comp', label:'Comprimento', unit:'m', default:10 },
+      { id:'larg', label:'Largura',     unit:'m', default:1.5 },
+    ],
+    extras: [
+      { id:'tipo_calc', label:'Acabamento', type:'select',
+        options:[
+          {val:'desempenado', label:'Desempenado liso'},
+          {val:'vassoura',    label:'Escovado (antiderrapante)'},
+          {val:'pedrisco',    label:'Lavado com pedrisco'},
+        ], default:'desempenado' },
+    ],
+    calcFn(d) {
+      const area = d.comp * d.larg;
+      const vol = area * 0.08;
+      const mats = [];
+      mats.push({ key:'cimento_cpii', nome:'Cimento Portland CP II-E 32', qty: vol*300,  tipo:'material' });
+      mats.push({ key:'areia_media',  nome:'Areia média lavada',           qty: vol*0.72, tipo:'material' });
+      mats.push({ key:'brita_1',      nome:'Brita 1',                      qty: vol*0.72, tipo:'material' });
+      if (d.tipo_calc === 'pedrisco') {
+        mats.push({ key:'brita_0', nome:'Pedrisco (brita 0) — cobertura', qty: area*0.008, tipo:'material' });
+      }
+      mats.push({ key:'mo_pedreiro',  nome:'Pedreiro — calçada',  qty: area*0.55, tipo:'mao' });
+      mats.push({ key:'mo_servente',  nome:'Servente',             qty: area*1.10, tipo:'mao' });
+      mats.push({ key:'eq_betoneira', nome:'Betoneira 400L',       qty: vol*1.50,  tipo:'equip' });
+      return { qty: area, un: 'm²', mats };
+    }
+  },
+];
+
+// ══════════════════════════════════════════════
+//  ESTADO
+// ══════════════════════════════════════════════
+let elementoAtual = null;
+
+// ══════════════════════════════════════════════
+//  RENDER GRID
+// ══════════════════════════════════════════════
+function renderGrid() {
+  const grid = document.getElementById('element-grid');
+  grid.innerHTML = ELEMENTOS.map(el => `
+    <div class="element-card" id="ec_${el.id}" onclick="selecionarElemento('${el.id}')">
+      <div class="element-icon">${el.icon}</div>
+      <div class="element-name">${el.nome}</div>
+      <div class="element-sub">${el.cat}</div>
+    </div>
+  `).join('');
+}
+
+function selecionarElemento(id) {
+  elementoAtual = ELEMENTOS.find(e => e.id === id);
+  if (!elementoAtual) return;
+  document.querySelectorAll('.element-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('ec_'+id)?.classList.add('selected');
+
+  // preencher step 2
+  document.getElementById('el-icon').textContent = elementoAtual.icon;
+  document.getElementById('el-name').textContent = elementoAtual.nome;
+  document.getElementById('el-desc').textContent = elementoAtual.desc;
+
+  // campos de dimensão
+  const df = document.getElementById('dims-fields');
+  df.innerHTML = elementoAtual.dims.map(d => `
+    <div class="field">
+      <label>${d.label} (${d.unit})</label>
+      <div class="field-wrap">
+        <input type="number" id="d_${d.id}" value="${d.default || ''}" min="0" step="0.01"
+               placeholder="0,00" oninput="atualLive()">
+        <span class="unit">${d.unit}</span>
+      </div>
+      ${d.hint ? `<div class="field-hint">↳ ${d.hint}</div>` : ''}
+    </div>
+  `).join('');
+
+  // extras
+  const ec = document.getElementById('extras-container');
+  if (elementoAtual.extras && elementoAtual.extras.length > 0) {
+    const inputs = elementoAtual.extras.map(ex => {
+      if (ex.type === 'check') {
+        return `<div class="extra-opt"><label>
+          <input type="checkbox" id="ex_${ex.id}" ${ex.default ? 'checked' : ''} onchange="atualLive()">
+          <span>${ex.label}</span>
+        </label></div>`;
+      } else if (ex.type === 'select') {
+        return `<div class="extra-opt">
+          <label style="display:block;margin-bottom:4px">${ex.label}</label>
+          <select id="ex_${ex.id}" onchange="atualLive()">
+            ${ex.options.map(o => `<option value="${o.val}" ${o.val===ex.default?'selected':''}>${o.label}</option>`).join('')}
+          </select>
+        </div>`;
+      } else if (ex.type === 'input_cond') {
+        return `<div class="extra-opt" id="cond_${ex.id}" style="display:none">
+          <label>${ex.label}</label>
+          <div class="field-wrap"><input type="number" id="ex_${ex.id}" value="${ex.default||''}" step="0.01" min="0"></div>
+        </div>`;
+      }
+      return '';
+    }).join('');
+    ec.innerHTML = `<div class="extras-section"><div class="extras-title">Opções adicionais</div><div class="extras-grid">${inputs}</div></div>`;
+    // Montar listeners de condicionais
+    elementoAtual.extras.filter(ex => ex.type === 'check').forEach(ex => {
+      const chk = document.getElementById('ex_'+ex.id);
+      if (chk) chk.addEventListener('change', () => toggleConditionals());
+    });
+    toggleConditionals();
+  } else {
+    ec.innerHTML = '';
+  }
+
+  document.getElementById('step2').style.display = 'block';
+  document.getElementById('resultado').classList.remove('show');
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('step2').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function toggleConditionals() {
+  if (!elementoAtual) return;
+  elementoAtual.extras?.filter(ex => ex.type === 'input_cond').forEach(ex => {
+    const condEl = document.getElementById('ex_'+ex.condition);
+    const wrapper = document.getElementById('cond_'+ex.id);
+    if (wrapper && condEl) {
+      wrapper.style.display = condEl.checked ? 'block' : 'none';
+    }
+  });
+}
+
+function voltarStep1() {
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('resultado').classList.remove('show');
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('step1').scrollIntoView({ behavior:'smooth' });
+}
+
+// ══════════════════════════════════════════════
+//  CALCULAR
+// ══════════════════════════════════════════════
+function coletarDims() {
+  if (!elementoAtual) return null;
+  const d = {};
+  elementoAtual.dims.forEach(dim => {
+    const el = document.getElementById('d_' + dim.id);
+    d[dim.id] = parseFloat(el?.value) || 0;
+  });
+  elementoAtual.extras?.forEach(ex => {
+    if (ex.type === 'check') {
+      const el = document.getElementById('ex_' + ex.id);
+      d[ex.id] = el ? el.checked : ex.default;
+    } else if (ex.type === 'select') {
+      const el = document.getElementById('ex_' + ex.id);
+      d[ex.id] = el ? el.value : ex.default;
+    } else if (ex.type === 'input_cond') {
+      const el = document.getElementById('ex_' + ex.id);
+      d[ex.id] = el ? parseFloat(el.value) || 0 : 0;
+    }
+  });
+  return d;
+}
+
+function atualLive() {} // hook para live preview (opcional)
+
+function calcular() {
+  if (!elementoAtual) return;
+  const d = coletarDims();
+  const allOk = elementoAtual.dims.every(dim => d[dim.id] > 0);
+  if (!allOk) { alert('Preencha todos os campos de dimensão com valores maiores que zero.'); return; }
+
+  const result = elementoAtual.calcFn(d);
+  renderResultado(result, d);
+}
+
+// ══════════════════════════════════════════════
+//  RENDER RESULTADO
+// ══════════════════════════════════════════════
+function renderResultado(result, d) {
+  const { qty, un, mats, nota } = result;
+
+  // Consolidar materiais (agrupar por key+nome)
+  const mapa = {};
+  mats.forEach(m => {
+    const k = (m.key||m.nome) + '||' + m.nome;
+    if (!mapa[k]) {
+      const base = PRECOS[m.key] || {};
+      mapa[k] = {
+        nome: m.nome,
+        un: m.un || base.un || 'un',
+        tipo: m.tipo || base.tipo || 'material',
+        qty: 0,
+        preco: m.precoOverride ?? base.preco ?? 0,
+      };
+    }
+    mapa[k].qty += m.qty;
+  });
+
+  const lista = Object.values(mapa).sort((a,b) => {
+    const ordem = { material:0, mao:1, equip:2 };
+    return (ordem[a.tipo]||0) - (ordem[b.tipo]||0);
+  });
+
+  // Totais
+  let totalMat = 0, totalMao = 0, totalEquip = 0;
+  lista.forEach(item => {
+    const sub = item.qty * item.preco;
+    if (item.tipo === 'material') totalMat += sub;
+    else if (item.tipo === 'mao') totalMao += sub;
+    else totalEquip += sub;
+  });
+  const totalGeral = totalMat + totalMao + totalEquip;
+
+  // Banner
+  const dimsStr = elementoAtual.dims.map(dim => `${dim.label}: ${fmt(d[dim.id],2)} ${dim.unit}`).join(' · ');
+  document.getElementById('res-el').textContent = elementoAtual.nome;
+  document.getElementById('res-dims').textContent = nota || dimsStr;
+  document.getElementById('res-qty').textContent = fmt(qty, 3);
+  document.getElementById('res-qty-un').textContent = un + ' calculados';
+  document.getElementById('res-total-itens').textContent = lista.length;
+
+  // Total card
+  document.getElementById('total-geral').textContent = fmtR(totalGeral);
+  document.getElementById('total-sub').textContent = `materiais: ${fmtR(totalMat)} + mão de obra: ${fmtR(totalMao)} + equipamentos: ${fmtR(totalEquip)}`;
+  document.getElementById('total-splits').innerHTML = `
+    <div class="total-split"><span class="total-split-label">🧱 Materiais</span><span class="total-split-val">${fmtR(totalMat)}</span></div>
+    <div class="total-split"><span class="total-split-label">👷 Mão de obra</span><span class="total-split-val">${fmtR(totalMao)}</span></div>
+    <div class="total-split"><span class="total-split-label">⚙️ Equipamentos</span><span class="total-split-val">${fmtR(totalEquip)}</span></div>
+  `;
+
+  // Gráfico
+  const maxVal = Math.max(totalMat, totalMao, totalEquip);
+  const bars = [
+    { label:'Materiais',    val:totalMat,   color:'#2a5a9e' },
+    { label:'Mão de obra',  val:totalMao,   color:'#2a7a4a' },
+    { label:'Equipamentos', val:totalEquip, color:'#9e2a2a' },
+  ];
+  document.getElementById('chart-bars').innerHTML = bars.map(b => `
+    <div class="chart-row">
+      <div class="chart-label">${b.label}</div>
+      <div class="chart-track">
+        <div class="chart-fill" style="width:${maxVal>0?Math.round(b.val/maxVal*100):0}%;background:${b.color}"></div>
+      </div>
+      <div class="chart-val">${fmtR(b.val)}</div>
+    </div>
+  `).join('');
+
+  // Badge
+  document.getElementById('mat-count-badge').textContent = lista.length + ' itens';
+
+  // Tabela
+  const tipoLabel = { material:'material', mao:'mão de obra', equip:'equipamento' };
+  const tipoClass = { material:'tipo-material', mao:'tipo-mao', equip:'tipo-equip' };
+
+  let tbody = '';
+  let curTipo = null;
+  lista.forEach(item => {
+    if (item.tipo !== curTipo) {
+      curTipo = item.tipo;
+      const titulos = { material:'🧱 Materiais e Insumos', mao:'👷 Mão de Obra', equip:'⚙️ Equipamentos' };
+      tbody += `<tr><td colspan="5" style="background:#f8f7f4;padding:10px 18px;font-size:10px;font-weight:700;letter-spacing:2px;color:#6b7870;text-transform:uppercase;border-top:2px solid #e2e0d8">${titulos[curTipo]||curTipo}</td></tr>`;
+    }
+    const sub = item.qty * item.preco;
+    const qtyFmt = item.qty >= 100 ? fmt(item.qty,1) : fmt(item.qty,3);
+    tbody += `
+      <tr>
+        <td><span class="td-tipo ${tipoClass[item.tipo]}">${tipoLabel[item.tipo]}</span></td>
+        <td>
+          <div class="td-name-main">${item.nome}</div>
+          <div class="td-name-sub">${item.un}</div>
+        </td>
+        <td class="td-qty">${qtyFmt} <span class="td-unit">${item.un}</span></td>
+        <td class="td-price">${item.preco > 0 ? 'R$ '+fmt(item.preco,2)+'/'+item.un : '—'}</td>
+        <td class="${sub > 500 ? 'td-total highlight' : 'td-total'}">${item.preco > 0 ? fmtR(sub) : '—'}</td>
+      </tr>`;
+  });
+
+  // Linha total
+  tbody += `
+    <tr class="subtotal-row">
+      <td colspan="3" style="padding:16px 18px;font-size:13px;color:var(--acc-dark)">TOTAL ESTIMADO</td>
+      <td></td>
+      <td style="font-size:18px;color:var(--acc-dark);font-family:'JetBrains Mono',monospace;padding-right:18px;text-align:right">${fmtR(totalGeral)}</td>
+    </tr>`;
+  document.getElementById('mat-tbody').innerHTML = tbody;
+
+  // Notes
+  document.getElementById('notes-box').innerHTML = `
+    <strong>⚠ Atenção:</strong> Preços de referência SINAPI (média nacional, Fev/2026). Variações regionais podem ser de ±20–30%.
+    Quantidades com perda normal incluída (5–12%). ${nota ? '<br><strong>Obs:</strong> '+nota : ''}
+    <br>Mão de obra calculada com salário base + encargos sociais (~115%) conforme SINAPI.
+  `;
+
+  document.getElementById('resultado').style.display = 'block';
+  document.getElementById('resultado').classList.add('show');
+  document.getElementById('resultado').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function fmt(v, dec=2) {
+  return v.toLocaleString('pt-BR', { minimumFractionDigits:dec, maximumFractionDigits:dec });
+}
+function fmtR(v) {
+  return 'R$ ' + fmt(v, 2);
+}
+
+function resetar() {
+  elementoAtual = null;
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('resultado').classList.remove('show');
+  document.getElementById('resultado').style.display = 'none';
+  document.querySelectorAll('.element-card').forEach(c => c.classList.remove('selected'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function exportarPDF() {
+  window.print();
+}
+
+// ── INIT ──
+renderGrid();
+</script>
+</body>
+</html>
