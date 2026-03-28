@@ -31,6 +31,17 @@ class SinapiController
             $stmt->execute([':termo' => '%BETONEIRA%']);
             $queryDireta = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
+            // Testar query igual à API
+            $sql = "SELECT codigo, descricao, unidade, tipo, preco_unit, uf, referencia, regime 
+                    FROM sinapi_insumos 
+                    WHERE 1=1 AND (codigo LIKE :termo OR descricao LIKE :termo)
+                    ORDER BY codigo LIMIT :limite";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindValue(':termo', '%BETONEIRA%');
+            $stmt->bindValue(':limite', 10, \PDO::PARAM_INT);
+            $stmt->execute();
+            $queryIgualAPI = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
             // Testar API listarInsumos
             $resultadosAPI = \App\Api\SinapiPrecosApi::listarInsumos('BETONEIRA', 'SP', 10);
             
@@ -42,6 +53,8 @@ class SinapiController
                 'codigo_10535_uf' => $cod10535['uf'] ?? null,
                 'query_direta_count' => count($queryDireta),
                 'query_direta_sample' => $queryDireta,
+                'query_igual_api_count' => count($queryIgualAPI),
+                'query_igual_api_sample' => array_slice($queryIgualAPI, 0, 3),
                 'api_listar_count' => count($resultadosAPI),
                 'api_listar_sample' => array_slice($resultadosAPI, 0, 3)
             ], JSON_UNESCAPED_UNICODE);
