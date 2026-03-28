@@ -219,6 +219,7 @@ if (isset($_GET['api']) && $_GET['api'] === 'sinapi-atualizar-preco') {
 
 use App\Controllers\ItemController;
 use App\Controllers\OrcamentoController;
+use App\Controllers\SinapiController;
 
 $uriPath = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
 $uriPath = $uriPath !== '' ? rtrim($uriPath, '/') : '';
@@ -280,6 +281,22 @@ if ($controllerName === 'orcamentos') {
         'adequacao' => ['GET'],
         'adequacaoPreview' => ['POST'],
         'adequacaoAplicar' => ['POST'],
+    ];
+
+    if (!isset($allowed[$action]) || !in_array($method, $allowed[$action], true)) {
+        http_response_code(404);
+        echo 'Not found';
+        exit;
+    }
+
+    $controller->{$action}();
+    exit;
+}
+
+if ($controllerName === 'sinapi') {
+    $controller = new SinapiController();
+    $allowed = [
+        'instalar' => ['GET'],
     ];
 
     if (!isset($allowed[$action]) || !in_array($method, $allowed[$action], true)) {
