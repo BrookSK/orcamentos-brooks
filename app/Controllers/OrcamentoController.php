@@ -1473,6 +1473,10 @@ final class OrcamentoController
 
     public function showSinapi(): void
     {
+        // Forçar exibição de erros
+        error_reporting(E_ALL);
+        ini_set('display_errors', '1');
+        
         $id = (int)($_GET['id'] ?? 0);
         Logger::info('orcamentos.showSinapi', ['id' => $id]);
 
@@ -1784,8 +1788,6 @@ final class OrcamentoController
         header('Location: ' . $path);
         exit;
     }
-}
-
 
     public function reorderItems(): void
     {
@@ -1870,3 +1872,4 @@ final class OrcamentoController
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
     }
+}
