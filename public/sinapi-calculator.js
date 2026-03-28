@@ -1319,7 +1319,15 @@ async function atualizarUnidadeSINAPI(codigo, novaUnidade, index) {
           }
           
           if (nomeCell) {
-            nomeCell.textContent = itemComUnidade.descricao;
+            const nomeEscaped = String(itemComUnidade.descricao).replace(/"/g, '&quot;').replace(/'/g, "\\'");
+            const codigoEscaped = String(itemComUnidade.codigo).replace(/'/g, "\\'");
+            nomeCell.innerHTML = `<input type="text" 
+                 class="sinapi-nome-input" 
+                 data-index="${index}" 
+                 data-codigo="${codigoEscaped}"
+                 value="${nomeEscaped}" 
+                 style="width:100%; padding:4px 6px; border:1px solid rgba(255,255,255,.1); border-radius:4px; background:rgba(255,255,255,.04); color:var(--text); font-size:11px;"
+                 onchange="atualizarNomeSINAPI('${codigoEscaped}', this.value, ${index})">`;
           }
           
           // Atualizar objeto local
