@@ -1601,6 +1601,11 @@ final class OrcamentoController
                     $categoria = $mapping['categoria'];
                 }
                 
+                // Garantir que o grupo existe no array de contadores
+                if (!isset($contadores[$grupo])) {
+                    $contadores[$grupo] = ['major' => 1, 'minor' => 1];
+                }
+                
                 // Obter código sequencial para este grupo
                 $codigo = $contadores[$grupo]['major'] . '.' . $contadores[$grupo]['minor'];
                 
