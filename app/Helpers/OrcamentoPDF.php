@@ -475,7 +475,7 @@ HTML;
     {
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado, custo_material, custo_mao_obra '
+            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado, custo_material, custo_mao_obra, margem_personalizada, usa_margem_personalizada '
             . 'FROM orcamento_itens WHERE orcamento_id = :id '
             . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED), id'
         );
@@ -652,7 +652,8 @@ CSS;
                     $quantidade = (float)($item['quantidade'] ?? 0);
                     $custoMaterialTotal = (float)($item['custo_material'] ?? 0);
                     $custoMaoObraTotal = (float)($item['custo_mao_obra'] ?? 0);
-                    $percentualBdi = (float)($item['percentual_bdi'] ?? 0);
+                    $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                    $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
                     $valorUnitario = (float)($item['valor_unitario'] ?? 0);
                     $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
                     
@@ -663,6 +664,12 @@ CSS;
                     $margemUnit = $valorCobrancaUnitario - $custoUnitTotal;
                     $valorTotal = $quantidade * $valorCobrancaUnitario;
                     
+                    // Calcular % de margem aplicada
+                    $percentualMargemAplicada = 0;
+                    if ($custoUnitTotal > 0) {
+                        $percentualMargemAplicada = (($valorCobrancaUnitario / $custoUnitTotal) - 1) * 100;
+                    }
+                    
                     $subtotalCategoria += $valorTotal;
                     
                     $html .= '<tr>';
@@ -672,7 +679,7 @@ CSS;
                     $html .= '<td class="center">' . number_format($quantidade, 2, ',', '.') . '</td>';
                     $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaterialUnit) . '</td>';
                     $html .= '<td class="right col-custo">R$ ' . self::formatarValor($custoMaoObraUnit) . '</td>';
-                    $html .= '<td class="center col-bdi">' . number_format($percentualBdi, 1, ',', '.') . '%</td>';
+                    $html .= '<td class="center col-bdi">' . number_format($percentualMargemAplicada, 1, ',', '.') . '%</td>';
                     $html .= '<td class="right col-margem">R$ ' . self::formatarValor($margemUnit) . '</td>';
                     $html .= '<td class="right">R$ ' . self::formatarValor($valorCobrancaUnitario) . '</td>';
                     $html .= '<td class="right">R$ ' . self::formatarValor($valorTotal) . '</td>';

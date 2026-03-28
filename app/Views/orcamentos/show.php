@@ -190,8 +190,12 @@ function toggleAdicionarItem() {
                 <?php foreach ($rows as $row) : ?>
                     <?php
                         $quantidade = (float)($row['quantidade'] ?? 0);
-                        $valorUnitario = (float)($row['valor_unitario'] ?? 0);
-                        $valorTotal = round($quantidade * $valorUnitario, 2);
+                        $valorCobranca = (float)($row['valor_cobranca'] ?? 0);
+                        // Fallback para valor_unitario se valor_cobranca não existir
+                        if ($valorCobranca == 0) {
+                            $valorCobranca = (float)($row['valor_unitario'] ?? 0);
+                        }
+                        $valorTotal = round($quantidade * $valorCobranca, 2);
                         $subtotalCategoria += $valorTotal;
                         $totalGeral += $valorTotal;
                     ?>
@@ -200,7 +204,7 @@ function toggleAdicionarItem() {
                         <td style="white-space:pre-line;"><?php echo htmlspecialchars((string)$row['descricao']); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatNumber((float)$row['quantidade']); ?></td>
                         <td><?php echo htmlspecialchars((string)$row['unidade']); ?></td>
-                        <td class="num"><?php echo OrcamentoItem::formatMoney((float)$row['valor_unitario']); ?></td>
+                        <td class="num"><?php echo OrcamentoItem::formatMoney($valorCobranca); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorTotal); ?></td>
                         <td>
                             <div class="row-actions">

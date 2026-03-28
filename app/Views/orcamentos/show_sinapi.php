@@ -246,25 +246,23 @@ function toggleCalculadora() {
             </div>
 
             <div class="field">
-                <label>Custo Material (R$)</label>
-                <input name="custo_material" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['custo_material'] ?? '0')); ?>">
-            </div>
-
-            <div class="field">
-                <label>Custo Mão de Obra (R$)</label>
-                <input name="custo_mao_obra" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['custo_mao_obra'] ?? '0')); ?>">
-            </div>
-
-            <div class="field">
-                <label>% BDI (Margem de lucro)</label>
-                <input name="percentual_bdi" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['percentual_bdi'] ?? '25')); ?>" placeholder="25">
-                <div class="muted" style="font-size:11px; margin-top:4px;">Aplicado sobre custo total para calcular valor de cobrança</div>
-            </div>
-
-            <div class="field">
-                <label>Valor unitário</label>
+                <label>Valor unitário (custo)</label>
                 <input name="valor_unitario" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['valor_unitario'] ?? '')); ?>">
                 <?php if (!empty($errors['valor_unitario'])) : ?><div class="error"><?php echo htmlspecialchars((string)$errors['valor_unitario']); ?></div><?php endif; ?>
+                <div class="muted" style="font-size:11px; margin-top:4px;">Custo base do item (sem margem)</div>
+            </div>
+
+            <div class="field">
+                <label>
+                    <input type="checkbox" name="usa_margem_personalizada" value="1" <?php echo !empty($item['usa_margem_personalizada']) ? 'checked' : ''; ?> style="width:auto;margin-right:6px;">
+                    Usar margem personalizada
+                </label>
+            </div>
+
+            <div class="field">
+                <label>% Margem Personalizada</label>
+                <input name="margem_personalizada" inputmode="decimal" value="<?php echo htmlspecialchars((string)($item['margem_personalizada'] ?? '0')); ?>" placeholder="0">
+                <div class="muted" style="font-size:11px; margin-top:4px;">Deixe 0 para usar margem global do orçamento (ex: 25 para 25%)</div>
             </div>
 
             <div class="field" style="display:flex; justify-content:flex-end; align-items:flex-end;">
@@ -322,8 +320,12 @@ function toggleAdicionarItem() {
                 <?php foreach ($rows as $row) : ?>
                     <?php
                         $quantidade = (float)($row['quantidade'] ?? 0);
-                        $valorUnitario = (float)($row['valor_unitario'] ?? 0);
-                        $valorTotal = round($quantidade * $valorUnitario, 2);
+                        $valorCobranca = (float)($row['valor_cobranca'] ?? 0);
+                        // Fallback para valor_unitario se valor_cobranca não existir
+                        if ($valorCobranca == 0) {
+                            $valorCobranca = (float)($row['valor_unitario'] ?? 0);
+                        }
+                        $valorTotal = round($quantidade * $valorCobranca, 2);
                         $subtotalCategoria += $valorTotal;
                         $totalGeral += $valorTotal;
                     ?>
@@ -332,7 +334,7 @@ function toggleAdicionarItem() {
                         <td style="white-space:pre-line;"><?php echo htmlspecialchars((string)$row['descricao']); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatNumber((float)$row['quantidade']); ?></td>
                         <td><?php echo htmlspecialchars((string)$row['unidade']); ?></td>
-                        <td class="num"><?php echo OrcamentoItem::formatMoney((float)$row['valor_unitario']); ?></td>
+                        <td class="num"><?php echo OrcamentoItem::formatMoney($valorCobranca); ?></td>
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorTotal); ?></td>
                         <td>
                             <div class="row-actions">
@@ -433,21 +435,18 @@ function confirmarCategoria() {
 
 // Função modificada para receber grupo e categoria
 function adicionarAoOrcamentoComCategoria(grupoSelecionado, categoriaSelecionada) {
-    if (!ultimoResultadoSINAPI || !ultimoResultadoSINAPI.mats) {
-        alert('Nenhum resultado para adicionar. Calcule um elemento primeiro.');
+    if (!ultimoResultadoSINAPI || !ultimoResultadoSINAPI.lista) {
+        alert('Nenhum cálculo disponível para adicionar.');
         return;
     }
 
-    const checkboxes = document.querySelectorAll('.sinapi-mat-check');
+    // Filtrar apenas itens selecionados
+    const checkboxes = document.querySelectorAll('.sinapi-item-check');
     const itensSelecionados = [];
     
-    checkboxes.forEach(cb => {
-        if (cb.checked) {
-            const idx = parseInt(cb.dataset.idx, 10);
-            const mat = ultimoResultadoSINAPI.mats[idx];
-            if (mat) {
-                itensSelecionados.push(mat);
-            }
+    checkboxes.forEach((cb, index) => {
+        if (cb.checked && ultimoResultadoSINAPI.lista[index]) {
+            itensSelecionados.push(ultimoResultadoSINAPI.lista[index]);
         }
     });
 
@@ -456,38 +455,45 @@ function adicionarAoOrcamentoComCategoria(grupoSelecionado, categoriaSelecionada
         return;
     }
 
-    const bdiInput = document.getElementById('sinapi-bdi-input');
-    const percentualBdi = parseFloat(bdiInput ? bdiInput.value : 25);
+    const urlParams = new URLSearchParams(window.location.search);
+    const orcamentoId = urlParams.get('id');
+    
+    if (!orcamentoId) {
+        alert('ID do orçamento não encontrado.');
+        return;
+    }
 
-    const orcamentoId = <?php echo (int)$orcamento['id']; ?>;
-    const elementoNome = elementoAtualSINAPI ? elementoAtualSINAPI.nome : 'Elemento SINAPI';
+    // Obter BDI configurado
+    const bdiInput = document.getElementById('sinapi-bdi-input');
+    const percentualBdi = parseFloat(bdiInput?.value || 25);
 
     const payload = {
-        orcamento_id: orcamentoId,
-        elemento_nome: elementoNome,
+        orcamento_id: parseInt(orcamentoId),
+        elemento_nome: ultimoResultadoSINAPI.elemento,
         percentual_bdi: percentualBdi,
         grupo_selecionado: grupoSelecionado,
         categoria_selecionada: categoriaSelecionada,
         itens: itensSelecionados
     };
 
+    // Enviar para backend
     fetch('/?route=orcamentos/addFromSinapi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
-    .then(r => r.json())
+    .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('Itens adicionados com sucesso!');
+            alert(`✓ ${data.count} itens adicionados com sucesso ao orçamento!`);
             window.location.reload();
         } else {
-            alert('Erro ao adicionar itens: ' + (data.error || 'desconhecido'));
+            alert('Erro ao adicionar itens: ' + (data.error || 'Erro desconhecido'));
         }
     })
     .catch(err => {
-        console.error(err);
-        alert('Erro de rede ao adicionar itens.');
+        console.error('Erro ao adicionar:', err);
+        alert('Erro ao adicionar itens ao orçamento. Verifique o console.');
     });
 }
 </script>

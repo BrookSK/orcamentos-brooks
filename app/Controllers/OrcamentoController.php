@@ -682,6 +682,14 @@ final class OrcamentoController
 
         $data = OrcamentoItem::normalize($_POST);
         
+        Logger::info('orcamentos.itemStore.data_normalized', [
+            'orcamento_id' => $orcamentoId,
+            'valor_unitario' => $data['valor_unitario'] ?? 'NAO_EXISTE',
+            'margem_personalizada' => $data['margem_personalizada'] ?? 'NAO_EXISTE',
+            'usa_margem_personalizada' => $data['usa_margem_personalizada'] ?? 'NAO_EXISTE',
+            'categoria' => $data['categoria'] ?? 'NAO_EXISTE'
+        ]);
+        
         // Determinar qual margem usar
         $usaMargemPersonalizada = (int)($data['usa_margem_personalizada'] ?? 0);
         $categoria = (string)($data['categoria'] ?? '');
@@ -689,12 +697,32 @@ final class OrcamentoController
         if ($usaMargemPersonalizada) {
             // Usar margem personalizada do item
             $margem = (float)($data['margem_personalizada'] ?? 0);
+            Logger::info('orcamentos.itemStore.margem', [
+                'tipo' => 'personalizada',
+                'margem' => $margem,
+                'categoria' => $categoria
+            ]);
         } else {
             // Usar margem global do orçamento baseada na categoria
+            Logger::info('orcamentos.itemStore.orcamento_margens', [
+                'margem_mao_obra' => $orcamento['margem_mao_obra'] ?? 'NAO_EXISTE',
+                'margem_materiais' => $orcamento['margem_materiais'] ?? 'NAO_EXISTE'
+            ]);
+            
             if (stripos($categoria, 'mão de obra') !== false || stripos($categoria, 'mao de obra') !== false) {
                 $margem = (float)($orcamento['margem_mao_obra'] ?? 0);
+                Logger::info('orcamentos.itemStore.margem', [
+                    'tipo' => 'global_mao_obra',
+                    'margem' => $margem,
+                    'categoria' => $categoria
+                ]);
             } else {
                 $margem = (float)($orcamento['margem_materiais'] ?? 0);
+                Logger::info('orcamentos.itemStore.margem', [
+                    'tipo' => 'global_materiais',
+                    'margem' => $margem,
+                    'categoria' => $categoria
+                ]);
             }
         }
         
@@ -703,8 +731,20 @@ final class OrcamentoController
         if ($margem > 0) {
             $valorCobrancaCalculado = round($valorUnitario * (1 + $margem / 100), 2);
             $data['valor_cobranca'] = (string)$valorCobrancaCalculado;
+            Logger::info('orcamentos.itemStore.calculo', [
+                'valor_unitario' => $valorUnitario,
+                'margem' => $margem,
+                'valor_cobranca' => $valorCobrancaCalculado,
+                'formula' => "$valorUnitario × (1 + $margem/100) = $valorCobrancaCalculado"
+            ]);
         } else {
             $data['valor_cobranca'] = (string)$valorUnitario;
+            Logger::warning('orcamentos.itemStore.sem_margem', [
+                'valor_unitario' => $valorUnitario,
+                'margem' => $margem,
+                'categoria' => $categoria,
+                'usa_margem_personalizada' => $usaMargemPersonalizada
+            ]);
         }
         
         $errors = OrcamentoItem::validate($data);
