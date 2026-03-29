@@ -747,7 +747,7 @@ final class OrcamentoController
             
             $categoriaUpper = strtoupper($categoria);
             if (stripos($categoriaUpper, 'MÃO DE OBRA') !== false || stripos($categoriaUpper, 'MAO DE OBRA') !== false) {
-                $margem = (float)($orcamento['margem_mao_obra'] ?? 0);
+                $margem = (float)($orcamento['margem_mao_obra'] ?? 50);
                 Logger::info('orcamentos.itemStore.margem', [
                     'tipo' => 'global_mao_obra',
                     'margem' => $margem,
@@ -761,7 +761,7 @@ final class OrcamentoController
                     'categoria' => $categoria
                 ]);
             } else {
-                $margem = (float)($orcamento['margem_materiais'] ?? 0);
+                $margem = (float)($orcamento['margem_materiais'] ?? 20);
                 Logger::info('orcamentos.itemStore.margem', [
                     'tipo' => 'global_materiais',
                     'margem' => $margem,
@@ -896,11 +896,11 @@ final class OrcamentoController
             // Usar margem global do orçamento baseada na categoria
             $categoriaUpper = strtoupper($categoria);
             if (stripos($categoriaUpper, 'MÃO DE OBRA') !== false || stripos($categoriaUpper, 'MAO DE OBRA') !== false) {
-                $margem = (float)($orcamento['margem_mao_obra'] ?? 0);
+                $margem = (float)($orcamento['margem_mao_obra'] ?? 50);
             } elseif (stripos($categoriaUpper, 'EQUIPAMENTO') !== false) {
                 $margem = (float)($orcamento['margem_equipamentos'] ?? 20);
             } else {
-                $margem = (float)($orcamento['margem_materiais'] ?? 0);
+                $margem = (float)($orcamento['margem_materiais'] ?? 20);
             }
         }
         
@@ -1644,8 +1644,8 @@ final class OrcamentoController
                 return;
             }
             
-            $margemMaoObra = (float)($orcamento['margem_mao_obra'] ?? 0);
-            $margemMateriais = (float)($orcamento['margem_materiais'] ?? 0);
+            $margemMaoObra = (float)($orcamento['margem_mao_obra'] ?? 50);
+            $margemMateriais = (float)($orcamento['margem_materiais'] ?? 20);
             $margemEquipamentos = (float)($orcamento['margem_equipamentos'] ?? 20);
             
             if (!is_array($itens) || empty($itens)) {

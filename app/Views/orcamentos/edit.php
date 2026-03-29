@@ -104,7 +104,7 @@ declare(strict_types=1);
 
             <div class="field">
                 <label>% Margem Mão de Obra (Padrão)</label>
-                <input name="margem_mao_obra" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['margem_mao_obra'] ?? '0')); ?>">
+                <input name="margem_mao_obra" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['margem_mao_obra'] ?? '50')); ?>">
                 <div class="muted" style="font-size:12px;margin-top:4px;">
                     Margem de lucro padrão para itens de mão de obra<br>
                     <strong>Digite apenas o número:</strong> 20 para 20%, 25 para 25%, 30 para 30%<br>
@@ -113,7 +113,7 @@ declare(strict_types=1);
             </div>
             <div class="field">
                 <label>% Margem Materiais (Padrão)</label>
-                <input name="margem_materiais" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['margem_materiais'] ?? '0')); ?>">
+                <input name="margem_materiais" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['margem_materiais'] ?? '20')); ?>">
                 <div class="muted" style="font-size:12px;margin-top:4px;">
                     Margem de lucro padrão para materiais<br>
                     <strong>Digite apenas o número:</strong> 20 para 20%, 25 para 25%, 30 para 30%<br>

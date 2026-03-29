@@ -251,8 +251,8 @@ final class Orcamento
         $out['prazo_dias'] = $out['prazo_dias'] !== '' ? (string)(int)$out['prazo_dias'] : '';
         $out['percentual_custos_adm'] = $out['percentual_custos_adm'] !== '' ? self::parsePtBrNumber((string)$out['percentual_custos_adm']) : 0.0;
         $out['percentual_impostos'] = $out['percentual_impostos'] !== '' ? self::parsePtBrNumber((string)$out['percentual_impostos']) : 0.0;
-        $out['margem_mao_obra'] = $out['margem_mao_obra'] !== '' ? self::parsePtBrNumber((string)$out['margem_mao_obra']) : 0.0;
-        $out['margem_materiais'] = $out['margem_materiais'] !== '' ? self::parsePtBrNumber((string)$out['margem_materiais']) : 0.0;
+        $out['margem_mao_obra'] = $out['margem_mao_obra'] !== '' ? self::parsePtBrNumber((string)$out['margem_mao_obra']) : 50.0;
+        $out['margem_materiais'] = $out['margem_materiais'] !== '' ? self::parsePtBrNumber((string)$out['margem_materiais']) : 20.0;
         $out['margem_equipamentos'] = $out['margem_equipamentos'] !== '' ? self::parsePtBrNumber((string)$out['margem_equipamentos']) : 20.0;
         $out['ajuste_prorata_materiais'] = $out['ajuste_prorata_materiais'] !== '' ? self::parsePtBrNumber((string)$out['ajuste_prorata_materiais']) : 0.0;
         

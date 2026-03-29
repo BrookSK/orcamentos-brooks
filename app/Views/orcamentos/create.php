@@ -85,6 +85,24 @@ declare(strict_types=1);
             <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:4px;"></div>
 
             <div class="field">
+                <label>% Margem Mão de Obra (Padrão)</label>
+                <input name="margem_mao_obra" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['margem_mao_obra'] ?? '50')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Margem de lucro padrão para mão de obra (ex: 50 para 50%)</div>
+            </div>
+            <div class="field">
+                <label>% Margem Materiais (Padrão)</label>
+                <input name="margem_materiais" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['margem_materiais'] ?? '20')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Margem de lucro padrão para materiais (ex: 20 para 20%)</div>
+            </div>
+            <div class="field">
+                <label>% Margem Equipamentos (Padrão)</label>
+                <input name="margem_equipamentos" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['margem_equipamentos'] ?? '20')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Margem de lucro padrão para equipamentos (ex: 20 para 20%)</div>
+            </div>
+
+            <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:4px;"></div>
+
+            <div class="field">
                 <label>% Custos Administrativos</label>
                 <input name="percentual_custos_adm" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['percentual_custos_adm'] ?? '0')); ?>">
                 <div class="muted" style="font-size:12px;margin-top:4px;">Percentual sobre o valor da obra (ex: 5.5 para 5,5%)</div>

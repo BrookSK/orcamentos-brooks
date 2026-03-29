@@ -16,8 +16,8 @@ foreach ($itens as $it) {
 $totalGeral = 0.0;
 
 // Buscar margens globais do orçamento
-$margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 0);
-$margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 0);
+$margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 50);
+$margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 20);
 $margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
 
 ?><div class="card" style="padding:16px; margin-bottom:12px;">
