@@ -875,16 +875,18 @@ CSS;
                     if ($usaMargemPersonalizada && $margemPersonalizada > 0) {
                         $percentualMargemAplicada = $margemPersonalizada;
                     }
-                    // PRIORIDADE 2: Se usa margem global, detectar qual margem aplicar baseado na categoria
+                    // PRIORIDADE 2: Se usa margem global, usar classificacao_custo do item
                     elseif (!$usaMargemPersonalizada) {
-                        // Detectar se é mão de obra, equipamento ou material pela categoria
-                        $categoriaUpper = strtoupper($categoria);
-                        if (strpos($categoriaUpper, 'MÃO DE OBRA') !== false || strpos($categoriaUpper, 'MAO DE OBRA') !== false) {
+                        $classificacaoCusto = (string)($item['classificacao_custo'] ?? '');
+                        if ($classificacaoCusto === 'mao_obra') {
                             $percentualMargemAplicada = $margemMaoObraGlobal;
-                        } elseif (strpos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                        } elseif ($classificacaoCusto === 'equipamento') {
                             $percentualMargemAplicada = $margemEquipamentosGlobal;
-                        } else {
+                        } elseif ($classificacaoCusto === 'material') {
                             $percentualMargemAplicada = $margemMateriaisGlobal;
+                        } else {
+                            // Se não tem classificacao_custo, usar 0
+                            $percentualMargemAplicada = 0;
                         }
                     }
                     // PRIORIDADE 3: Calcular baseado em custo vs valor de venda (fallback)
