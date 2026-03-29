@@ -2154,17 +2154,43 @@ final class OrcamentoController
             $pdo = \App\Core\Database::pdo();
             
             $searchQuery = '%' . strtolower($query) . '%';
+            $exactQuery = strtolower($query);
             
             $stmt = $pdo->prepare(
-                "SELECT codigo, descricao, unidade, preco_unit as preco_unitario 
+                "SELECT 
+                    codigo, 
+                    descricao, 
+                    unidade, 
+                    preco_unit as preco_unitario,
+                    CASE 
+                        WHEN LOWER(descricao) = :exact THEN 1
+                        WHEN LOWER(descricao) LIKE CONCAT(:exact2, '%') THEN 2
+                        WHEN LOWER(descricao) LIKE :query1 THEN 3
+                        WHEN LOWER(codigo) = :exact3 THEN 4
+                        WHEN LOWER(codigo) LIKE :query2 THEN 5
+                        ELSE 6
+                    END as relevancia
                  FROM sinapi_insumos 
-                 WHERE LOWER(descricao) LIKE :query1 
-                 OR LOWER(codigo) LIKE :query2 
-                 ORDER BY descricao 
-                 LIMIT 10"
+                 WHERE LOWER(descricao) LIKE :query3 
+                 OR LOWER(codigo) LIKE :query4 
+                 ORDER BY relevancia ASC, descricao ASC 
+                 LIMIT 50"
             );
-            $stmt->execute([':query1' => $searchQuery, ':query2' => $searchQuery]);
+            $stmt->execute([
+                ':exact' => $exactQuery,
+                ':exact2' => $exactQuery,
+                ':exact3' => $exactQuery,
+                ':query1' => $searchQuery,
+                ':query2' => $searchQuery,
+                ':query3' => $searchQuery,
+                ':query4' => $searchQuery
+            ]);
             $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            // Remover coluna de relevância antes de retornar
+            foreach ($resultados as &$item) {
+                unset($item['relevancia']);
+            }
             
             echo json_encode($resultados);
         } catch (\Throwable $e) {
