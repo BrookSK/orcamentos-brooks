@@ -608,6 +608,11 @@ final class OrcamentoController
 
     public function show(): void
     {
+        // Iniciar sessão se não estiver iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $id = (int)($_GET['id'] ?? 0);
         Logger::info('orcamentos.show', ['id' => $id]);
 
@@ -845,6 +850,11 @@ final class OrcamentoController
 
     public function itemUpdate(): void
     {
+        // Iniciar sessão se não estiver iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $orcamentoId = (int)($_POST['orcamento_id'] ?? 0);
         $id = (int)($_POST['id'] ?? 0);
         Logger::info('orcamentos.itemUpdate.start', ['orcamento_id' => $orcamentoId, 'item_id' => $id]);
@@ -958,20 +968,10 @@ final class OrcamentoController
             return;
         }
 
-        // DEBUG: Mostrar URL de redirect
-        $redirectUrl = '/?route=orcamentos/show&id=' . $orcamentoId . '#item-' . $id;
-        error_log("REDIRECT URL: " . $redirectUrl);
+        // Salvar item ID para scroll após redirect
+        $_SESSION['scroll_to_item'] = $id;
         
-        // Usar JavaScript para redirecionar com âncora (PHP header não preserva âncora)
-        echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>';
-        echo '<h1>Redirecionando...</h1>';
-        echo '<p>Item ID: ' . $id . '</p>';
-        echo '<p>URL: ' . htmlspecialchars($redirectUrl) . '</p>';
-        echo '<script>';
-        echo 'console.log("Redirecionando para:", "' . $redirectUrl . '");';
-        echo 'setTimeout(function() { window.location.href = "' . $redirectUrl . '"; }, 1000);';
-        echo '</script></body></html>';
-        exit;
+        $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
     }
 
     public function recalcularMargens(): void

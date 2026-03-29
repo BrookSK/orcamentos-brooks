@@ -1195,10 +1195,32 @@ function recalcularMargens(orcamentoId) {
 <script>
 // Scroll suave para o item após edição
 (function() {
+    // Verificar se há item para scroll (via sessão PHP)
+    <?php 
+    $scrollToItem = null;
+    if (isset($_SESSION['scroll_to_item'])) {
+        $scrollToItem = (int)$_SESSION['scroll_to_item'];
+        unset($_SESSION['scroll_to_item']); // Limpar após usar
+    }
+    ?>
+    
+    const scrollToItemId = <?php echo $scrollToItem ? $scrollToItem : 'null'; ?>;
+    
     function scrollToItem() {
-        if (window.location.hash) {
-            const itemId = window.location.hash.substring(1); // Remove o #
-            console.log('🎯 Tentando scroll para:', itemId);
+        let itemId = null;
+        
+        // Prioridade 1: Item da sessão PHP
+        if (scrollToItemId) {
+            itemId = 'item-' + scrollToItemId;
+            console.log('🎯 Scroll via sessão para:', itemId);
+        }
+        // Prioridade 2: Hash na URL
+        else if (window.location.hash) {
+            itemId = window.location.hash.substring(1);
+            console.log('🎯 Scroll via hash para:', itemId);
+        }
+        
+        if (itemId) {
             const element = document.getElementById(itemId);
             if (element) {
                 console.log('✓ Elemento encontrado:', element);
