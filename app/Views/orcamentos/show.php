@@ -454,6 +454,83 @@ function toggleAdicionarItem() {
                     </tr>
                 <?php endforeach; ?>
 
+                <!-- Botão para adicionar novo item na categoria -->
+                <tr class="add-item-row">
+                    <td colspan="14" style="padding:12px; text-align:center;">
+                        <button class="btn" style="background:#4CAF50; color:white; width:100%;" onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo); ?>', '<?php echo htmlspecialchars($categoria); ?>'); return false;">
+                            ➕ Adicionar Item
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- Formulário inline para adicionar item (inicialmente oculto) -->
+                <tr class="add-item-form-row" id="add-form-<?php echo md5($grupo . $categoria); ?>" style="display:none;">
+                    <td colspan="14" style="padding:20px; background:rgba(76,175,80,0.05); border:2px solid #4CAF50;">
+                        <div style="max-width:900px; margin:0 auto;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                                <h3 style="margin:0; color:#4CAF50;">Novo Item - <?php echo htmlspecialchars($categoria); ?></h3>
+                                <button onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo); ?>', '<?php echo htmlspecialchars($categoria); ?>'); return false;" style="background:transparent; border:none; font-size:24px; cursor:pointer; color:#999;">×</button>
+                            </div>
+                            
+                            <form id="form-add-item-<?php echo md5($grupo . $categoria); ?>" onsubmit="salvarNovoItem(event, '<?php echo htmlspecialchars($grupo); ?>', '<?php echo htmlspecialchars($categoria); ?>', '<?php echo md5($grupo . $categoria); ?>')">
+                                <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
+                                <input type="hidden" name="grupo" value="<?php echo htmlspecialchars($grupo); ?>">
+                                <input type="hidden" name="categoria" value="<?php echo htmlspecialchars($categoria); ?>">
+                                
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                                    <div>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Código</label>
+                                        <input type="text" name="codigo" required style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Unidade</label>
+                                        <input type="text" name="unidade" required style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom:16px; position:relative;">
+                                    <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Descrição (digite para buscar no SINAPI)</label>
+                                    <input type="text" 
+                                           name="descricao" 
+                                           id="descricao-<?php echo md5($grupo . $categoria); ?>"
+                                           required 
+                                           autocomplete="off"
+                                           oninput="buscarSINAPI(this.value, '<?php echo md5($grupo . $categoria); ?>')"
+                                           style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                    <div id="sinapi-suggestions-<?php echo md5($grupo . $categoria); ?>" class="sinapi-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#2a2a2a; border:1px solid #4CAF50; border-radius:4px; max-height:200px; overflow-y:auto; z-index:1000; margin-top:4px;"></div>
+                                </div>
+                                
+                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+                                    <div>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Quantidade</label>
+                                        <input type="number" name="quantidade" step="0.01" required value="1" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Valor Unitário</label>
+                                        <input type="number" name="valor_unitario" step="0.01" required value="0" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Tipo de Custo</label>
+                                        <select name="classificacao_custo" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                            <option value="material">Material</option>
+                                            <option value="mao_obra">Mão de Obra</option>
+                                            <option value="equipamento">Equipamento</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div style="display:flex; gap:12px;">
+                                    <button type="submit" class="btn primary" style="flex:1; background:#4CAF50; color:white;">Salvar Item</button>
+                                    <button type="button" onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo); ?>', '<?php echo htmlspecialchars($categoria); ?>'); return false;" class="btn" style="background:#666; color:white;">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+
                 <tr class="total-row">
                     <td colspan="12" class="num">Total <?php echo htmlspecialchars((string)$categoria); ?></td>
                     <td class="num"><?php echo OrcamentoItem::formatMoney($subtotalCategoria); ?></td>
@@ -775,4 +852,192 @@ function recalcularMargens(orcamentoId) {
     // Tentar novamente após tudo carregar (fallback)
     window.addEventListener('load', scrollToItem);
 })();
+</script>
+
+
+<script>
+// ========== ADICIONAR ITEM INLINE ==========
+
+let sinapiTimeout = null;
+
+function toggleAddItemForm(grupo, categoria) {
+    const hash = md5(grupo + categoria);
+    const formRow = document.getElementById('add-form-' + hash);
+    
+    if (formRow.style.display === 'none') {
+        // Fechar todos os outros formulários abertos
+        document.querySelectorAll('.add-item-form-row').forEach(row => {
+            row.style.display = 'none';
+        });
+        
+        // Abrir este formulário
+        formRow.style.display = '';
+        
+        // Focar no campo de descrição
+        setTimeout(() => {
+            const descInput = document.getElementById('descricao-' + hash);
+            if (descInput) {
+                descInput.focus();
+                // Scroll suave até o formulário
+                formRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
+    } else {
+        // Fechar formulário
+        formRow.style.display = 'none';
+        
+        // Limpar formulário
+        const form = document.getElementById('form-add-item-' + hash);
+        if (form) {
+            form.reset();
+        }
+        
+        // Limpar sugestões
+        const suggestions = document.getElementById('sinapi-suggestions-' + hash);
+        if (suggestions) {
+            suggestions.style.display = 'none';
+            suggestions.innerHTML = '';
+        }
+    }
+}
+
+function buscarSINAPI(query, hash) {
+    // Limpar timeout anterior
+    if (sinapiTimeout) {
+        clearTimeout(sinapiTimeout);
+    }
+    
+    // Se query muito curta, esconder sugestões
+    if (query.length < 3) {
+        const suggestions = document.getElementById('sinapi-suggestions-' + hash);
+        if (suggestions) {
+            suggestions.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Aguardar 300ms antes de buscar (debounce)
+    sinapiTimeout = setTimeout(() => {
+        fetch('/?route=orcamentos/buscarSinapi&q=' + encodeURIComponent(query))
+            .then(response => response.json())
+            .then(data => {
+                mostrarSugestoesSINAPI(data, hash);
+            })
+            .catch(error => {
+                console.error('Erro ao buscar SINAPI:', error);
+            });
+    }, 300);
+}
+
+function mostrarSugestoesSINAPI(itens, hash) {
+    const suggestions = document.getElementById('sinapi-suggestions-' + hash);
+    if (!suggestions) return;
+    
+    if (itens.length === 0) {
+        suggestions.style.display = 'none';
+        return;
+    }
+    
+    let html = '';
+    itens.forEach(item => {
+        html += `
+            <div onclick="selecionarItemSINAPI(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${hash}')" 
+                 style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:background 0.2s;"
+                 onmouseover="this.style.background='rgba(76,175,80,0.1)'"
+                 onmouseout="this.style.background='transparent'">
+                <div style="font-weight:600; margin-bottom:4px;">${item.codigo} - ${item.descricao}</div>
+                <div style="font-size:11px; color:#999;">
+                    ${item.unidade} | R$ ${parseFloat(item.preco_unitario || 0).toFixed(2)}
+                </div>
+            </div>
+        `;
+    });
+    
+    suggestions.innerHTML = html;
+    suggestions.style.display = 'block';
+}
+
+function selecionarItemSINAPI(item, hash) {
+    const form = document.getElementById('form-add-item-' + hash);
+    if (!form) return;
+    
+    // Preencher campos do formulário
+    form.querySelector('[name="codigo"]').value = item.codigo || '';
+    form.querySelector('[name="descricao"]').value = item.descricao || '';
+    form.querySelector('[name="unidade"]').value = item.unidade || '';
+    form.querySelector('[name="valor_unitario"]').value = parseFloat(item.preco_unitario || 0).toFixed(2);
+    
+    // Esconder sugestões
+    const suggestions = document.getElementById('sinapi-suggestions-' + hash);
+    if (suggestions) {
+        suggestions.style.display = 'none';
+    }
+    
+    // Focar no campo quantidade
+    const qtdInput = form.querySelector('[name="quantidade"]');
+    if (qtdInput) {
+        qtdInput.focus();
+        qtdInput.select();
+    }
+}
+
+function salvarNovoItem(event, grupo, categoria, hash) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    // Mostrar loading
+    const submitBtn = form.querySelector('[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Salvando...';
+    submitBtn.disabled = true;
+    
+    fetch('/?route=orcamentos/itemStoreAjax', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recarregar a página mantendo a posição
+            const scrollPos = window.scrollY;
+            window.location.href = window.location.href.split('#')[0] + '#add-form-' + hash;
+            window.location.reload();
+        } else {
+            alert('Erro ao salvar item: ' + (data.message || 'Erro desconhecido'));
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar item. Verifique o console para mais detalhes.');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+    
+    return false;
+}
+
+// Função MD5 simples para gerar hash
+function md5(str) {
+    // Implementação simples de hash (não é MD5 real, mas serve para IDs únicos)
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+}
+
+// Fechar sugestões ao clicar fora
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.sinapi-suggestions') && !e.target.matches('[id^="descricao-"]')) {
+        document.querySelectorAll('.sinapi-suggestions').forEach(el => {
+            el.style.display = 'none';
+        });
+    }
+});
 </script>

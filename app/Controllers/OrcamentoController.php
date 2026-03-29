@@ -2139,3 +2139,163 @@ final class OrcamentoController
         }
     }
 }
+
+
+    public function buscarSinapi(): void
+    {
+        header('Content-Type: application/json');
+        
+        $query = $_GET['q'] ?? '';
+        
+        if (strlen($query) < 3) {
+            echo json_encode([]);
+            return;
+        }
+        
+        try {
+            $pdo = \App\Core\Database::pdo();
+            $stmt = $pdo->prepare(
+                "SELECT codigo, descricao, unidade, preco_unitario 
+                 FROM sinapi_insumos 
+                 WHERE descricao LIKE :query 
+                 OR codigo LIKE :query 
+                 ORDER BY descricao 
+                 LIMIT 10"
+            );
+            $stmt->execute([':query' => '%' . $query . '%']);
+            $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            echo json_encode($resultados);
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.buscarSinapi.error', ['message' => $e->getMessage()]);
+            echo json_encode([]);
+        }
+    }
+
+    public function itemStoreAjax(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $orcamentoId = (int)($_POST['orcamento_id'] ?? 0);
+            $grupo = (string)($_POST['grupo'] ?? '');
+            $categoria = (string)($_POST['categoria'] ?? '');
+            $codigo = (string)($_POST['codigo'] ?? '');
+            $descricao = (string)($_POST['descricao'] ?? '');
+            $unidade = (string)($_POST['unidade'] ?? '');
+            $quantidade = (float)($_POST['quantidade'] ?? 1);
+            $valorUnitario = (float)($_POST['valor_unitario'] ?? 0);
+            $classificacaoCusto = (string)($_POST['classificacao_custo'] ?? 'material');
+            
+            if (!$orcamentoId || !$descricao) {
+                echo json_encode(['success' => false, 'message' => 'Dados incompletos']);
+                return;
+            }
+            
+            // Verificar se o item existe no SINAPI
+            $pdo = \App\Core\Database::pdo();
+            $stmt = $pdo->prepare("SELECT id FROM sinapi_insumos WHERE codigo = :codigo AND descricao = :descricao");
+            $stmt->execute([':codigo' => $codigo, ':descricao' => $descricao]);
+            $sinapiItem = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            // Se não existe no SINAPI, criar
+            if (!$sinapiItem && $codigo && $descricao) {
+                $stmt = $pdo->prepare(
+                    "INSERT INTO sinapi_insumos (codigo, descricao, unidade, preco_unitario, tipo, origem) 
+                     VALUES (:codigo, :descricao, :unidade, :preco, 'COMPOSICAO', 'MANUAL')"
+                );
+                $stmt->execute([
+                    ':codigo' => $codigo,
+                    ':descricao' => $descricao,
+                    ':unidade' => $unidade,
+                    ':preco' => $valorUnitario
+                ]);
+                
+                Logger::info('sinapi.item_created', [
+                    'codigo' => $codigo,
+                    'descricao' => $descricao
+                ]);
+            }
+            
+            // Buscar o orçamento para pegar as margens
+            $orcamento = Orcamento::find($orcamentoId);
+            if (!$orcamento) {
+                echo json_encode(['success' => false, 'message' => 'Orçamento não encontrado']);
+                return;
+            }
+            
+            $margemMateriais = (float)($orcamento['margem_materiais'] ?? 20);
+            $margemMaoObra = (float)($orcamento['margem_mao_obra'] ?? 50);
+            $margemEquipamentos = (float)($orcamento['margem_equipamentos'] ?? 20);
+            
+            // Calcular valor de cobrança baseado na classificação
+            $margem = 0;
+            if ($classificacaoCusto === 'mao_obra') {
+                $margem = $margemMaoObra;
+            } elseif ($classificacaoCusto === 'equipamento') {
+                $margem = $margemEquipamentos;
+            } else {
+                $margem = $margemMateriais;
+            }
+            
+            $valorCobranca = $valorUnitario * (1 + ($margem / 100));
+            
+            // Definir custos baseado na classificação
+            $custoMaterial = 0;
+            $custoMaoObra = 0;
+            $custoEquipamento = 0;
+            
+            if ($classificacaoCusto === 'material') {
+                $custoMaterial = $valorUnitario;
+            } elseif ($classificacaoCusto === 'mao_obra') {
+                $custoMaoObra = $valorUnitario;
+            } elseif ($classificacaoCusto === 'equipamento') {
+                $custoEquipamento = $valorUnitario;
+            }
+            
+            // Criar o item no orçamento
+            $data = [
+                'orcamento_id' => $orcamentoId,
+                'codigo' => $codigo,
+                'descricao' => $descricao,
+                'unidade' => $unidade,
+                'quantidade' => $quantidade,
+                'valor_unitario' => $valorUnitario,
+                'valor_cobranca' => $valorCobranca,
+                'custo_material' => $custoMaterial,
+                'custo_mao_obra' => $custoMaoObra,
+                'custo_equipamento' => $custoEquipamento,
+                'classificacao_custo' => $classificacaoCusto,
+                'grupo' => $grupo,
+                'categoria' => $categoria,
+                'etapa' => '',
+                'percentual_realizado' => 0,
+                'usa_margem_personalizada' => 0,
+                'margem_personalizada' => 0
+            ];
+            
+            $itemId = OrcamentoItem::create($data);
+            
+            Logger::info('orcamentos.itemStoreAjax.success', [
+                'orcamento_id' => $orcamentoId,
+                'item_id' => $itemId,
+                'categoria' => $categoria
+            ]);
+            
+            echo json_encode([
+                'success' => true,
+                'item_id' => $itemId,
+                'message' => 'Item adicionado com sucesso'
+            ]);
+            
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.itemStoreAjax.error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erro ao salvar item: ' . $e->getMessage()
+            ]);
+        }
+    }
