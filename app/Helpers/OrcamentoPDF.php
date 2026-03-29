@@ -888,108 +888,81 @@ HTML;
     
     private static function gerarPaginaDetalhamento(int $orcamentoId, array $orcamento): string
     {
-        $pdo = \App\Core\Database::pdo();
-        $stmt = $pdo->prepare(
-            'SELECT id, codigo, descricao, quantidade, unidade, valor_unitario, valor_cobranca, percentual_realizado, custo_material, custo_mao_obra, categoria '
-            . 'FROM orcamento_itens WHERE orcamento_id = :id '
-            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED), id'
-        );
-        $stmt->execute([':id' => $orcamentoId]);
-        $todosItens = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
         
         // Agrupar por CATEGORIA
-        $categorias = [];
-        $totalGeral = 0.0;
-        
-        foreach ($todosItens as $item) {
+        $grouped = [];
+        foreach ($itens as $item) {
             $categoria = (string)($item['categoria'] ?? 'SEM CATEGORIA');
-            if (!isset($categorias[$categoria])) {
-                $categorias[$categoria] = [
-                    'label' => strtoupper($categoria),
-                    'itens' => [],
-                    'subtotal' => 0.0
-                ];
-            }
-            $valorTotal = (float)$item['quantidade'] * (float)$item['valor_cobranca'];
-            $categorias[$categoria]['itens'][] = $item;
-            $categorias[$categoria]['subtotal'] += $valorTotal;
-            $totalGeral += $valorTotal;
+            $grouped[$categoria][] = $item;
         }
-        
-        $html = '<div class="no-page-break">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA ORÇAMENTÁRIA') . '</div>';
-        
-        foreach ($categorias as $categoria) {
-            if (empty($categoria['itens'])) continue;
-            $subtotal = $categoria['subtotal'];
+
+        $html = '<div class="page"><div class="page-title">PLANILHA ORÇAMENTÁRIA</div>';
+        $html .= '<div class="page-subtitle">Detalhamento por Item</div>';
+
+        $totalGeralObra = 0.0;
+
+        foreach ($grouped as $categoria => $itensCategoria) {
+            $html .= '<div class="banner-etapa">' . htmlspecialchars(strtoupper($categoria)) . '</div>';
             
-            $html .= sprintf('<div class="banner-etapa">%s</div>', htmlspecialchars((string)$categoria['label']));
-            $html .= self::gerarTabelaDetalhes($categoria['itens'], $subtotal, $totalGeral);
+            $subtotalCategoria = 0.0;
+            
+            $html .= '<table class="table-detalhes">';
+            $html .= '<thead><tr>';
+            $html .= '<th class="left" style="width:8%;">Cód.</th>';
+            $html .= '<th class="left" style="width:35%;">Descrição</th>';
+            $html .= '<th class="center" style="width:6%;">Un</th>';
+            $html .= '<th class="center" style="width:8%;">Qtd</th>';
+            $html .= '<th class="right" style="width:13%;">Vlr Unit.</th>';
+            $html .= '<th class="right" style="width:15%;">Vlr Total</th>';
+            $html .= '<th class="center" style="width:8%;">% Etapa</th>';
+            $html .= '<th class="center" style="width:7%;">% Obra</th>';
+            $html .= '</tr></thead><tbody>';
+
+            // Calcular subtotal da categoria primeiro
+            foreach ($itensCategoria as $item) {
+                $quantidade = (float)($item['quantidade'] ?? 0);
+                $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
+                $valorTotal = $quantidade * $valorCobrancaUnitario;
+                $subtotalCategoria += $valorTotal;
+                $totalGeralObra += $valorTotal;
+            }
+
+            // Agora gerar as linhas
+            foreach ($itensCategoria as $item) {
+                $quantidade = (float)($item['quantidade'] ?? 0);
+                $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
+                $valorTotal = $quantidade * $valorCobrancaUnitario;
+                
+                $pctEtapa = $subtotalCategoria > 0 ? ($valorTotal / $subtotalCategoria) * 100 : 0.0;
+                $pctObra = $totalGeralObra > 0 ? ($valorTotal / $totalGeralObra) * 100 : 0.0;
+                
+                $html .= '<tr>';
+                $html .= '<td class="left">' . htmlspecialchars((string)$item['codigo']) . '</td>';
+                $html .= '<td class="left">' . htmlspecialchars((string)$item['descricao']) . '</td>';
+                $html .= '<td class="center">' . htmlspecialchars((string)$item['unidade']) . '</td>';
+                $html .= '<td class="center">' . number_format($quantidade, 2, ',', '.') . '</td>';
+                $html .= '<td class="right">R$ ' . self::formatarValor($valorCobrancaUnitario) . '</td>';
+                $html .= '<td class="right">R$ ' . self::formatarValor($valorTotal) . '</td>';
+                $html .= '<td class="center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
+                $html .= '<td class="center">' . number_format($pctObra, 2, ',', '.') . '%</td>';
+                $html .= '</tr>';
+            }
+            
+            $html .= '</tbody></table>';
             $html .= sprintf(
                 '<div class="subtotal-etapa">SUBTOTAL — %s: R$ %s</div>',
-                htmlspecialchars((string)$categoria['label']),
-                self::formatarValor($subtotal)
+                htmlspecialchars(strtoupper($categoria)),
+                self::formatarValor($subtotalCategoria)
             );
         }
         
         $html .= sprintf(
             '<div class="total-obra">VALOR TOTAL DE OBRA: R$ %s</div>',
-            self::formatarValor($totalGeral)
+            self::formatarValor($totalGeralObra)
         );
         
-        $html .= '<div class="page-footer"><div>FOLHA: 4</div></div>';
-        
-        return $html;
-    }
-
-    
-    private static function gerarTabelaDetalhes(array $itens, float $subtotal, float $totalGeral): string
-    {
-        $html = '<table class="table-detalhes"><thead><tr>';
-        $html .= '<th class="left" style="width:5%;">ITEM</th>';
-        $html .= '<th class="left" style="width:25%;">DESCRIÇÃO</th>';
-        $html .= '<th class="center" style="width:5%;">UNID</th>';
-        $html .= '<th class="center" style="width:6%;">QUANT</th>';
-        $html .= '<th class="right" style="width:10%;">VALOR UNIT MATERIAL</th>';
-        $html .= '<th class="right" style="width:10%;">VALOR UNIT M.O</th>';
-        $html .= '<th class="right" style="width:10%;">VALOR UNITÁRIO TOTAL</th>';
-        $html .= '<th class="right" style="width:11%;">VALOR TOTAL</th>';
-        $html .= '<th class="center" style="width:7%;">% ETAPA</th>';
-        $html .= '<th class="center" style="width:7%;">% OBRA</th>';
-        $html .= '<th class="center" style="width:4%;">% REALIZADO</th>';
-        $html .= '</tr></thead><tbody>';
-        
-        foreach ($itens as $item) {
-            $quantidade = (float)$item['quantidade'];
-            $valorCobrancaUnitario = (float)$item['valor_cobranca'];
-            $valorTotal = $quantidade * $valorCobrancaUnitario;
-            $custoMaterial = (float)($item['custo_material'] ?? 0);
-            $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
-            
-            $valorUnitMaterial = $quantidade > 0 ? $custoMaterial / $quantidade : 0;
-            $valorUnitMaoObra = $quantidade > 0 ? $custoMaoObra / $quantidade : 0;
-            $valorUnitTotal = $valorCobrancaUnitario;
-            
-            $pctEtapa = $subtotal > 0 ? ($valorTotal / $subtotal) * 100 : 0.0;
-            $pctObra = $totalGeral > 0 ? ($valorTotal / $totalGeral) * 100 : 0.0;
-            $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
-            $pctRealizadoEfetivo = ($percentualRealizado / 100) * $pctObra;
-            
-            $html .= '<tr>';
-            $html .= '<td class="left">' . htmlspecialchars((string)$item['codigo']) . '</td>';
-            $html .= '<td class="left">' . htmlspecialchars((string)$item['descricao']) . '</td>';
-            $html .= '<td class="center">' . htmlspecialchars((string)$item['unidade']) . '</td>';
-            $html .= '<td class="center">' . number_format($quantidade, 2, ',', '.') . '</td>';
-            $html .= '<td class="right">R$ ' . self::formatarValor($valorUnitMaterial) . '</td>';
-            $html .= '<td class="right">R$ ' . self::formatarValor($valorUnitMaoObra) . '</td>';
-            $html .= '<td class="right">R$ ' . self::formatarValor($valorUnitTotal) . '</td>';
-            $html .= '<td class="right">R$ ' . self::formatarValor($valorTotal) . '</td>';
-            $html .= '<td class="center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
-            $html .= '<td class="center">' . number_format($pctObra, 2, ',', '.') . '%</td>';
-            $html .= '<td class="center">' . number_format($pctRealizadoEfetivo, 2, ',', '.') . '%</td>';
-            $html .= '</tr>';
-        }
-        
-        $html .= '</tbody></table>';
+        $html .= '</div>';
         return $html;
     }
     
