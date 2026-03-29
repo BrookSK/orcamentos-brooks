@@ -661,6 +661,15 @@ HTML;
         $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
         $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
+        // Calcular custos administrativos e impostos
+        $subtotal = $totalGeral;
+        $percentualCustosAdm = (float)($orcamento['percentual_custos_adm'] ?? 0);
+        $percentualImpostos = (float)($orcamento['percentual_impostos'] ?? 0);
+        
+        $valorCustosAdm = $subtotal * ($percentualCustosAdm / 100);
+        $valorImpostos = $subtotal * ($percentualImpostos / 100);
+        $totalFinal = $subtotal + $valorCustosAdm + $valorImpostos;
+        
         // Tabela ÚNICA com TODAS as informações: CATEGORIA, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
         $html .= '<table class="table-resumo" style="margin-top:15px;">';
         $html .= '<thead><tr>';
@@ -685,12 +694,38 @@ HTML;
             );
         }
         
+        // Linha de SUBTOTAL DA OBRA
         $html .= sprintf(
-            '<tr class="total-row"><td class="left">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td><td class="center">%s</td><td class="right">R$ %s</td></tr>',
-            self::formatarValor($totalGeral),
+            '<tr class="subtotal-row"><td class="left">SUBTOTAL DA OBRA:</td><td class="right">R$ %s</td><td class="center">100,00%%</td><td class="center">%s</td><td class="right">R$ %s</td></tr>',
+            self::formatarValor($subtotal),
             number_format($areaTotal, 2, ',', '.'),
-            self::formatarValor($areaTotal > 0 ? $totalGeral / $areaTotal : 0)
+            self::formatarValor($areaTotal > 0 ? $subtotal / $areaTotal : 0)
         );
+        
+        // Linha de Custos Administrativos (se houver)
+        if ($percentualCustosAdm > 0) {
+            $html .= sprintf(
+                '<tr><td class="left">Custos Administrativos (%s%%)</td><td class="right">R$ %s</td><td class="center" colspan="3">—</td></tr>',
+                number_format($percentualCustosAdm, 2, ',', '.'),
+                self::formatarValor($valorCustosAdm)
+            );
+        }
+        
+        // Linha de Impostos (se houver)
+        if ($percentualImpostos > 0) {
+            $html .= sprintf(
+                '<tr><td class="left">Impostos (%s%%)</td><td class="right">R$ %s</td><td class="center" colspan="3">—</td></tr>',
+                number_format($percentualImpostos, 2, ',', '.'),
+                self::formatarValor($valorImpostos)
+            );
+        }
+        
+        // Linha de TOTAL GERAL
+        $html .= sprintf(
+            '<tr class="total-row"><td class="left">TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center" colspan="3">—</td></tr>',
+            self::formatarValor($totalFinal)
+        );
+        
         $html .= '</tbody></table>';
         
         // Gerar tabela de áreas (separada, abaixo) - wrapper para evitar quebra de página
