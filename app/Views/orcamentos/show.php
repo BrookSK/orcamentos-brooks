@@ -326,21 +326,21 @@ function toggleAdicionarItem() {
                 </tr>
                 
                 <!-- Repetir cabeçalho da tabela para cada categoria -->
-                <tr>
-                    <th style="width:30px;"></th>
-                    <th style="width:60px">Código</th>
-                    <th style="width:auto; min-width:150px;">Descrição</th>
-                    <th class="center" style="width:45px">Un</th>
-                    <th class="center" style="width:60px">Qtd</th>
-                    <th class="num admin-col" style="width:80px;">Custo Mat.</th>
-                    <th class="num admin-col" style="width:80px;">Custo M.O.</th>
-                    <th class="num admin-col" style="width:80px;">Custo Equip.</th>
-                    <th class="center admin-col" style="width:55px;">% BDI</th>
-                    <th class="num admin-col" style="width:80px;">Margem Un.</th>
-                    <th class="num" style="width:85px">Vlr Unit.</th>
-                    <th class="num admin-col" style="width:85px;">Lucro Total</th>
-                    <th class="num" style="width:85px">Vlr Total</th>
-                    <th style="width:120px"></th>
+                <tr class="category-table-header">
+                    <th style="width:30px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);"></th>
+                    <th style="width:60px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Código</th>
+                    <th style="width:auto; min-width:150px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Descrição</th>
+                    <th class="center" style="width:45px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Un</th>
+                    <th class="center" style="width:60px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Qtd</th>
+                    <th class="num admin-col" style="width:80px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Custo Mat.</th>
+                    <th class="num admin-col" style="width:80px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Custo M.O.</th>
+                    <th class="num admin-col" style="width:80px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Custo Equip.</th>
+                    <th class="center admin-col" style="width:55px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">% BDI</th>
+                    <th class="num admin-col" style="width:80px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Margem Un.</th>
+                    <th class="num" style="width:85px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Vlr Unit.</th>
+                    <th class="num admin-col" style="width:85px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Lucro Total</th>
+                    <th class="num" style="width:85px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);">Vlr Total</th>
+                    <th style="width:120px; text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:12px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.03);"></th>
                 </tr>
 
                 <?php $subtotalCategoria = 0.0; ?>
