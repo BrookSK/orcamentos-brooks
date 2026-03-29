@@ -2153,7 +2153,7 @@ final class OrcamentoController
         try {
             $pdo = \App\Core\Database::pdo();
             $stmt = $pdo->prepare(
-                "SELECT codigo, descricao, unidade, preco_unitario 
+                "SELECT codigo, descricao, unidade, preco_unit as preco_unitario 
                  FROM sinapi_insumos 
                  WHERE descricao LIKE :query 
                  OR codigo LIKE :query 
@@ -2259,7 +2259,7 @@ final class OrcamentoController
             }
             
             // Verificar se o item existe no SINAPI (buscar por descrição)
-            $stmt = $pdo->prepare("SELECT codigo as sinapi_codigo, unidade, preco_unitario FROM sinapi_insumos WHERE descricao = :descricao LIMIT 1");
+            $stmt = $pdo->prepare("SELECT codigo as sinapi_codigo, unidade, preco_unit as preco_unitario FROM sinapi_insumos WHERE descricao = :descricao LIMIT 1");
             $stmt->execute([':descricao' => $descricao]);
             $sinapiItem = $stmt->fetch(\PDO::FETCH_ASSOC);
             
@@ -2269,7 +2269,7 @@ final class OrcamentoController
                 $sinapiCodigo = 'MANUAL-' . time() . '-' . rand(1000, 9999);
                 
                 $stmt = $pdo->prepare(
-                    "INSERT INTO sinapi_insumos (codigo, descricao, unidade, preco_unitario, tipo, origem) 
+                    "INSERT INTO sinapi_insumos (codigo, descricao, unidade, preco_unit, tipo, origem) 
                      VALUES (:codigo, :descricao, :unidade, :preco, 'COMPOSICAO', 'MANUAL')"
                 );
                 $stmt->execute([
