@@ -494,25 +494,25 @@ function toggleAdicionarItem() {
                 <td style="padding:8px 0; text-align:right; font-weight:600;"><?php echo OrcamentoItem::formatMoney($totalGeral); ?></td>
             </tr>
             <?php 
-            $taxaAdmin = (float)($orcamento['taxa_administracao'] ?? 0);
-            $impostos = (float)($orcamento['impostos'] ?? 0);
-            $valorTaxaAdmin = $totalGeral * ($taxaAdmin / 100);
-            $valorImpostos = $totalGeral * ($impostos / 100);
-            $totalComTaxas = $totalGeral + $valorTaxaAdmin + $valorImpostos;
+            $percentualCustosAdm = (float)($orcamento['percentual_custos_adm'] ?? 0);
+            $percentualImpostos = (float)($orcamento['percentual_impostos'] ?? 0);
+            $valorCustosAdm = $totalGeral * ($percentualCustosAdm / 100);
+            $valorImpostos = $totalGeral * ($percentualImpostos / 100);
+            $totalComTaxas = $totalGeral + $valorCustosAdm + $valorImpostos;
             ?>
-            <?php if ($taxaAdmin > 0) : ?>
+            <?php if ($percentualCustosAdm > 0) : ?>
             <tr>
-                <td style="padding:8px 0; color:var(--muted);">Taxa de Administração (<?php echo number_format($taxaAdmin, 2, ',', '.'); ?>%):</td>
-                <td style="padding:8px 0; text-align:right; color:var(--muted);">+ <?php echo OrcamentoItem::formatMoney($valorTaxaAdmin); ?></td>
+                <td style="padding:8px 0; color:var(--muted);">Custos Administrativos (<?php echo number_format($percentualCustosAdm, 2, ',', '.'); ?>%):</td>
+                <td style="padding:8px 0; text-align:right; color:var(--muted);">+ <?php echo OrcamentoItem::formatMoney($valorCustosAdm); ?></td>
             </tr>
             <?php endif; ?>
-            <?php if ($impostos > 0) : ?>
+            <?php if ($percentualImpostos > 0) : ?>
             <tr>
-                <td style="padding:8px 0; color:var(--muted);">Impostos (<?php echo number_format($impostos, 2, ',', '.'); ?>%):</td>
+                <td style="padding:8px 0; color:var(--muted);">Impostos (<?php echo number_format($percentualImpostos, 2, ',', '.'); ?>%):</td>
                 <td style="padding:8px 0; text-align:right; color:var(--muted);">+ <?php echo OrcamentoItem::formatMoney($valorImpostos); ?></td>
             </tr>
             <?php endif; ?>
-            <?php if ($taxaAdmin > 0 || $impostos > 0) : ?>
+            <?php if ($percentualCustosAdm > 0 || $percentualImpostos > 0) : ?>
             <tr style="border-top:2px solid rgba(255,255,255,0.1);">
                 <td style="padding:12px 0 8px; font-weight:800; font-size:16px;">TOTAL FINAL:</td>
                 <td style="padding:12px 0 8px; text-align:right; font-weight:800; font-size:16px; color:#4CAF50;"><?php echo OrcamentoItem::formatMoney($totalComTaxas); ?></td>
@@ -521,9 +521,9 @@ function toggleAdicionarItem() {
         </tbody>
     </table>
     
-    <?php if ($taxaAdmin == 0 && $impostos == 0) : ?>
+    <?php if ($percentualCustosAdm == 0 && $percentualImpostos == 0) : ?>
     <div class="muted" style="font-size:12px; margin-top:8px;">
-        💡 Configure taxa de administração e impostos no cabeçalho do orçamento para visualizar o total final.
+        💡 Configure custos administrativos e impostos no cabeçalho do orçamento para visualizar o total final.
     </div>
     <?php endif; ?>
 </div>
