@@ -958,7 +958,11 @@ final class OrcamentoController
             return;
         }
 
-        $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId . '#item-' . $id);
+        // Usar JavaScript para redirecionar com âncora (PHP header não preserva âncora)
+        echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><script>';
+        echo 'window.location.href = "/?route=orcamentos/show&id=' . $orcamentoId . '#item-' . $id . '";';
+        echo '</script></body></html>';
+        exit;
     }
 
     public function recalcularMargens(): void
