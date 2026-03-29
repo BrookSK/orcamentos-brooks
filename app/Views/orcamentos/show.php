@@ -939,22 +939,25 @@ function mostrarSugestoesSINAPI(itens, hash) {
         return;
     }
     
-    let html = '';
+    suggestions.innerHTML = '';
+    
     itens.forEach(item => {
-        html += `
-            <div onclick="selecionarItemSINAPI(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${hash}')" 
-                 style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:background 0.2s;"
-                 onmouseover="this.style.background='rgba(76,175,80,0.1)'"
-                 onmouseout="this.style.background='transparent'">
-                <div style="font-weight:600; margin-bottom:4px;">${item.codigo} - ${item.descricao}</div>
-                <div style="font-size:11px; color:#999;">
-                    ${item.unidade} | R$ ${parseFloat(item.preco_unitario || 0).toFixed(2)}
-                </div>
+        const div = document.createElement('div');
+        div.style.cssText = 'padding:12px; border-bottom:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:background 0.2s;';
+        div.onmouseover = function() { this.style.background = 'rgba(76,175,80,0.1)'; };
+        div.onmouseout = function() { this.style.background = 'transparent'; };
+        div.onclick = function() { selecionarItemSINAPI(item, hash); };
+        
+        div.innerHTML = `
+            <div style="font-weight:600; margin-bottom:4px;">${item.codigo} - ${item.descricao}</div>
+            <div style="font-size:11px; color:#999;">
+                ${item.unidade} | R$ ${parseFloat(item.preco_unitario || 0).toFixed(2)}
             </div>
         `;
+        
+        suggestions.appendChild(div);
     });
     
-    suggestions.innerHTML = html;
     suggestions.style.display = 'block';
 }
 
