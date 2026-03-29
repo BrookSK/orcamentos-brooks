@@ -964,9 +964,8 @@ final class OrcamentoController
         }
         
         // Calcular custos detalhados baseado na classificacao_custo
-        // Para orçamentos manuais, distribuir o valor_unitario nos campos de custo apropriados
-        $custoTotal = $data['custo_material'] + $data['custo_mao_obra'] + (float)($data['custo_equipamento'] ?? 0);
-        if ($custoTotal == 0 && $valorUnitario > 0 && $classificacaoCusto !== '') {
+        // Sempre redistribuir o valor_unitario nos campos de custo apropriados baseado na classificacao
+        if ($valorUnitario > 0 && $classificacaoCusto !== '') {
             // Distribuir valor_unitario no campo de custo apropriado
             if ($classificacaoCusto === 'material') {
                 $data['custo_material'] = $valorUnitario;
