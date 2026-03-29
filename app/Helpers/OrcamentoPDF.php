@@ -6,6 +6,51 @@ namespace App\Helpers;
 
 final class OrcamentoPDF
 {
+    /**
+     * Calcula áreas do orçamento separando terreno e área construída
+     * @return array ['terreno' => float, 'construida' => float, 'total' => float, 'areas' => array]
+     */
+    private static function calcularAreas(array $orcamento): array
+    {
+        $areasPersonalizadas = [];
+        $areaTerreno = 0; // Áreas que compõem o terreno
+        $areaConstruida = 0; // Áreas que não compõem o terreno
+        
+        if (!empty($orcamento['areas_personalizadas'])) {
+            $areasPersonalizadas = json_decode($orcamento['areas_personalizadas'], true);
+            if (is_array($areasPersonalizadas)) {
+                foreach ($areasPersonalizadas as $area) {
+                    $m2 = (float)($area['m2'] ?? 0);
+                    $fator = (float)($area['fator'] ?? 1);
+                    $naoCompoe = !empty($area['nao_compoe']);
+                    $m2xFator = $m2 * $fator;
+                    
+                    if ($naoCompoe) {
+                        $areaConstruida += $m2xFator;
+                    } else {
+                        $areaTerreno += $m2xFator;
+                    }
+                }
+            }
+        }
+        
+        // Área total = terreno + construída
+        $areaTotal = $areaTerreno + $areaConstruida;
+        
+        // Se não tiver áreas personalizadas ou área total for zero, usar área do orçamento
+        if ($areaTotal == 0) {
+            $areaTotal = (float)($orcamento['area_m2'] ?? 0);
+            $areaTerreno = $areaTotal;
+        }
+        
+        return [
+            'terreno' => $areaTerreno,
+            'construida' => $areaConstruida,
+            'total' => $areaTotal,
+            'areas' => $areasPersonalizadas
+        ];
+    }
+    
     public static function gerarHTML(int $orcamentoId, array $orcamento): string
     {
         $html = self::gerarCabecalhoHTML();
@@ -98,24 +143,11 @@ final class OrcamentoPDF
         
         // TABELAS DE ÁREAS
         // Processar áreas personalizadas
-        $areasPersonalizadas = [];
-        $areaTotal = 0;
-        
-        if (!empty($orcamento['areas_personalizadas'])) {
-            $areasPersonalizadas = json_decode($orcamento['areas_personalizadas'], true);
-            if (is_array($areasPersonalizadas)) {
-                foreach ($areasPersonalizadas as $area) {
-                    $m2 = (float)($area['m2'] ?? 0);
-                    $fator = (float)($area['fator'] ?? 1);
-                    $areaTotal += $m2 * $fator;
-                }
-            }
-        }
-        
-        // Se não tiver áreas personalizadas ou área total for zero, usar área do orçamento
-        if ($areaTotal == 0) {
-            $areaTotal = (float)($orcamento['area_m2'] ?? 0);
-        }
+        $dadosAreas = self::calcularAreas($orcamento);
+        $areaTerreno = $dadosAreas['terreno'];
+        $areaConstruida = $dadosAreas['construida'];
+        $areaTotal = $dadosAreas['total'];
+        $areasPersonalizadas = $dadosAreas['areas'];
         
         // Tabela ÚNICA com TODAS as informações: CATEGORIA, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
         $html .= '<table class="table-resumo" style="margin-top:15px;">';
@@ -157,14 +189,30 @@ final class OrcamentoPDF
                 $nome = htmlspecialchars((string)($area['nome'] ?? ''));
                 $m2 = (float)($area['m2'] ?? 0);
                 $fator = (float)($area['fator'] ?? 1);
+                $naoCompoe = !empty($area['nao_compoe']);
                 $m2xFator = $m2 * $fator;
+                
+                // Adicionar indicador se não compõe o terreno
+                $nomeExibicao = $naoCompoe ? $nome . ' *' : $nome;
                 
                 $html .= sprintf(
                     '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
-                    $nome,
+                    $nomeExibicao,
                     number_format($m2, 2, ',', '.'),
                     number_format($fator, 2, ',', '.'),
                     number_format($m2xFator, 2, ',', '.')
+                );
+            }
+            
+            // Linha de subtotal do terreno (se houver áreas que não compõem)
+            if ($areaConstruida > 0) {
+                $html .= sprintf(
+                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA DO TERRENO:</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaTerreno, 2, ',', '.')
+                );
+                $html .= sprintf(
+                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA (*):</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaConstruida, 2, ',', '.')
                 );
             }
         } else {
@@ -177,6 +225,12 @@ final class OrcamentoPDF
         }
         
         $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
+        
+        // Adicionar nota explicativa se houver áreas que não compõem
+        if ($areaConstruida > 0) {
+            $html .= '<tr><td colspan="4" style="font-size:9px;color:#666;padding:8px;text-align:left;">(*) Áreas marcadas não compõem a metragem do terreno</td></tr>';
+        }
+        
         $html .= '</tbody></table>';
         
         $html .= '<div class="page-footer"><div>FOLHA: 1</div></div>';
@@ -515,24 +569,11 @@ HTML;
 
         // TABELAS DE ÁREAS
         // Processar áreas personalizadas
-        $areasPersonalizadas = [];
-        $areaTotal = 0;
-        
-        if (!empty($orcamento['areas_personalizadas'])) {
-            $areasPersonalizadas = json_decode($orcamento['areas_personalizadas'], true);
-            if (is_array($areasPersonalizadas)) {
-                foreach ($areasPersonalizadas as $area) {
-                    $m2 = (float)($area['m2'] ?? 0);
-                    $fator = (float)($area['fator'] ?? 1);
-                    $areaTotal += $m2 * $fator;
-                }
-            }
-        }
-        
-        // Se não tiver áreas personalizadas ou área total for zero, usar área do orçamento
-        if ($areaTotal == 0) {
-            $areaTotal = (float)($orcamento['area_m2'] ?? 0);
-        }
+        $dadosAreas = self::calcularAreas($orcamento);
+        $areaTerreno = $dadosAreas['terreno'];
+        $areaConstruida = $dadosAreas['construida'];
+        $areaTotal = $dadosAreas['total'];
+        $areasPersonalizadas = $dadosAreas['areas'];
         
         // Gerar tabela de áreas
         $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
@@ -542,14 +583,30 @@ HTML;
                 $nome = htmlspecialchars((string)($area['nome'] ?? ''));
                 $m2 = (float)($area['m2'] ?? 0);
                 $fator = (float)($area['fator'] ?? 1);
+                $naoCompoe = !empty($area['nao_compoe']);
                 $m2xFator = $m2 * $fator;
+                
+                // Adicionar indicador se não compõe o terreno
+                $nomeExibicao = $naoCompoe ? $nome . ' *' : $nome;
                 
                 $html .= sprintf(
                     '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
-                    $nome,
+                    $nomeExibicao,
                     number_format($m2, 2, ',', '.'),
                     number_format($fator, 2, ',', '.'),
                     number_format($m2xFator, 2, ',', '.')
+                );
+            }
+            
+            // Linha de subtotal do terreno (se houver áreas que não compõem)
+            if ($areaConstruida > 0) {
+                $html .= sprintf(
+                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA DO TERRENO:</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaTerreno, 2, ',', '.')
+                );
+                $html .= sprintf(
+                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA (*):</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaConstruida, 2, ',', '.')
                 );
             }
         } else {
@@ -562,6 +619,12 @@ HTML;
         }
         
         $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
+        
+        // Adicionar nota explicativa se houver áreas que não compõem
+        if ($areaConstruida > 0) {
+            $html .= '<tr><td colspan="4" style="font-size:9px;color:#666;padding:8px;text-align:left;">(*) Áreas marcadas não compõem a metragem do terreno</td></tr>';
+        }
+        
         $html .= '</tbody></table>';
         
         // Gerar tabela de CATEGORIAS (usando dados reais do orçamento)

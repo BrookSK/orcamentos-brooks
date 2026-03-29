@@ -177,7 +177,7 @@ declare(strict_types=1);
                     
                     foreach ($areasPersonalizadas as $index => $area) :
                     ?>
-                    <div class="area-row" style="display:grid; grid-template-columns:2fr 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:end;">
+                    <div class="area-row" style="display:grid; grid-template-columns:2fr 1fr 1fr 120px 40px; gap:8px; margin-bottom:8px; align-items:end;">
                         <div>
                             <label style="font-size:11px; color:#999;">Nome da Área</label>
                             <input type="text" name="areas[<?php echo $index; ?>][nome]" value="<?php echo htmlspecialchars($area['nome'] ?? ''); ?>" placeholder="Ex: AREA INTERNA" style="width:100%;">
@@ -189,6 +189,12 @@ declare(strict_types=1);
                         <div>
                             <label style="font-size:11px; color:#999;">Fator</label>
                             <input type="number" step="0.01" name="areas[<?php echo $index; ?>][fator]" value="<?php echo htmlspecialchars((string)($area['fator'] ?? '1')); ?>" placeholder="1" style="width:100%;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; color:#999; display:block; margin-bottom:4px;">
+                                <input type="checkbox" name="areas[<?php echo $index; ?>][nao_compoe]" value="1" <?php echo !empty($area['nao_compoe']) ? 'checked' : ''; ?> style="margin-right:4px;">
+                                Não compõe terreno
+                            </label>
                         </div>
                         <button type="button" class="btn-remove-area" style="background:#f44336; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-size:16px;" onclick="removerArea(this)">🗑️</button>
                     </div>
@@ -242,7 +248,7 @@ function adicionarArea() {
     const container = document.getElementById('areas-container');
     const div = document.createElement('div');
     div.className = 'area-row';
-    div.style.cssText = 'display:grid; grid-template-columns:2fr 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:end;';
+    div.style.cssText = 'display:grid; grid-template-columns:2fr 1fr 1fr 120px 40px; gap:8px; margin-bottom:8px; align-items:end;';
     
     div.innerHTML = `
         <div>
@@ -256,6 +262,12 @@ function adicionarArea() {
         <div>
             <label style="font-size:11px; color:#999;">Fator</label>
             <input type="number" step="0.01" name="areas[${areaIndex}][fator]" value="1" placeholder="1" style="width:100%;">
+        </div>
+        <div>
+            <label style="font-size:11px; color:#999; display:block; margin-bottom:4px;">
+                <input type="checkbox" name="areas[${areaIndex}][nao_compoe]" value="1" style="margin-right:4px;">
+                Não compõe terreno
+            </label>
         </div>
         <button type="button" class="btn-remove-area" style="background:#f44336; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-size:16px;" onclick="removerArea(this)">🗑️</button>
     `;
