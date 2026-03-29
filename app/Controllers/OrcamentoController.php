@@ -2336,6 +2336,22 @@ final class OrcamentoController
                 $custoEquipamento = $valorUnitario;
             }
             
+            // Calcular ordem do item
+            $stmt = $pdo->prepare(
+                "SELECT MAX(ordem) as max_ordem 
+                 FROM orcamento_itens 
+                 WHERE orcamento_id = :orcamento_id 
+                 AND grupo = :grupo 
+                 AND categoria = :categoria"
+            );
+            $stmt->execute([
+                ':orcamento_id' => $orcamentoId,
+                ':grupo' => $grupo,
+                ':categoria' => $categoria
+            ]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $ordem = $result && $result['max_ordem'] ? ((int)$result['max_ordem'] + 1) : 1;
+            
             // Criar o item no orçamento
             $data = [
                 'codigo' => $codigo,
@@ -2350,6 +2366,7 @@ final class OrcamentoController
                 'classificacao_custo' => $classificacaoCusto,
                 'grupo' => $grupo,
                 'categoria' => $categoria,
+                'ordem' => $ordem,
                 'etapa' => '',
                 'percentual_realizado' => 0,
                 'usa_margem_personalizada' => 0,

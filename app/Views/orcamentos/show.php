@@ -1013,9 +1013,11 @@ function salvarNovoItem(event, grupo, categoria, hash) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Recarregar a página mantendo a posição
-            const scrollPos = window.scrollY;
-            window.location.href = window.location.href.split('#')[0] + '#add-form-' + hash;
+            // Salvar posição atual do scroll
+            sessionStorage.setItem('scrollPosition', window.scrollY);
+            sessionStorage.setItem('lastAddedHash', hash);
+            
+            // Recarregar a página
             window.location.reload();
         } else {
             alert('Erro ao salvar item: ' + (data.message || 'Erro desconhecido'));
@@ -1032,6 +1034,29 @@ function salvarNovoItem(event, grupo, categoria, hash) {
     
     return false;
 }
+
+// Restaurar posição do scroll após reload
+window.addEventListener('load', function() {
+    const scrollPosition = sessionStorage.getItem('scrollPosition');
+    const lastAddedHash = sessionStorage.getItem('lastAddedHash');
+    
+    if (scrollPosition) {
+        window.scrollTo(0, parseInt(scrollPosition));
+        sessionStorage.removeItem('scrollPosition');
+        
+        // Destacar o formulário onde o item foi adicionado
+        if (lastAddedHash) {
+            const formRow = document.getElementById('add-form-' + lastAddedHash);
+            if (formRow) {
+                formRow.style.background = 'rgba(76,175,80,0.2)';
+                setTimeout(() => {
+                    formRow.style.background = '';
+                }, 2000);
+            }
+            sessionStorage.removeItem('lastAddedHash');
+        }
+    }
+});
 
 // Fechar sugestões ao clicar fora
 document.addEventListener('click', function(e) {
