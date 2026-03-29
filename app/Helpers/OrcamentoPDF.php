@@ -630,48 +630,8 @@ HTML;
             return $html;
         }
         
-        // Gerar páginas de resumo por categoria
+        // PRIMEIRO: Gerar página de RESUMO GERAL (logo após as capas)
         $html = '';
-        $paginaNum = 1;
-        
-        foreach ($categorias as $categoriaNome => $categoriaData) {
-            $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
-            $html .= '<div class="etapa-header">' . htmlspecialchars(strtoupper($categoriaNome)) . '</div>';
-            $html .= '<table class="table-resumo"><thead><tr>';
-            $html .= '<th style="width:8%;">Nº</th><th style="width:60%;">DESCRIÇÃO</th>';
-            $html .= '<th class="right" style="width:22%;">VALOR TOTAL</th><th class="center" style="width:10%;">%</th>';
-            $html .= '</tr></thead><tbody>';
-            
-            foreach ($categoriaData['itens'] as $item) {
-                $pct = $totalGeral > 0 ? ((float)$item['valor_total'] / $totalGeral) * 100 : 0;
-                $html .= sprintf(
-                    '<tr><td>%s</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-                    htmlspecialchars((string)$item['codigo']),
-                    htmlspecialchars((string)$item['descricao']),
-                    self::formatarValor((float)$item['valor_total']),
-                    number_format($pct, 2, ',', '.')
-                );
-            }
-            
-            $pctCategoria = $totalGeral > 0 ? ($categoriaData['total'] / $totalGeral) * 100 : 0;
-            $html .= sprintf(
-                '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - %s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
-                htmlspecialchars(strtoupper($categoriaNome)),
-                self::formatarValor($categoriaData['total']),
-                number_format($pctCategoria, 2, ',', '.')
-            );
-            
-            $html .= '</tbody></table>';
-            $html .= sprintf('<div class="page-footer"><div>FOLHA: %d</div></div>', $paginaNum);
-            $html .= '</div>';
-            
-            $paginaNum++;
-        }
-        
-        // Página final com áreas e totais por categoria (IGUAL AO PDF ADMIN)
-        $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
-        $html .= '<div class="etapa-header">RESUMO GERAL</div>';
-        $html .= '<p style="color:red;font-size:20px;font-weight:bold;">TESTE - SE VOCÊ VÊ ISSO, O CÓDIGO ESTÁ FUNCIONANDO</p>';
         
         // TABELAS DE ÁREAS
         // Processar áreas personalizadas
@@ -697,6 +657,9 @@ HTML;
             
             $categoriasAgrupadas[$categoriaPrincipal] += $categoriaData['total'];
         }
+        
+        $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
+        $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
         // Tabela ÚNICA com TODAS as informações: CATEGORIA, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
         $html .= '<table class="table-resumo" style="margin-top:15px;">';
@@ -806,8 +769,45 @@ HTML;
         $html .= '</tbody></table>';
         $html .= '</div>'; // Fecha wrapper page-break-inside: avoid
         
-        $html .= sprintf('<div class="page-footer"><div>FOLHA: %d</div></div>', $paginaNum);
+        $html .= '<div class="page-footer"><div>FOLHA: 1</div></div>';
         $html .= '</div>';
+        
+        // DEPOIS: Gerar páginas de resumo por categoria
+        $paginaNum = 2;
+        
+        foreach ($categorias as $categoriaNome => $categoriaData) {
+            $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
+            $html .= '<div class="etapa-header">' . htmlspecialchars(strtoupper($categoriaNome)) . '</div>';
+            $html .= '<table class="table-resumo"><thead><tr>';
+            $html .= '<th style="width:8%;">Nº</th><th style="width:60%;">DESCRIÇÃO</th>';
+            $html .= '<th class="right" style="width:22%;">VALOR TOTAL</th><th class="center" style="width:10%;">%</th>';
+            $html .= '</tr></thead><tbody>';
+            
+            foreach ($categoriaData['itens'] as $item) {
+                $pct = $totalGeral > 0 ? ((float)$item['valor_total'] / $totalGeral) * 100 : 0;
+                $html .= sprintf(
+                    '<tr><td>%s</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
+                    htmlspecialchars((string)$item['codigo']),
+                    htmlspecialchars((string)$item['descricao']),
+                    self::formatarValor((float)$item['valor_total']),
+                    number_format($pct, 2, ',', '.')
+                );
+            }
+            
+            $pctCategoria = $totalGeral > 0 ? ($categoriaData['total'] / $totalGeral) * 100 : 0;
+            $html .= sprintf(
+                '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - %s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
+                htmlspecialchars(strtoupper($categoriaNome)),
+                self::formatarValor($categoriaData['total']),
+                number_format($pctCategoria, 2, ',', '.')
+            );
+            
+            $html .= '</tbody></table>';
+            $html .= sprintf('<div class="page-footer"><div>FOLHA: %d</div></div>', $paginaNum);
+            $html .= '</div>';
+            
+            $paginaNum++;
+        }
         
         return $html;
     }
