@@ -958,9 +958,18 @@ final class OrcamentoController
             return;
         }
 
+        // DEBUG: Mostrar URL de redirect
+        $redirectUrl = '/?route=orcamentos/show&id=' . $orcamentoId . '#item-' . $id;
+        error_log("REDIRECT URL: " . $redirectUrl);
+        
         // Usar JavaScript para redirecionar com âncora (PHP header não preserva âncora)
-        echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><script>';
-        echo 'window.location.href = "/?route=orcamentos/show&id=' . $orcamentoId . '#item-' . $id . '";';
+        echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>';
+        echo '<h1>Redirecionando...</h1>';
+        echo '<p>Item ID: ' . $id . '</p>';
+        echo '<p>URL: ' . htmlspecialchars($redirectUrl) . '</p>';
+        echo '<script>';
+        echo 'console.log("Redirecionando para:", "' . $redirectUrl . '");';
+        echo 'setTimeout(function() { window.location.href = "' . $redirectUrl . '"; }, 1000);';
         echo '</script></body></html>';
         exit;
     }
