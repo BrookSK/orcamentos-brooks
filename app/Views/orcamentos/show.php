@@ -15,7 +15,7 @@ foreach ($itens as $it) {
 
 $totalGeral = 0.0;
 
-?><div class="card" style="padding:16px; margin-bottom:12px;">
+?><div class="card" style="padding:16px; margin-bottom:12px;" data-orcamento-id="<?php echo (int)$orcamento['id']; ?>">
     <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
         <div>
             <div style="font-weight:800; font-size:14px;">Orçamento: <?php echo htmlspecialchars((string)$orcamento['numero_proposta']); ?></div>
@@ -537,8 +537,11 @@ document.getElementById('toggle-admin-columns').addEventListener('change', funct
 });
 </script>
 
+<script src="/public/orcamento-drag-drop.js"></script>
 
 <script>
+// DRAG AND DROP - Agora em arquivo externo: /public/orcamento-drag-drop.js
+/*
 // Drag and Drop para reordenar itens e categorias
 document.addEventListener('DOMContentLoaded', function() {
 (function() {
@@ -849,7 +852,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 })();
+*/
 
+// Configurar drag para grupos - COMENTADO, agora em arquivo externo
+/*
 // Configurar drag para grupos
 (function() {
     const groupRows = document.querySelectorAll('.group-row');
@@ -1004,8 +1010,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 })();
+*/
+</script>
 
-// Função para editar desconto de grupo
+<script>
 function editarDescontoGrupo(grupo, orcamentoId) {
     const modal = document.createElement('div');
     modal.id = 'modal-desconto-grupo';
