@@ -373,42 +373,14 @@ function toggleAdicionarItem() {
                         }
                         
                         // Calcular custos unitários
-                        // IMPORTANTE: custo_material e custo_mao_obra podem estar salvos como:
-                        // - UNITÁRIOS (itens do SINAPI após correção)
-                        // - TOTAIS (itens antigos)
-                        // Para detectar, verificamos se custo/quantidade ≈ valor_unitario
+                        // Os custos são sempre salvos como UNITÁRIOS no banco
+                        $custoMaterialUnit = $custoMaterialTotal;
+                        $custoMaoObraUnit = $custoMaoObraTotal;
                         
-                        $custoMaterialUnit = 0;
-                        $custoMaoObraUnit = 0;
-                        
-                        if ($custoMaterialTotal > 0 && $quantidade > 0) {
-                            $custoMaterialPorQtd = $custoMaterialTotal / $quantidade;
-                            // Se custo/qtd é muito diferente do valor_unitario, provavelmente já é unitário
-                            if (abs($custoMaterialTotal - $valorUnitario) < 0.01) {
-                                // Custo já é unitário
-                                $custoMaterialUnit = $custoMaterialTotal;
-                            } else {
-                                // Custo é total, dividir pela quantidade
-                                $custoMaterialUnit = $custoMaterialPorQtd;
-                            }
-                            
-                            // Aplicar ajuste pro rata de materiais
-                            $ajusteProRata = (float)($orcamento['ajuste_prorata_materiais'] ?? 0);
-                            if ($ajusteProRata > 0) {
-                                $custoMaterialUnit = $custoMaterialUnit * (1 + ($ajusteProRata / 100));
-                            }
-                        }
-                        
-                        if ($custoMaoObraTotal > 0 && $quantidade > 0) {
-                            $custoMaoObraPorQtd = $custoMaoObraTotal / $quantidade;
-                            // Se custo/qtd é muito diferente do valor_unitario, provavelmente já é unitário
-                            if (abs($custoMaoObraTotal - $valorUnitario) < 0.01) {
-                                // Custo já é unitário
-                                $custoMaoObraUnit = $custoMaoObraTotal;
-                            } else {
-                                // Custo é total, dividir pela quantidade
-                                $custoMaoObraUnit = $custoMaoObraPorQtd;
-                            }
+                        // Aplicar ajuste pro rata de materiais
+                        $ajusteProRata = (float)($orcamento['ajuste_prorata_materiais'] ?? 0);
+                        if ($ajusteProRata > 0 && $custoMaterialUnit > 0) {
+                            $custoMaterialUnit = $custoMaterialUnit * (1 + ($ajusteProRata / 100));
                         }
                         
                         $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit;
@@ -448,18 +420,9 @@ function toggleAdicionarItem() {
                     ?>
                     <?php
                         // Calcular custo de equipamento unitário
+                        // Os custos são sempre salvos como UNITÁRIOS no banco
                         $custoEquipamentoTotal = (float)($row['custo_equipamento'] ?? 0);
-                        $custoEquipamentoUnit = 0;
-                        
-                        if ($custoEquipamentoTotal > 0 && $quantidade > 0) {
-                            // Se custo é próximo do valor_unitario, provavelmente já é unitário
-                            if (abs($custoEquipamentoTotal - $valorUnitario) < 0.01) {
-                                $custoEquipamentoUnit = $custoEquipamentoTotal;
-                            } else {
-                                // Custo é total, dividir pela quantidade
-                                $custoEquipamentoUnit = $custoEquipamentoTotal / $quantidade;
-                            }
-                        }
+                        $custoEquipamentoUnit = $custoEquipamentoTotal;
                         
                         // Calcular lucro total (margem unitária × quantidade)
                         $lucroTotal = $margemUnit * $quantidade;

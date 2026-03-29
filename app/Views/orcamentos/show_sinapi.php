@@ -389,39 +389,15 @@ function toggleAdicionarItem() {
                         }
                         
                         // Calcular custos unitários
-                        $custoMaterialUnit = 0;
-                        $custoMaoObraUnit = 0;
-                        $custoEquipamentoUnit = 0;
+                        // Os custos são sempre salvos como UNITÁRIOS no banco
+                        $custoMaterialUnit = $custoMaterialTotal;
+                        $custoMaoObraUnit = $custoMaoObraTotal;
+                        $custoEquipamentoUnit = $custoEquipamentoTotal;
                         
-                        if ($custoMaterialTotal > 0 && $quantidade > 0) {
-                            // Se custo é próximo do valor_unitario, provavelmente já é unitário
-                            if (abs($custoMaterialTotal - $valorUnitario) < 0.01) {
-                                $custoMaterialUnit = $custoMaterialTotal;
-                            } else {
-                                $custoMaterialUnit = $custoMaterialTotal / $quantidade;
-                            }
-                            
-                            // Aplicar ajuste pro rata de materiais
-                            $ajusteProRata = (float)($orcamento['ajuste_prorata_materiais'] ?? 0);
-                            if ($ajusteProRata > 0) {
-                                $custoMaterialUnit = $custoMaterialUnit * (1 + ($ajusteProRata / 100));
-                            }
-                        }
-                        
-                        if ($custoMaoObraTotal > 0 && $quantidade > 0) {
-                            if (abs($custoMaoObraTotal - $valorUnitario) < 0.01) {
-                                $custoMaoObraUnit = $custoMaoObraTotal;
-                            } else {
-                                $custoMaoObraUnit = $custoMaoObraTotal / $quantidade;
-                            }
-                        }
-                        
-                        if ($custoEquipamentoTotal > 0 && $quantidade > 0) {
-                            if (abs($custoEquipamentoTotal - $valorUnitario) < 0.01) {
-                                $custoEquipamentoUnit = $custoEquipamentoTotal;
-                            } else {
-                                $custoEquipamentoUnit = $custoEquipamentoTotal / $quantidade;
-                            }
+                        // Aplicar ajuste pro rata de materiais
+                        $ajusteProRata = (float)($orcamento['ajuste_prorata_materiais'] ?? 0);
+                        if ($ajusteProRata > 0 && $custoMaterialUnit > 0) {
+                            $custoMaterialUnit = $custoMaterialUnit * (1 + ($ajusteProRata / 100));
                         }
                         
                         $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit + $custoEquipamentoUnit;

@@ -823,42 +823,10 @@ CSS;
                     $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
                     
                     // Calcular valores unitários
-                    // IMPORTANTE: custos podem estar salvos como UNITÁRIOS ou TOTAIS
-                    // Para detectar, verificamos se custo ≈ valor_unitario (indica que é unitário)
-                    
-                    $custoMaterialUnit = 0;
-                    $custoMaoObraUnit = 0;
-                    $custoEquipamentoUnit = 0;
-                    
-                    if ($custoMaterialTotal > 0 && $quantidade > 0) {
-                        // Se custo é próximo do valor_unitario, provavelmente já é unitário
-                        if (abs($custoMaterialTotal - $valorUnitario) < 0.01) {
-                            $custoMaterialUnit = $custoMaterialTotal;
-                        } else {
-                            // Custo é total, dividir pela quantidade
-                            $custoMaterialUnit = $custoMaterialTotal / $quantidade;
-                        }
-                    }
-                    
-                    if ($custoMaoObraTotal > 0 && $quantidade > 0) {
-                        // Se custo é próximo do valor_unitario, provavelmente já é unitário
-                        if (abs($custoMaoObraTotal - $valorUnitario) < 0.01) {
-                            $custoMaoObraUnit = $custoMaoObraTotal;
-                        } else {
-                            // Custo é total, dividir pela quantidade
-                            $custoMaoObraUnit = $custoMaoObraTotal / $quantidade;
-                        }
-                    }
-                    
-                    if ($custoEquipamentoTotal > 0 && $quantidade > 0) {
-                        // Se custo é próximo do valor_unitario, provavelmente já é unitário
-                        if (abs($custoEquipamentoTotal - $valorUnitario) < 0.01) {
-                            $custoEquipamentoUnit = $custoEquipamentoTotal;
-                        } else {
-                            // Custo é total, dividir pela quantidade
-                            $custoEquipamentoUnit = $custoEquipamentoTotal / $quantidade;
-                        }
-                    }
+                    // Os custos são sempre salvos como UNITÁRIOS no banco
+                    $custoMaterialUnit = $custoMaterialTotal;
+                    $custoMaoObraUnit = $custoMaoObraTotal;
+                    $custoEquipamentoUnit = $custoEquipamentoTotal;
                     
                     $custoUnitTotal = $custoMaterialUnit + $custoMaoObraUnit + $custoEquipamentoUnit;
                     
