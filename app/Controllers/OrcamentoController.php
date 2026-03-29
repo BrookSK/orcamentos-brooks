@@ -2145,15 +2145,16 @@ final class OrcamentoController
         
         $query = $_GET['q'] ?? '';
         
-        Logger::info('orcamentos.buscarSinapi', ['query' => $query]);
-        
         if (strlen($query) < 3) {
-            echo json_encode([]);
+            echo json_encode(['debug' => 'query too short', 'query' => $query, 'length' => strlen($query)]);
             return;
         }
         
         try {
             $pdo = \App\Core\Database::pdo();
+            
+            $searchQuery = '%' . $query . '%';
+            
             $stmt = $pdo->prepare(
                 "SELECT codigo, descricao, unidade, preco_unit as preco_unitario 
                  FROM sinapi_insumos 
@@ -2162,15 +2163,26 @@ final class OrcamentoController
                  ORDER BY descricao 
                  LIMIT 10"
             );
-            $stmt->execute([':query' => '%' . $query . '%']);
+            $stmt->execute([':query' => $searchQuery]);
             $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
-            Logger::info('orcamentos.buscarSinapi.results', ['count' => count($resultados)]);
+            // Debug: adicionar informações extras
+            $response = [
+                'debug' => 'success',
+                'query' => $query,
+                'searchQuery' => $searchQuery,
+                'count' => count($resultados),
+                'results' => $resultados
+            ];
             
-            echo json_encode($resultados);
+            echo json_encode($response);
         } catch (\Throwable $e) {
-            Logger::error('orcamentos.buscarSinapi.error', ['message' => $e->getMessage()]);
-            echo json_encode([]);
+            echo json_encode([
+                'debug' => 'error',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
         }
     }
 
@@ -2244,21 +2256,15 @@ final class OrcamentoController
                 } else {
                     // Primeiro item do grupo - descobrir próximo número de grupo
                     $stmt = $pdo->prepare(
-                        "SELECT codigo FROM orcamento_itens 
-                         WHERE orcamento_id = :orcamento_id 
-                         ORDER BY ordem DESC, id DESC 
-                         LIMIT 1"
+                        "SELECT MAX(CAST(SUBSTRING_INDEX(codigo, '.', 1) AS UNSIGNED)) as max_grupo 
+                         FROM orcamento_itens 
+                         WHERE orcamento_id = :orcamento_id"
                     );
                     $stmt->execute([':orcamento_id' => $orcamentoId]);
-                    $lastOverall = $stmt->fetch(\PDO::FETCH_ASSOC);
+                    $result = $stmt->fetch(\PDO::FETCH_ASSOC);
                     
-                    if ($lastOverall && !empty($lastOverall['codigo'])) {
-                        $parts = explode('.', $lastOverall['codigo']);
-                        $nextGroup = ((int)$parts[0]) + 1;
-                        $codigo = $nextGroup . '.1';
-                    } else {
-                        $codigo = '1.1';
-                    }
+                    $nextGroup = $result && $result['max_grupo'] ? ((int)$result['max_grupo'] + 1) : 1;
+                    $codigo = $nextGroup . '.1';
                 }
             }
             
@@ -2269,8 +2275,8 @@ final class OrcamentoController
             
             // Se não existe no SINAPI, criar
             if (!$sinapiItem) {
-                // Gerar código SINAPI único
-                $sinapiCodigo = 'MANUAL-' . time() . '-' . rand(1000, 9999);
+                // Gerar código SINAPI simples
+                $sinapiCodigo = 'M' . time();
                 
                 $stmt = $pdo->prepare(
                     "INSERT INTO sinapi_insumos (codigo, descricao, unidade, preco_unit, tipo) 
