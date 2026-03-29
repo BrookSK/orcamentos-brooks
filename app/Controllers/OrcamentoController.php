@@ -2211,6 +2211,9 @@ final class OrcamentoController
             $quantidade = (float)($_POST['quantidade'] ?? 1);
             $valorUnitario = (float)($_POST['valor_unitario'] ?? 0);
             $classificacaoCusto = (string)($_POST['classificacao_custo'] ?? 'material');
+            $ordem = (int)($_POST['ordem'] ?? 0);
+            $usaMargemPersonalizada = !empty($_POST['usa_margem_personalizada']) ? 1 : 0;
+            $margemPersonalizada = (float)($_POST['margem_personalizada'] ?? 0);
             
             if (!$orcamentoId || !$descricao || !$grupo || !$categoria) {
                 echo json_encode(['success' => false, 'message' => 'Dados incompletos']);
@@ -2337,20 +2340,26 @@ final class OrcamentoController
             }
             
             // Calcular ordem do item
-            $stmt = $pdo->prepare(
-                "SELECT MAX(ordem) as max_ordem 
-                 FROM orcamento_itens 
-                 WHERE orcamento_id = :orcamento_id 
-                 AND grupo = :grupo 
-                 AND categoria = :categoria"
-            );
-            $stmt->execute([
-                ':orcamento_id' => $orcamentoId,
-                ':grupo' => $grupo,
-                ':categoria' => $categoria
-            ]);
-            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-            $ordem = $result && $result['max_ordem'] ? ((int)$result['max_ordem'] + 1) : 1;
+            if ($ordem > 0) {
+                // Usar ordem fornecida pelo usuário
+                $ordemFinal = $ordem;
+            } else {
+                // Calcular próxima ordem automaticamente
+                $stmt = $pdo->prepare(
+                    "SELECT MAX(ordem) as max_ordem 
+                     FROM orcamento_itens 
+                     WHERE orcamento_id = :orcamento_id 
+                     AND grupo = :grupo 
+                     AND categoria = :categoria"
+                );
+                $stmt->execute([
+                    ':orcamento_id' => $orcamentoId,
+                    ':grupo' => $grupo,
+                    ':categoria' => $categoria
+                ]);
+                $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+                $ordemFinal = $result && $result['max_ordem'] ? ((int)$result['max_ordem'] + 1) : 1;
+            }
             
             // Criar o item no orçamento
             $data = [
@@ -2366,11 +2375,11 @@ final class OrcamentoController
                 'classificacao_custo' => $classificacaoCusto,
                 'grupo' => $grupo,
                 'categoria' => $categoria,
-                'ordem' => $ordem,
+                'ordem' => $ordemFinal,
                 'etapa' => '',
                 'percentual_realizado' => 0,
-                'usa_margem_personalizada' => 0,
-                'margem_personalizada' => 0
+                'usa_margem_personalizada' => $usaMargemPersonalizada,
+                'margem_personalizada' => $margemPersonalizada
             ];
             
             $itemId = OrcamentoItem::create($orcamentoId, $data);

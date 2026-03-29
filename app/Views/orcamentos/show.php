@@ -467,7 +467,7 @@ function toggleAdicionarItem() {
                 <?php $formHash = preg_replace('/[^a-zA-Z0-9]/', '', $grupo . $categoria); ?>
                 <tr class="add-item-form-row" id="add-form-<?php echo $formHash; ?>" style="display:none;">
                     <td colspan="14" style="padding:20px; background:rgba(76,175,80,0.05); border:2px solid #4CAF50;">
-                        <div style="max-width:900px; margin:0 auto;">
+                        <div style="max-width:1000px; margin:0 auto;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                                 <h3 style="margin:0; color:#4CAF50;">Novo Item - <?php echo htmlspecialchars($categoria); ?></h3>
                                 <button onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>'); return false;" style="background:transparent; border:none; font-size:24px; cursor:pointer; color:#999;">×</button>
@@ -480,14 +480,15 @@ function toggleAdicionarItem() {
                                 
                                 <div style="margin-bottom:16px; position:relative;">
                                     <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Descrição (digite para buscar no SINAPI)</label>
-                                    <input type="text" 
-                                           name="descricao" 
+                                    <textarea name="descricao" 
                                            id="descricao-<?php echo $formHash; ?>"
                                            required 
+                                           rows="3"
                                            autocomplete="off"
                                            oninput="buscarSINAPI(this.value, '<?php echo $formHash; ?>')"
-                                           style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                           style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit; resize:vertical;"></textarea>
                                     <div id="sinapi-suggestions-<?php echo $formHash; ?>" class="sinapi-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#2a2a2a; border:1px solid #4CAF50; border-radius:4px; max-height:200px; overflow-y:auto; z-index:1000; margin-top:4px;"></div>
+                                    <div style="font-size:11px; color:#999; margin-top:4px;">Dica: para múltiplas linhas, você pode usar quebras de linha</div>
                                 </div>
                                 
                                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
@@ -507,19 +508,44 @@ function toggleAdicionarItem() {
                                     </div>
                                     
                                     <div>
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Valor Unitário</label>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Ordem (opcional)</label>
+                                        <input type="number" name="ordem" step="1" value="0" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                    </div>
+                                </div>
+                                
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                                    <div>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Valor Unitário (custo base)</label>
                                         <input type="number" name="valor_unitario" step="0.01" required value="0" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                        <div style="font-size:11px; color:#999; margin-top:4px;">Custo base do item (sem margem)</div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Tipo de Custo</label>
+                                        <select name="classificacao_custo" required style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                            <option value="material">Material</option>
+                                            <option value="mao_obra">Mão de Obra</option>
+                                            <option value="equipamento">Equipamento</option>
+                                        </select>
+                                        <div style="font-size:11px; color:#999; margin-top:4px;">Define qual margem será aplicada</div>
                                     </div>
                                 </div>
                                 
                                 <div style="margin-bottom:16px;">
-                                    <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Tipo de Custo</label>
-                                    <select name="classificacao_custo" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
-                                        <option value="material">Material</option>
-                                        <option value="mao_obra">Mão de Obra</option>
-                                        <option value="equipamento">Equipamento</option>
-                                    </select>
-                                    <div style="font-size:11px; color:#999; margin-top:4px;">O código será gerado automaticamente ao salvar</div>
+                                    <label style="display:flex; align-items:center; font-size:13px; cursor:pointer;">
+                                        <input type="checkbox" name="usa_margem_personalizada" value="1" style="width:auto; margin-right:8px;">
+                                        Usar margem personalizada
+                                    </label>
+                                </div>
+                                
+                                <div style="margin-bottom:16px;">
+                                    <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">% Margem Personalizada</label>
+                                    <input type="number" name="margem_personalizada" step="0.01" value="0" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                    <div style="font-size:11px; color:#999; margin-top:4px;">Deixe 0 para usar margem global do orçamento (ex: 25 para 25%)</div>
+                                </div>
+                                
+                                <div style="padding:12px; background:rgba(255,255,255,0.02); border-radius:4px; margin-bottom:16px;">
+                                    <div style="font-size:11px; color:#999;">ℹ️ O código será gerado automaticamente ao salvar</div>
                                 </div>
                                 
                                 <div style="display:flex; gap:12px;">
