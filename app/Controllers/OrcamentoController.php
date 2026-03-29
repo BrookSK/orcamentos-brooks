@@ -1566,6 +1566,11 @@ final class OrcamentoController
 
     public function showSinapi(): void
     {
+        // Iniciar sessão se não estiver iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         // Forçar exibição de erros
         error_reporting(E_ALL);
         ini_set('display_errors', '1');

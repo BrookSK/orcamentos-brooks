@@ -441,7 +441,7 @@ function toggleAdicionarItem() {
                         $subtotalCategoria += $valorTotal;
                         $totalGeral += $valorTotal;
                     ?>
-                    <tr class="item-row" draggable="true" data-item-id="<?php echo (int)$row['id']; ?>" data-ordem="<?php echo (int)($row['ordem'] ?? 0); ?>">
+                    <tr id="item-<?php echo (int)$row['id']; ?>" class="item-row" draggable="true" data-item-id="<?php echo (int)$row['id']; ?>" data-ordem="<?php echo (int)($row['ordem'] ?? 0); ?>">
                         <td class="drag-handle" style="cursor:move; text-align:center; width:30px; color:#666;">⋮⋮</td>
                         <td class="muted"><?php echo htmlspecialchars((string)$row['codigo']); ?></td>
                         <td style="white-space:pre-line;"><?php echo htmlspecialchars((string)$row['descricao']); ?></td>
@@ -457,7 +457,7 @@ function toggleAdicionarItem() {
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorTotal); ?></td>
                         <td>
                             <div class="row-actions">
-                                <a class="btn" href="/?route=orcamentos/itemEdit&orcamento_id=<?php echo (int)$orcamento['id']; ?>&id=<?php echo (int)$row['id']; ?>">Editar</a>
+                                <a class="btn" href="/?route=orcamentos/itemEdit&orcamento_id=<?php echo (int)$orcamento['id']; ?>&id=<?php echo (int)$row['id']; ?>&return_anchor=item-<?php echo (int)$row['id']; ?>">Editar</a>
                                 <form class="inline" method="post" action="/?route=orcamentos/itemDelete" onsubmit="return confirm('Excluir este item?');">
                                     <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
                                     <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
@@ -1188,4 +1188,66 @@ function aplicarDescontoGrupo(grupo, orcamentoId) {
         setTimeout(() => loadingMsg.remove(), 3000);
     });
 }
+</script>
+
+<script>
+// Scroll suave para o item após edição
+(function() {
+    // Verificar se há item para scroll (via sessão PHP)
+    <?php 
+    $scrollToItem = null;
+    if (isset($_SESSION['scroll_to_item'])) {
+        $scrollToItem = (int)$_SESSION['scroll_to_item'];
+        unset($_SESSION['scroll_to_item']); // Limpar após usar
+    }
+    ?>
+    
+    const scrollToItemId = <?php echo $scrollToItem ? $scrollToItem : 'null'; ?>;
+    
+    function scrollToItem() {
+        let itemId = null;
+        
+        // Prioridade 1: Item da sessão PHP
+        if (scrollToItemId) {
+            itemId = 'item-' + scrollToItemId;
+            console.log('🎯 Scroll via sessão para:', itemId);
+        }
+        // Prioridade 2: Hash na URL
+        else if (window.location.hash) {
+            itemId = window.location.hash.substring(1);
+            console.log('🎯 Scroll via hash para:', itemId);
+        }
+        
+        if (itemId) {
+            const element = document.getElementById(itemId);
+            if (element) {
+                console.log('✓ Elemento encontrado:', element);
+                // Scroll imediato primeiro
+                element.scrollIntoView({ block: 'center' });
+                // Depois scroll suave
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Destacar o item
+                    element.style.transition = 'background-color 0.5s';
+                    element.style.backgroundColor = 'rgba(76, 175, 80, 0.3)';
+                    setTimeout(() => {
+                        element.style.backgroundColor = '';
+                    }, 2000);
+                }, 100);
+            } else {
+                console.log('✗ Elemento não encontrado:', itemId);
+            }
+        }
+    }
+    
+    // Tentar quando DOM carregar
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', scrollToItem);
+    } else {
+        scrollToItem();
+    }
+    
+    // Tentar novamente após tudo carregar (fallback)
+    window.addEventListener('load', scrollToItem);
+})();
 </script>
