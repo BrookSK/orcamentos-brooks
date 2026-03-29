@@ -694,7 +694,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Determinar posição de inserção
                 const rect = this.getBoundingClientRect();
-                const midpoint = rect.top + rect.height / 2;tBoundingClientRect();
                 const midpoint = rect.top + rect.height / 2;
                 
                 if (e.clientY < midpoint) {
