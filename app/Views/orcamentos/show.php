@@ -1194,21 +1194,40 @@ function recalcularMargens(orcamentoId) {
 
 <script>
 // Scroll suave para o item após edição
-document.addEventListener('DOMContentLoaded', function() {
-    if (window.location.hash) {
-        const itemId = window.location.hash.substring(1); // Remove o #
-        const element = document.getElementById(itemId);
-        if (element) {
-            setTimeout(() => {
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Destacar o item brevemente
-                element.style.transition = 'background-color 0.5s';
-                element.style.backgroundColor = 'rgba(76, 175, 80, 0.3)';
+(function() {
+    function scrollToItem() {
+        if (window.location.hash) {
+            const itemId = window.location.hash.substring(1); // Remove o #
+            console.log('🎯 Tentando scroll para:', itemId);
+            const element = document.getElementById(itemId);
+            if (element) {
+                console.log('✓ Elemento encontrado:', element);
+                // Scroll imediato primeiro
+                element.scrollIntoView({ block: 'center' });
+                // Depois scroll suave
                 setTimeout(() => {
-                    element.style.backgroundColor = '';
-                }, 2000);
-            }, 300);
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Destacar o item
+                    element.style.transition = 'background-color 0.5s';
+                    element.style.backgroundColor = 'rgba(76, 175, 80, 0.3)';
+                    setTimeout(() => {
+                        element.style.backgroundColor = '';
+                    }, 2000);
+                }, 100);
+            } else {
+                console.log('✗ Elemento não encontrado:', itemId);
+            }
         }
     }
-});
+    
+    // Tentar quando DOM carregar
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', scrollToItem);
+    } else {
+        scrollToItem();
+    }
+    
+    // Tentar novamente após tudo carregar (fallback)
+    window.addEventListener('load', scrollToItem);
+})();
 </script>
