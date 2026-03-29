@@ -9,7 +9,7 @@ declare(strict_types=1);
             <div class="muted" style="margin-top:4px; font-size:12px;">Orçamento: <?php echo htmlspecialchars((string)$orcamento['numero_proposta']); ?></div>
         </div>
         <div class="actions">
-            <a class="btn" href="/?route=orcamentos/show&id=<?php echo (int)$orcamento['id']; ?>">Voltar</a>
+            <a class="btn" href="/?route=orcamentos/show&id=<?php echo (int)$orcamento['id']; ?>#item-<?php echo (int)$item['id']; ?>">Voltar</a>
         </div>
     </div>
 </div>

@@ -432,7 +432,7 @@ function toggleAdicionarItem() {
                         // Calcular lucro total (margem unitária × quantidade)
                         $lucroTotal = $margemUnit * $quantidade;
                     ?>
-                    <tr class="item-row" draggable="true" data-item-id="<?php echo (int)$row['id']; ?>" data-ordem="<?php echo (int)($row['ordem'] ?? 0); ?>">
+                    <tr id="item-<?php echo (int)$row['id']; ?>" class="item-row" draggable="true" data-item-id="<?php echo (int)$row['id']; ?>" data-ordem="<?php echo (int)($row['ordem'] ?? 0); ?>">
                         <td class="drag-handle" style="cursor:move; text-align:center; width:30px; color:#666;">⋮⋮</td>
                         <td class="muted"><?php echo htmlspecialchars((string)$row['codigo']); ?></td>
                         <td style="white-space:pre-line;"><?php echo htmlspecialchars((string)$row['descricao']); ?></td>
@@ -448,7 +448,7 @@ function toggleAdicionarItem() {
                         <td class="num"><?php echo OrcamentoItem::formatMoney($valorTotal); ?></td>
                         <td>
                             <div class="row-actions">
-                                <a class="btn" href="/?route=orcamentos/itemEdit&orcamento_id=<?php echo (int)$orcamento['id']; ?>&id=<?php echo (int)$row['id']; ?>">Editar</a>
+                                <a class="btn" href="/?route=orcamentos/itemEdit&orcamento_id=<?php echo (int)$orcamento['id']; ?>&id=<?php echo (int)$row['id']; ?>&return_anchor=item-<?php echo (int)$row['id']; ?>">Editar</a>
                                 <form class="inline" method="post" action="/?route=orcamentos/itemDelete" onsubmit="return confirm('Excluir este item?');">
                                     <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
                                     <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
@@ -1190,4 +1190,25 @@ function recalcularMargens(orcamentoId) {
         setTimeout(() => loadingMsg.remove(), 3000);
     });
 }
+</script>
+
+<script>
+// Scroll suave para o item após edição
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash) {
+        const itemId = window.location.hash.substring(1); // Remove o #
+        const element = document.getElementById(itemId);
+        if (element) {
+            setTimeout(() => {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Destacar o item brevemente
+                element.style.transition = 'background-color 0.5s';
+                element.style.backgroundColor = 'rgba(76, 175, 80, 0.3)';
+                setTimeout(() => {
+                    element.style.backgroundColor = '';
+                }, 2000);
+            }, 300);
+        }
+    }
+});
 </script>

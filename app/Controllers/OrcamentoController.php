@@ -958,7 +958,7 @@ final class OrcamentoController
             return;
         }
 
-        $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
+        $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId . '#item-' . $id);
     }
 
     public function recalcularMargens(): void
