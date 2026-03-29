@@ -944,7 +944,8 @@ function mostrarSugestoesSINAPI(itens, hash) {
     if (!suggestions) return;
     
     if (itens.length === 0) {
-        suggestions.style.display = 'none';
+        suggestions.innerHTML = '<div style="padding:12px; color:#999; text-align:center;">Nenhum item encontrado no SINAPI. Digite para criar um novo item.</div>';
+        suggestions.style.display = 'block';
         return;
     }
     

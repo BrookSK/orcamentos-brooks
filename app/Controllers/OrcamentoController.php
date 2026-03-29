@@ -2157,8 +2157,8 @@ final class OrcamentoController
             $stmt = $pdo->prepare(
                 "SELECT codigo, descricao, unidade, preco_unit as preco_unitario 
                  FROM sinapi_insumos 
-                 WHERE descricao LIKE :query 
-                 OR codigo LIKE :query 
+                 WHERE LOWER(descricao) LIKE LOWER(:query) 
+                 OR LOWER(codigo) LIKE LOWER(:query) 
                  ORDER BY descricao 
                  LIMIT 10"
             );
