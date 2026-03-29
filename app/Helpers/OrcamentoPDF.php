@@ -671,6 +671,7 @@ HTML;
         // Página final com áreas e totais por categoria (IGUAL AO PDF ADMIN)
         $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
         $html .= '<div class="etapa-header">RESUMO GERAL</div>';
+        $html .= '<p style="color:red;font-size:20px;font-weight:bold;">TESTE - SE VOCÊ VÊ ISSO, O CÓDIGO ESTÁ FUNCIONANDO</p>';
         
         // TABELAS DE ÁREAS
         // Processar áreas personalizadas
