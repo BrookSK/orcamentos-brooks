@@ -29,6 +29,7 @@ $totalGeral = 0.0;
         <div class="actions">
             <a class="btn" href="/?route=orcamentos/index">Voltar</a>
             <a class="btn" href="/?route=orcamentos/edit&id=<?php echo (int)$orcamento['id']; ?>">Editar cabeçalho</a>
+            <button class="btn" style="background: #2196F3; color: white;" onclick="recalcularMargens(<?php echo (int)$orcamento['id']; ?>)">🔄 Recalcular Margens</button>
             <a class="btn" style="background: #e94560; color: white;" href="/?route=orcamentos/adequacao&id=<?php echo (int)$orcamento['id']; ?>">💰 Ajustar Valor do Contrato</a>
             <!-- <a class="btn" href="/?route=orcamentos/print&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Imprimir</a> -->
             <a class="btn primary" href="/?route=orcamentos/pdf&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Exportar PDF</a>
@@ -1139,5 +1140,41 @@ function toggleCalculadora() {
 
 function selecionarTodosSINAPI(checked) {
     document.querySelectorAll('.sinapi-item-check').forEach(cb => cb.checked = checked);
+}
+
+function recalcularMargens(orcamentoId) {
+    if (!confirm('Recalcular os valores de cobrança de todos os itens baseado nas margens do cabeçalho?\n\nIsto irá atualizar o valor de cobrança de todos os itens que NÃO usam margem personalizada.')) {
+        return;
+    }
+    
+    const loadingMsg = document.createElement('div');
+    loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:10001;';
+    loadingMsg.innerHTML = '⏳ Recalculando margens...';
+    document.body.appendChild(loadingMsg);
+    
+    fetch('/?route=orcamentos/recalcularMargens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orcamento_id: orcamentoId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            loadingMsg.innerHTML = '✓ ' + data.count + ' itens recalculados!';
+            loadingMsg.style.background = '#4CAF50';
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            loadingMsg.innerHTML = '✗ Erro: ' + (data.error || 'Erro desconhecido');
+            loadingMsg.style.background = '#f44336';
+            setTimeout(() => loadingMsg.remove(), 3000);
+        }
+    })
+    .catch(err => {
+        loadingMsg.innerHTML = '✗ Erro de conexão';
+        loadingMsg.style.background = '#f44336';
+        setTimeout(() => loadingMsg.remove(), 3000);
+    });
 }
 </script>

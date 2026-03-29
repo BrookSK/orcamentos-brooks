@@ -961,6 +961,86 @@ final class OrcamentoController
         $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
     }
 
+    public function recalcularMargens(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+        
+        $orcamentoId = (int)($data['orcamento_id'] ?? 0);
+        
+        if ($orcamentoId <= 0) {
+            echo json_encode(['success' => false, 'error' => 'ID do orçamento inválido']);
+            return;
+        }
+        
+        // Buscar orçamento
+        $orcamento = Orcamento::find($orcamentoId);
+        if (!$orcamento) {
+            echo json_encode(['success' => false, 'error' => 'Orçamento não encontrado']);
+            return;
+        }
+        
+        // Buscar margens globais
+        $margemMaoObra = (float)($orcamento['margem_mao_obra'] ?? 50);
+        $margemMateriais = (float)($orcamento['margem_materiais'] ?? 20);
+        $margemEquipamentos = (float)($orcamento['margem_equipamentos'] ?? 20);
+        
+        // Buscar todos os itens
+        $itens = OrcamentoItem::allByOrcamento($orcamentoId);
+        
+        $count = 0;
+        foreach ($itens as $item) {
+            $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+            
+            // Só recalcular itens que NÃO usam margem personalizada
+            if ($usaMargemPersonalizada) {
+                continue;
+            }
+            
+            $valorUnitario = (float)($item['valor_unitario'] ?? 0);
+            if ($valorUnitario <= 0) {
+                continue;
+            }
+            
+            // Detectar margem baseada na categoria
+            $categoria = (string)($item['categoria'] ?? '');
+            $categoriaUpper = strtoupper($categoria);
+            
+            if (stripos($categoriaUpper, 'MÃO DE OBRA') !== false || stripos($categoriaUpper, 'MAO DE OBRA') !== false) {
+                $margem = $margemMaoObra;
+            } elseif (stripos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                $margem = $margemEquipamentos;
+            } else {
+                $margem = $margemMateriais;
+            }
+            
+            // Calcular novo valor_cobranca
+            $valorCobranca = round($valorUnitario * (1 + $margem / 100), 2);
+            
+            // Atualizar no banco
+            $pdo = \App\Core\Database::pdo();
+            $stmt = $pdo->prepare('UPDATE orcamento_itens SET valor_cobranca = :valor_cobranca WHERE id = :id');
+            $stmt->execute([
+                ':valor_cobranca' => $valorCobranca,
+                ':id' => (int)$item['id']
+            ]);
+            
+            $count++;
+        }
+        
+        Logger::info('orcamentos.recalcularMargens', [
+            'orcamento_id' => $orcamentoId,
+            'count' => $count,
+            'margem_mao_obra' => $margemMaoObra,
+            'margem_materiais' => $margemMateriais,
+            'margem_equipamentos' => $margemEquipamentos
+        ]);
+        
+        echo json_encode(['success' => true, 'count' => $count]);
+    }
+
     public function grupos(): void
     {
         Logger::info('orcamentos.grupos');
