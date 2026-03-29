@@ -285,7 +285,7 @@ table { page-break-inside: auto; }
 tr { page-break-inside: avoid; page-break-after: auto; }
 thead { display: table-header-group; }
 tfoot { display: table-footer-group; }
-.page { page-break-after: always; background: #FFF; padding: 20px; }
+.page { page-break-after: always; background: #FFF; padding: 10mm; }
 .no-page-break { page-break-after: avoid; }
 
 /* CAPA */
