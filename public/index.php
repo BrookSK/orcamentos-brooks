@@ -309,6 +309,8 @@ if ($controllerName === 'orcamentos') {
         'delete' => ['POST'],
         'show' => ['GET'],
         'itemStore' => ['POST'],
+        'itemStoreAjax' => ['POST'],
+        'buscarSinapi' => ['GET'],
         'itemEdit' => ['GET'],
         'itemUpdate' => ['POST'],
         'itemDelete' => ['POST'],

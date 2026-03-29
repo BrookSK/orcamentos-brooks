@@ -2178,41 +2178,15 @@ final class OrcamentoController
             $orcamentoId = (int)($_POST['orcamento_id'] ?? 0);
             $grupo = (string)($_POST['grupo'] ?? '');
             $categoria = (string)($_POST['categoria'] ?? '');
-            $codigo = (string)($_POST['codigo'] ?? '');
             $descricao = (string)($_POST['descricao'] ?? '');
             $unidade = (string)($_POST['unidade'] ?? '');
             $quantidade = (float)($_POST['quantidade'] ?? 1);
             $valorUnitario = (float)($_POST['valor_unitario'] ?? 0);
             $classificacaoCusto = (string)($_POST['classificacao_custo'] ?? 'material');
             
-            if (!$orcamentoId || !$descricao) {
+            if (!$orcamentoId || !$descricao || !$grupo || !$categoria) {
                 echo json_encode(['success' => false, 'message' => 'Dados incompletos']);
                 return;
-            }
-            
-            // Verificar se o item existe no SINAPI
-            $pdo = \App\Core\Database::pdo();
-            $stmt = $pdo->prepare("SELECT id FROM sinapi_insumos WHERE codigo = :codigo AND descricao = :descricao");
-            $stmt->execute([':codigo' => $codigo, ':descricao' => $descricao]);
-            $sinapiItem = $stmt->fetch(\PDO::FETCH_ASSOC);
-            
-            // Se não existe no SINAPI, criar
-            if (!$sinapiItem && $codigo && $descricao) {
-                $stmt = $pdo->prepare(
-                    "INSERT INTO sinapi_insumos (codigo, descricao, unidade, preco_unitario, tipo, origem) 
-                     VALUES (:codigo, :descricao, :unidade, :preco, 'COMPOSICAO', 'MANUAL')"
-                );
-                $stmt->execute([
-                    ':codigo' => $codigo,
-                    ':descricao' => $descricao,
-                    ':unidade' => $unidade,
-                    ':preco' => $valorUnitario
-                ]);
-                
-                Logger::info('sinapi.item_created', [
-                    'codigo' => $codigo,
-                    'descricao' => $descricao
-                ]);
             }
             
             // Buscar o orçamento para pegar as margens
@@ -2220,6 +2194,95 @@ final class OrcamentoController
             if (!$orcamento) {
                 echo json_encode(['success' => false, 'message' => 'Orçamento não encontrado']);
                 return;
+            }
+            
+            // Auto-gerar código baseado na categoria
+            $pdo = \App\Core\Database::pdo();
+            $stmt = $pdo->prepare(
+                "SELECT codigo FROM orcamento_itens 
+                 WHERE orcamento_id = :orcamento_id 
+                 AND grupo = :grupo 
+                 AND categoria = :categoria 
+                 ORDER BY ordem DESC, id DESC 
+                 LIMIT 1"
+            );
+            $stmt->execute([
+                ':orcamento_id' => $orcamentoId,
+                ':grupo' => $grupo,
+                ':categoria' => $categoria
+            ]);
+            $lastItem = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            // Gerar próximo código
+            if ($lastItem && !empty($lastItem['codigo'])) {
+                // Extrair número do código (ex: "1.5" -> 5, "2.10" -> 10)
+                $parts = explode('.', $lastItem['codigo']);
+                $nextNum = isset($parts[1]) ? ((int)$parts[1] + 1) : 1;
+                $codigo = $parts[0] . '.' . $nextNum;
+            } else {
+                // Primeiro item da categoria - descobrir número do grupo
+                $stmt = $pdo->prepare(
+                    "SELECT codigo FROM orcamento_itens 
+                     WHERE orcamento_id = :orcamento_id 
+                     AND grupo = :grupo 
+                     ORDER BY ordem ASC, id ASC 
+                     LIMIT 1"
+                );
+                $stmt->execute([
+                    ':orcamento_id' => $orcamentoId,
+                    ':grupo' => $grupo
+                ]);
+                $firstGroupItem = $stmt->fetch(\PDO::FETCH_ASSOC);
+                
+                if ($firstGroupItem && !empty($firstGroupItem['codigo'])) {
+                    $parts = explode('.', $firstGroupItem['codigo']);
+                    $codigo = $parts[0] . '.1';
+                } else {
+                    // Primeiro item do grupo - descobrir próximo número de grupo
+                    $stmt = $pdo->prepare(
+                        "SELECT codigo FROM orcamento_itens 
+                         WHERE orcamento_id = :orcamento_id 
+                         ORDER BY ordem DESC, id DESC 
+                         LIMIT 1"
+                    );
+                    $stmt->execute([':orcamento_id' => $orcamentoId]);
+                    $lastOverall = $stmt->fetch(\PDO::FETCH_ASSOC);
+                    
+                    if ($lastOverall && !empty($lastOverall['codigo'])) {
+                        $parts = explode('.', $lastOverall['codigo']);
+                        $nextGroup = ((int)$parts[0]) + 1;
+                        $codigo = $nextGroup . '.1';
+                    } else {
+                        $codigo = '1.1';
+                    }
+                }
+            }
+            
+            // Verificar se o item existe no SINAPI (buscar por descrição)
+            $stmt = $pdo->prepare("SELECT codigo as sinapi_codigo, unidade, preco_unitario FROM sinapi_insumos WHERE descricao = :descricao LIMIT 1");
+            $stmt->execute([':descricao' => $descricao]);
+            $sinapiItem = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            // Se não existe no SINAPI, criar
+            if (!$sinapiItem) {
+                // Gerar código SINAPI único
+                $sinapiCodigo = 'MANUAL-' . time() . '-' . rand(1000, 9999);
+                
+                $stmt = $pdo->prepare(
+                    "INSERT INTO sinapi_insumos (codigo, descricao, unidade, preco_unitario, tipo, origem) 
+                     VALUES (:codigo, :descricao, :unidade, :preco, 'COMPOSICAO', 'MANUAL')"
+                );
+                $stmt->execute([
+                    ':codigo' => $sinapiCodigo,
+                    ':descricao' => $descricao,
+                    ':unidade' => $unidade,
+                    ':preco' => $valorUnitario
+                ]);
+                
+                Logger::info('sinapi.item_created', [
+                    'codigo' => $sinapiCodigo,
+                    'descricao' => $descricao
+                ]);
             }
             
             $margemMateriais = (float)($orcamento['margem_materiais'] ?? 20);
@@ -2277,12 +2340,14 @@ final class OrcamentoController
             Logger::info('orcamentos.itemStoreAjax.success', [
                 'orcamento_id' => $orcamentoId,
                 'item_id' => $itemId,
+                'codigo' => $codigo,
                 'categoria' => $categoria
             ]);
             
             echo json_encode([
                 'success' => true,
                 'item_id' => $itemId,
+                'codigo' => $codigo,
                 'message' => 'Item adicionado com sucesso'
             ]);
             

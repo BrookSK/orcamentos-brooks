@@ -478,18 +478,6 @@ function toggleAdicionarItem() {
                                 <input type="hidden" name="grupo" value="<?php echo htmlspecialchars($grupo); ?>">
                                 <input type="hidden" name="categoria" value="<?php echo htmlspecialchars($categoria); ?>">
                                 
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
-                                    <div>
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Código</label>
-                                        <input type="text" name="codigo" required style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
-                                    </div>
-                                    
-                                    <div>
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Unidade</label>
-                                        <input type="text" name="unidade" required style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
-                                    </div>
-                                </div>
-                                
                                 <div style="margin-bottom:16px; position:relative;">
                                     <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Descrição (digite para buscar no SINAPI)</label>
                                     <input type="text" 
@@ -504,6 +492,16 @@ function toggleAdicionarItem() {
                                 
                                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
                                     <div>
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Unidade</label>
+                                        <select name="unidade" required style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                            <option value="">Selecione</option>
+                                            <?php foreach ($unidades as $un) : ?>
+                                                <option value="<?php echo htmlspecialchars((string)$un); ?>"><?php echo htmlspecialchars((string)$un); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
                                         <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Quantidade</label>
                                         <input type="number" name="quantidade" step="0.01" required value="1" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
                                     </div>
@@ -512,15 +510,16 @@ function toggleAdicionarItem() {
                                         <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Valor Unitário</label>
                                         <input type="number" name="valor_unitario" step="0.01" required value="0" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
                                     </div>
-                                    
-                                    <div>
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Tipo de Custo</label>
-                                        <select name="classificacao_custo" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
-                                            <option value="material">Material</option>
-                                            <option value="mao_obra">Mão de Obra</option>
-                                            <option value="equipamento">Equipamento</option>
-                                        </select>
-                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom:16px;">
+                                    <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Tipo de Custo</label>
+                                    <select name="classificacao_custo" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
+                                        <option value="material">Material</option>
+                                        <option value="mao_obra">Mão de Obra</option>
+                                        <option value="equipamento">Equipamento</option>
+                                    </select>
+                                    <div style="font-size:11px; color:#999; margin-top:4px;">O código será gerado automaticamente ao salvar</div>
                                 </div>
                                 
                                 <div style="display:flex; gap:12px;">
@@ -964,7 +963,6 @@ function selecionarItemSINAPI(item, hash) {
     if (!form) return;
     
     // Preencher campos do formulário
-    form.querySelector('[name="codigo"]').value = item.codigo || '';
     form.querySelector('[name="descricao"]').value = item.descricao || '';
     form.querySelector('[name="unidade"]').value = item.unidade || '';
     form.querySelector('[name="valor_unitario"]').value = parseFloat(item.preco_unitario || 0).toFixed(2);
