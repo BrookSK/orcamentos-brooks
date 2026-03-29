@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             draggedType = 'group';
             this.style.opacity = '0.5';
             e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
             console.log('🎯 Arrastando GRUPO:', this.dataset.grupo);
         });
         
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
         row.addEventListener('dragover', function(e) {
             if (draggedType === 'group' && draggedElement !== this) {
                 e.preventDefault();
+                e.stopPropagation();
                 e.dataTransfer.dropEffect = 'move';
                 const rect = this.getBoundingClientRect();
                 const midpoint = rect.top + rect.height / 2;
@@ -38,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         row.addEventListener('drop', function(e) {
             if (draggedType === 'group' && draggedElement !== this) {
+                e.preventDefault();
                 e.stopPropagation();
                 console.log('📦 Soltando GRUPO');
                 
@@ -82,6 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
             draggedType = 'category';
             this.style.opacity = '0.5';
             e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
             console.log('🎯 Arrastando CATEGORIA:', this.dataset.categoria);
         });
         
@@ -92,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         header.addEventListener('dragover', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             
             if (draggedType === 'category' && draggedElement !== this) {
                 e.dataTransfer.dropEffect = 'move';
@@ -113,6 +118,182 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         header.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.backgroundColor = '';
+            
+            if (draggedType === 'item') {
+                console.log('📦 Soltando ITEM na categoria');
+                // Item sendo solto na categoria - adicionar ao final
+                let insertAfter = this;
+                let nextElement = this.nextElementSibling;
+                while (nextElement && nextElement.classList.contains('item-row')) {
+                    insertAfter = nextElement;
+                    nextElement = nextElement.nextElementSibling;
+                }
+                this.parentNode.insertBefore(draggedElement, insertAfter.nextSibling);
+                saveNewOrder();
+                
+            } else if (draggedType === 'category' && draggedElement !== this) {
+                console.log('📦 Soltando CATEGORIA');
+                // Categoria sendo movida - mover com todos os itens e total
+                const elementsToMove = [draggedElement];
+                let nextElement = draggedElement.nextElementSibling;
+                while (nextElement && (nextElement.classList.contains('item-row') || nextElement.classList.contains('total-row'))) {
+                    elementsToMove.push(nextElement);
+                    nextElement = nextElement.nextElementSibling;
+                }
+                
+                console.log('   Movendo', elementsToMove.length, 'elementos');
+                
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    elementsToMove.forEach(el => this.parentNode.insertBefore(el, this));
+                } else {
+                    let insertAfter = this.nextElementSibling;
+                    while (insertAfter && (insertAfter.classList.contains('item-row') || insertAfter.classList.contains('total-row'))) {
+                        insertAfter = insertAfter.nextElementSibling;
+                    }
+                    elementsToMove.forEach(el => {
+                        if (insertAfter) {
+                            this.parentNode.insertBefore(el, insertAfter);
+                        } else {
+                            this.parentNode.appendChild(el);
+                        }
+                    });
+                }
+                
+                saveNewOrder();
+            }
+        });
+    });a unificado de Drag and Drop para grupos, categorias e itens
+document.addEventListener('DOMContentLoaded', function() {
+    let draggedElement = null;
+    let draggedType = null; // 'item', 'category', ou 'group'
+    
+    const tbody = document.querySelector('#orcamento-table tbody');
+    if (!tbody) return;
+    
+    tbody.addEventListener('dragover', e => e.preventDefault());
+    tbody.addEventListener('drop', e => e.preventDefault());
+    
+    // Configurar drag para GRUPOS
+    document.querySelectorAll('.group-row').forEach(row => {
+        row.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            draggedType = 'group';
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+            console.log('🎯 Arrastando GRUPO:', this.dataset.grupo);
+        });
+        
+        row.addEventListener('dragend', function(e) {
+            this.style.opacity = '';
+            clearHighlights();
+        });
+        
+        row.addEventListener('dragover', function(e) {
+            if (draggedType === 'group' && draggedElement !== this) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'move';
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                clearHighlights();
+                this.style.borderTop = e.clientY < midpoint ? '4px solid #4FC3F7' : '';
+                this.style.borderBottom = e.clientY >= midpoint ? '4px solid #4FC3F7' : '';
+            }
+        });
+        
+        row.addEventListener('dragleave', function(e) {
+            this.style.borderTop = '';
+            this.style.borderBottom = '';
+        });
+        
+        row.addEventListener('drop', function(e) {
+            if (draggedType === 'group' && draggedElement !== this) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📦 Soltando GRUPO');
+                
+                // Coletar TODOS os elementos do grupo (categorias, itens, totais)
+                const elementsToMove = [draggedElement];
+                let nextElement = draggedElement.nextElementSibling;
+                while (nextElement && !nextElement.classList.contains('group-row')) {
+                    elementsToMove.push(nextElement);
+                    nextElement = nextElement.nextElementSibling;
+                }
+                
+                console.log('   Movendo', elementsToMove.length, 'elementos');
+                
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    elementsToMove.forEach(el => this.parentNode.insertBefore(el, this));
+                } else {
+                    let insertAfter = this.nextElementSibling;
+                    while (insertAfter && !insertAfter.classList.contains('group-row')) {
+                        insertAfter = insertAfter.nextElementSibling;
+                    }
+                    elementsToMove.forEach(el => {
+                        if (insertAfter) {
+                            this.parentNode.insertBefore(el, insertAfter);
+                        } else {
+                            this.parentNode.appendChild(el);
+                        }
+                    });
+                }
+                
+                saveNewOrder();
+            }
+        });
+    });
+    
+    // Configurar drag para CATEGORIAS
+    document.querySelectorAll('.category-header').forEach(header => {
+        header.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            draggedType = 'category';
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+            console.log('🎯 Arrastando CATEGORIA:', this.dataset.categoria);
+        });
+        
+        header.addEventListener('dragend', function(e) {
+            this.style.opacity = '';
+            clearHighlights();
+        });
+        
+        header.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (draggedType === 'category' && draggedElement !== this) {
+                e.dataTransfer.dropEffect = 'move';
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                clearHighlights();
+                this.style.borderTop = e.clientY < midpoint ? '3px solid #2196F3' : '';
+                this.style.borderBottom = e.clientY >= midpoint ? '3px solid #2196F3' : '';
+            } else if (draggedType === 'item') {
+                e.dataTransfer.dropEffect = 'move';
+                this.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+            }
+        });
+        
+        header.addEventListener('dragleave', function(e) {
+            this.style.borderTop = '';
+            this.style.borderBottom = '';
+            this.style.backgroundColor = '';
+        });
+        
+        header.addEventListener('drop', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             this.style.backgroundColor = '';
             
@@ -171,6 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             draggedType = 'item';
             this.style.opacity = '0.5';
             e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
             console.log('🎯 Arrastando ITEM:', this.dataset.itemId);
         });
         
@@ -182,6 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
         row.addEventListener('dragover', function(e) {
             if (draggedType === 'item' && draggedElement !== this) {
                 e.preventDefault();
+                e.stopPropagation();
                 e.dataTransfer.dropEffect = 'move';
                 const rect = this.getBoundingClientRect();
                 const midpoint = rect.top + rect.height / 2;
@@ -191,8 +374,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        row.addEventListener('dragleave', function(e) {
+            this.style.borderTop = '';
+            this.style.borderBottom = '';
+        });
+        
         row.addEventListener('drop', function(e) {
             if (draggedType === 'item' && draggedElement !== this) {
+                e.preventDefault();
                 e.stopPropagation();
                 console.log('📦 Soltando ITEM');
                 const rect = this.getBoundingClientRect();
