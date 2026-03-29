@@ -668,20 +668,10 @@ HTML;
             $paginaNum++;
         }
         
-        // Página final com áreas e totais por categoria
+        // Página final com áreas e totais por categoria (IGUAL AO PDF ADMIN)
         $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
         $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
-        // Tabela de total geral
-        $html .= '<table class="table-resumo" style="margin-top:15px;">';
-        $html .= '<thead><tr><th colspan="2">DESCRIÇÃO</th><th class="right">VALOR TOTAL</th><th class="center">%</th></tr></thead>';
-        $html .= '<tbody>';
-        $html .= sprintf(
-            '<tr class="total-row"><td colspan="2">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
-            self::formatarValor($totalGeral)
-        );
-        $html .= '</tbody></table>';
-
         // TABELAS DE ÁREAS
         // Processar áreas personalizadas
         $dadosAreas = self::calcularAreas($orcamento);
@@ -691,7 +681,55 @@ HTML;
         $areaTotal = $dadosAreas['total'];
         $areasPersonalizadas = $dadosAreas['areas'];
         
-        // Gerar tabela de áreas - wrapper para evitar quebra de página
+        // Agrupar categorias por nome principal (remover sufixos como " - MATERIAIS", " - MÃO DE OBRA", etc)
+        $categoriasAgrupadas = [];
+        foreach ($categorias as $categoriaNome => $categoriaData) {
+            // Extrair categoria principal (antes do " - ")
+            $categoriaPrincipal = $categoriaNome;
+            if (strpos($categoriaNome, ' - ') !== false) {
+                $categoriaPrincipal = trim(explode(' - ', $categoriaNome)[0]);
+            }
+            
+            if (!isset($categoriasAgrupadas[$categoriaPrincipal])) {
+                $categoriasAgrupadas[$categoriaPrincipal] = 0;
+            }
+            
+            $categoriasAgrupadas[$categoriaPrincipal] += $categoriaData['total'];
+        }
+        
+        // Tabela ÚNICA com TODAS as informações: CATEGORIA, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
+        $html .= '<table class="table-resumo" style="margin-top:15px;">';
+        $html .= '<thead><tr>';
+        $html .= '<th class="left" style="width:30%;">CATEGORIA</th>';
+        $html .= '<th class="right" style="width:20%;">VALOR TOTAL</th>';
+        $html .= '<th class="center" style="width:12%;">% DA OBRA</th>';
+        $html .= '<th class="center" style="width:15%;">M2</th>';
+        $html .= '<th class="right" style="width:23%;">PREÇO / m2</th>';
+        $html .= '</tr></thead><tbody>';
+        
+        foreach ($categoriasAgrupadas as $categoriaNome => $totalCategoria) {
+            $pctObra = $totalGeral > 0 ? ($totalCategoria / $totalGeral) * 100 : 0;
+            $precoM2 = $areaTotal > 0 ? $totalCategoria / $areaTotal : 0;
+            
+            $html .= sprintf(
+                '<tr><td class="left">%s</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="center">%s</td><td class="right">R$ %s</td></tr>',
+                htmlspecialchars(strtoupper($categoriaNome)),
+                self::formatarValor($totalCategoria),
+                number_format($pctObra, 2, ',', '.'),
+                number_format($areaTotal, 2, ',', '.'),
+                self::formatarValor($precoM2)
+            );
+        }
+        
+        $html .= sprintf(
+            '<tr class="total-row"><td class="left">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td><td class="center">%s</td><td class="right">R$ %s</td></tr>',
+            self::formatarValor($totalGeral),
+            number_format($areaTotal, 2, ',', '.'),
+            self::formatarValor($areaTotal > 0 ? $totalGeral / $areaTotal : 0)
+        );
+        $html .= '</tbody></table>';
+        
+        // Gerar tabela de áreas (separada, abaixo) - wrapper para evitar quebra de página
         $html .= '<div style="page-break-inside: avoid;">';
         $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
         
@@ -767,29 +805,8 @@ HTML;
         $html .= '</tbody></table>';
         $html .= '</div>'; // Fecha wrapper page-break-inside: avoid
         
-        // Gerar tabela de CATEGORIAS (usando dados reais do orçamento)
-        $html .= '<table class="table-areas" style="margin-top:15px;"><thead><tr><th>CATEGORIAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
-        
-        foreach ($categorias as $categoriaNome => $categoriaData) {
-            $html .= sprintf(
-                '<tr><td>%s</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
-                htmlspecialchars(strtoupper($categoriaNome)),
-                self::formatarValor($categoriaData['total']),
-                number_format($areaTotal, 2, ',', '.'),
-                self::formatarValor($areaTotal > 0 ? $categoriaData['total'] / $areaTotal : 0)
-            );
-        }
-        
-        $html .= sprintf(
-            '<tr class="total-row"><td>TOTAL GERAL:</td><td>R$ %s</td><td>%s</td><td>R$ %s</td></tr>',
-            self::formatarValor($totalGeral),
-            number_format($areaTotal, 2, ',', '.'),
-            self::formatarValor($areaTotal > 0 ? $totalGeral / $areaTotal : 0)
-        );
-        $html .= '</tbody></table>';
-        
         $html .= sprintf('<div class="page-footer"><div>FOLHA: %d</div></div>', $paginaNum);
-        $html .= '</div>'; // Fecha <div class="page">
+        $html .= '</div>';
         
         return $html;
     }
