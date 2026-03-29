@@ -1155,13 +1155,9 @@ CSS;
                 $totalEquipamentos += $quantidade * $custoEquipamento;
             } elseif ($classificacaoCusto === 'mao_obra') {
                 $totalMaoObra += $quantidade * $custoMaoObra;
-            } elseif ($classificacaoCusto === 'material') {
-                $totalMateriais += $quantidade * $custoMaterial;
             } else {
-                // Se não tem classificacao_custo, somar nos materiais (fallback)
+                // Default: material (ou quando classificacao_custo está vazio)
                 $totalMateriais += $quantidade * $custoMaterial;
-                $totalMaoObra += $quantidade * $custoMaoObra;
-                $totalEquipamentos += $quantidade * $custoEquipamento;
             }
         }
         
