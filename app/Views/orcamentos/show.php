@@ -326,7 +326,7 @@ function toggleAdicionarItem() {
                 </tr>
                 
                 <!-- Repetir cabeçalho da tabela para cada categoria -->
-                <tr style="background: rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 5;">
+                <tr>
                     <th style="width:30px;"></th>
                     <th style="width:60px">Código</th>
                     <th style="width:auto; min-width:150px;">Descrição</th>

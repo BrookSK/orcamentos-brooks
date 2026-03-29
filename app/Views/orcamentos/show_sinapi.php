@@ -354,21 +354,21 @@ function toggleAdicionarItem() {
                 </tr>
                 
                 <!-- Repetir cabeçalho da tabela para cada categoria -->
-                <tr style="background: rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 5;">
+                <tr>
                     <th style="width:30px;"></th>
-                    <th style="width:60px">Código</th>
-                    <th style="width:auto; min-width:150px;">Descrição</th>
-                    <th class="center" style="width:45px">Un</th>
-                    <th class="center" style="width:60px">Qtd</th>
-                    <th class="num admin-col" style="width:80px;">Custo Mat.</th>
-                    <th class="num admin-col" style="width:80px;">Custo M.O.</th>
-                    <th class="num admin-col" style="width:80px;">Custo Equip.</th>
-                    <th class="center admin-col" style="width:55px;">% BDI</th>
-                    <th class="num admin-col" style="width:80px;">Margem Un.</th>
-                    <th class="num" style="width:85px">Vlr Unit.</th>
-                    <th class="num admin-col" style="width:85px;">Lucro Total</th>
-                    <th class="num" style="width:85px">Vlr Total</th>
-                    <th style="width:120px"></th>
+                    <th style="width:90px">Código</th>
+                    <th>Descrição</th>
+                    <th style="width:80px">Unid</th>
+                    <th class="num" style="width:90px">Quant.</th>
+                    <th class="num admin-col" style="width:90px;">Custo Mat.</th>
+                    <th class="num admin-col" style="width:90px;">Custo M.O.</th>
+                    <th class="num admin-col" style="width:90px;">Custo Equip.</th>
+                    <th class="center admin-col" style="width:70px;">% BDI</th>
+                    <th class="num admin-col" style="width:90px;">Margem Un.</th>
+                    <th class="num" style="width:120px">Valor Unit.</th>
+                    <th class="num admin-col" style="width:100px;">Lucro Total</th>
+                    <th class="num" style="width:120px">Valor Total</th>
+                    <th style="width:140px"></th>
                 </tr>
 
                 <?php $subtotalCategoria = 0.0; ?>
