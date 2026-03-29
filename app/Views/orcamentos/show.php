@@ -299,6 +299,9 @@ function toggleAdicionarItem() {
         $margemMaoObraGlobal = (float)($orcamento['margem_mao_obra'] ?? 50);
         $margemMateriaisGlobal = (float)($orcamento['margem_materiais'] ?? 20);
         $margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
+        
+        // DEBUG: Mostrar margens carregadas
+        echo "<!-- DEBUG MARGENS: MO={$margemMaoObraGlobal}% | MAT={$margemMateriaisGlobal}% | EQ={$margemEquipamentosGlobal}% -->\n";
         ?>
 
         <?php foreach ($grouped as $grupo => $cats) : ?>
@@ -399,6 +402,8 @@ function toggleAdicionarItem() {
                             } else {
                                 $percentualBdi = $margemMateriaisGlobal;
                             }
+                            // DEBUG
+                            echo "<!-- Item {$row['id']}: cat={$categoria} | usa_pers={$usaMargemPersonalizada} | BDI={$percentualBdi}% -->\n";
                         } elseif ($custoBase > 0.01 && $valorCobranca > $custoBase) {
                             $percentualBdi = (($valorCobranca - $custoBase) / $custoBase) * 100;
                             if ($percentualBdi > 999) {
