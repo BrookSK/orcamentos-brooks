@@ -108,8 +108,8 @@ final class OrcamentoItem
         }
 
         $stmt = $pdo->prepare(
-            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, custo_equipamento, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, margem_personalizada, usa_margem_personalizada) '
-            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :custo_equipamento, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :margem_personalizada, :usa_margem_personalizada)'
+            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, custo_equipamento, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, margem_personalizada, usa_margem_personalizada, classificacao_custo) '
+            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :custo_equipamento, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :margem_personalizada, :usa_margem_personalizada, :classificacao_custo)'
         );
 
         $stmt->execute([
@@ -133,6 +133,7 @@ final class OrcamentoItem
             ':percentual_realizado' => $percentualRealizado,
             ':margem_personalizada' => $margemPersonalizada,
             ':usa_margem_personalizada' => $usaMargemPersonalizada,
+            ':classificacao_custo' => (string)($data['classificacao_custo'] ?? ''),
         ]);
 
         return (int)$pdo->lastInsertId();
@@ -196,7 +197,8 @@ final class OrcamentoItem
             . ' desconto_item = :desconto_item,'
             . ' percentual_realizado = :percentual_realizado,'
             . ' margem_personalizada = :margem_personalizada,'
-            . ' usa_margem_personalizada = :usa_margem_personalizada'
+            . ' usa_margem_personalizada = :usa_margem_personalizada,'
+            . ' classificacao_custo = :classificacao_custo'
             . ' WHERE id = :id'
         );
 
@@ -221,6 +223,7 @@ final class OrcamentoItem
             ':percentual_realizado' => $percentualRealizado,
             ':margem_personalizada' => $margemPersonalizada,
             ':usa_margem_personalizada' => $usaMargemPersonalizada,
+            ':classificacao_custo' => (string)($data['classificacao_custo'] ?? ''),
         ]);
     }
 
@@ -282,6 +285,7 @@ final class OrcamentoItem
         $out['unidade'] = trim((string)($data['unidade'] ?? ''));
         $out['etapa'] = trim((string)($data['etapa'] ?? ''));
         $out['ordem'] = (int)($data['ordem'] ?? 0);
+        $out['classificacao_custo'] = trim((string)($data['classificacao_custo'] ?? ''));
 
         $out['valor_unitario'] = self::parsePtBrNumber((string)($data['valor_unitario'] ?? '0'));
         $out['quantidade'] = self::parsePtBrNumber((string)($data['quantidade'] ?? '0'));

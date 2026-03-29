@@ -796,7 +796,7 @@ final class OrcamentoController
             Logger::warning('orcamentos.itemStore.sem_margem', [
                 'valor_unitario' => $valorUnitario,
                 'margem' => $margem,
-                'categoria' => $categoria,
+                'classificacao_custo' => $classificacaoCusto,
                 'usa_margem_personalizada' => $usaMargemPersonalizada
             ]);
         }
