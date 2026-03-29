@@ -181,7 +181,8 @@ final class OrcamentoPDF
         );
         $html .= '</tbody></table>';
         
-        // Gerar tabela de áreas (separada, abaixo)
+        // Gerar tabela de áreas (separada, abaixo) - wrapper para evitar quebra de página
+        $html .= '<div style="page-break-inside: avoid;">';
         $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
         
         if (!empty($areasPersonalizadas)) {
@@ -232,6 +233,7 @@ final class OrcamentoPDF
         }
         
         $html .= '</tbody></table>';
+        $html .= '</div>'; // Fecha wrapper page-break-inside: avoid
         
         $html .= '<div class="page-footer"><div>FOLHA: 1</div></div>';
         $html .= '</div>';
@@ -575,7 +577,8 @@ HTML;
         $areaTotal = $dadosAreas['total'];
         $areasPersonalizadas = $dadosAreas['areas'];
         
-        // Gerar tabela de áreas
+        // Gerar tabela de áreas - wrapper para evitar quebra de página
+        $html .= '<div style="page-break-inside: avoid;">';
         $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
         
         if (!empty($areasPersonalizadas)) {
@@ -626,6 +629,7 @@ HTML;
         }
         
         $html .= '</tbody></table>';
+        $html .= '</div>'; // Fecha wrapper page-break-inside: avoid
         
         // Gerar tabela de CATEGORIAS (usando dados reais do orçamento)
         $html .= '<table class="table-areas" style="margin-top:15px;"><thead><tr><th>CATEGORIAS</th><th>PREÇO</th><th>M2</th><th>PREÇO / m2</th></tr></thead><tbody>';
