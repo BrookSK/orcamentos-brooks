@@ -2138,8 +2138,6 @@ final class OrcamentoController
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
     }
-}
-
 
     public function buscarSinapi(): void
     {
@@ -2299,3 +2297,4 @@ final class OrcamentoController
             ]);
         }
     }
+}
