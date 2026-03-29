@@ -1291,7 +1291,7 @@ final class OrcamentoController
                 $nomeArquivo = $orcamento['numero_proposta'] ?? 'orcamento-' . $id;
                 $nomeArquivo = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nomeArquivo);
                 $dataExportacao = date('Y-m-d');
-                header('Content-Disposition: inline; filename="' . $nomeArquivo . '_' . $dataExportacao . '.pdf"');
+                header('Content-Disposition: inline; filename="' . $nomeArquivo . '_cliente_' . $dataExportacao . '.pdf"');
                 echo $dompdf->output();
                 return;
             } catch (\Throwable $e) {
@@ -1342,7 +1342,7 @@ final class OrcamentoController
                 $nomeArquivo = $orcamento['numero_proposta'] ?? 'orcamento-' . $id;
                 $nomeArquivo = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nomeArquivo);
                 $dataExportacao = date('Y-m-d');
-                header('Content-Disposition: inline; filename="' . $nomeArquivo . '_ADMIN_' . $dataExportacao . '.pdf"');
+                header('Content-Disposition: inline; filename="' . $nomeArquivo . '_adm_' . $dataExportacao . '.pdf"');
                 echo $dompdf->output();
                 return;
             } catch (\Throwable $e) {
