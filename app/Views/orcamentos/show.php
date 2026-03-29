@@ -457,22 +457,23 @@ function toggleAdicionarItem() {
                 <!-- Botão para adicionar novo item na categoria -->
                 <tr class="add-item-row">
                     <td colspan="14" style="padding:12px; text-align:center;">
-                        <button class="btn" style="background:#4CAF50; color:white; width:100%;" onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo); ?>', '<?php echo htmlspecialchars($categoria); ?>'); return false;">
+                        <button class="btn" style="background:#4CAF50; color:white; width:100%;" onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>'); return false;">
                             ➕ Adicionar Item
                         </button>
                     </td>
                 </tr>
 
                 <!-- Formulário inline para adicionar item (inicialmente oculto) -->
-                <tr class="add-item-form-row" id="add-form-<?php echo md5($grupo . $categoria); ?>" style="display:none;">
+                <?php $formHash = preg_replace('/[^a-zA-Z0-9]/', '', $grupo . $categoria); ?>
+                <tr class="add-item-form-row" id="add-form-<?php echo $formHash; ?>" style="display:none;">
                     <td colspan="14" style="padding:20px; background:rgba(76,175,80,0.05); border:2px solid #4CAF50;">
                         <div style="max-width:900px; margin:0 auto;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                                 <h3 style="margin:0; color:#4CAF50;">Novo Item - <?php echo htmlspecialchars($categoria); ?></h3>
-                                <button onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo); ?>', '<?php echo htmlspecialchars($categoria); ?>'); return false;" style="background:transparent; border:none; font-size:24px; cursor:pointer; color:#999;">×</button>
+                                <button onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>'); return false;" style="background:transparent; border:none; font-size:24px; cursor:pointer; color:#999;">×</button>
                             </div>
                             
-                            <form id="form-add-item-<?php echo md5($grupo . $categoria); ?>" onsubmit="salvarNovoItem(event, '<?php echo htmlspecialchars($grupo); ?>', '<?php echo htmlspecialchars($categoria); ?>', '<?php echo md5($grupo . $categoria); ?>')">
+                            <form id="form-add-item-<?php echo $formHash; ?>" onsubmit="salvarNovoItem(event, '<?php echo htmlspecialchars($grupo, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>', '<?php echo $formHash; ?>')">
                                 <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
                                 <input type="hidden" name="grupo" value="<?php echo htmlspecialchars($grupo); ?>">
                                 <input type="hidden" name="categoria" value="<?php echo htmlspecialchars($categoria); ?>">
@@ -493,12 +494,12 @@ function toggleAdicionarItem() {
                                     <label style="display:block; margin-bottom:4px; font-size:12px; color:#999;">Descrição (digite para buscar no SINAPI)</label>
                                     <input type="text" 
                                            name="descricao" 
-                                           id="descricao-<?php echo md5($grupo . $categoria); ?>"
+                                           id="descricao-<?php echo $formHash; ?>"
                                            required 
                                            autocomplete="off"
-                                           oninput="buscarSINAPI(this.value, '<?php echo md5($grupo . $categoria); ?>')"
+                                           oninput="buscarSINAPI(this.value, '<?php echo $formHash; ?>')"
                                            style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:inherit;">
-                                    <div id="sinapi-suggestions-<?php echo md5($grupo . $categoria); ?>" class="sinapi-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#2a2a2a; border:1px solid #4CAF50; border-radius:4px; max-height:200px; overflow-y:auto; z-index:1000; margin-top:4px;"></div>
+                                    <div id="sinapi-suggestions-<?php echo $formHash; ?>" class="sinapi-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#2a2a2a; border:1px solid #4CAF50; border-radius:4px; max-height:200px; overflow-y:auto; z-index:1000; margin-top:4px;"></div>
                                 </div>
                                 
                                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
@@ -524,7 +525,7 @@ function toggleAdicionarItem() {
                                 
                                 <div style="display:flex; gap:12px;">
                                     <button type="submit" class="btn primary" style="flex:1; background:#4CAF50; color:white;">Salvar Item</button>
-                                    <button type="button" onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo); ?>', '<?php echo htmlspecialchars($categoria); ?>'); return false;" class="btn" style="background:#666; color:white;">Cancelar</button>
+                                    <button type="button" onclick="toggleAddItemForm('<?php echo htmlspecialchars($grupo, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>'); return false;" class="btn" style="background:#666; color:white;">Cancelar</button>
                                 </div>
                             </form>
                         </div>
@@ -861,7 +862,8 @@ function recalcularMargens(orcamentoId) {
 let sinapiTimeout = null;
 
 function toggleAddItemForm(grupo, categoria) {
-    const hash = md5(grupo + categoria);
+    // Gerar hash simples removendo caracteres especiais
+    const hash = (grupo + categoria).replace(/[^a-zA-Z0-9]/g, '');
     const formRow = document.getElementById('add-form-' + hash);
     
     if (formRow.style.display === 'none') {
@@ -1018,18 +1020,6 @@ function salvarNovoItem(event, grupo, categoria, hash) {
     });
     
     return false;
-}
-
-// Função MD5 simples para gerar hash
-function md5(str) {
-    // Implementação simples de hash (não é MD5 real, mas serve para IDs únicos)
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    return Math.abs(hash).toString(36);
 }
 
 // Fechar sugestões ao clicar fora
