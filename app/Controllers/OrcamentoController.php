@@ -2146,43 +2146,29 @@ final class OrcamentoController
         $query = $_GET['q'] ?? '';
         
         if (strlen($query) < 3) {
-            echo json_encode(['debug' => 'query too short', 'query' => $query, 'length' => strlen($query)]);
+            echo json_encode([]);
             return;
         }
         
         try {
             $pdo = \App\Core\Database::pdo();
             
-            $searchQuery = '%' . $query . '%';
+            $searchQuery = '%' . strtolower($query) . '%';
             
             $stmt = $pdo->prepare(
                 "SELECT codigo, descricao, unidade, preco_unit as preco_unitario 
                  FROM sinapi_insumos 
-                 WHERE LOWER(descricao) LIKE LOWER(:query) 
-                 OR LOWER(codigo) LIKE LOWER(:query) 
+                 WHERE LOWER(descricao) LIKE :query1 
+                 OR LOWER(codigo) LIKE :query2 
                  ORDER BY descricao 
                  LIMIT 10"
             );
-            $stmt->execute([':query' => $searchQuery]);
+            $stmt->execute([':query1' => $searchQuery, ':query2' => $searchQuery]);
             $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
-            // Debug: adicionar informações extras
-            $response = [
-                'debug' => 'success',
-                'query' => $query,
-                'searchQuery' => $searchQuery,
-                'count' => count($resultados),
-                'results' => $resultados
-            ];
-            
-            echo json_encode($response);
+            echo json_encode($resultados);
         } catch (\Throwable $e) {
-            echo json_encode([
-                'debug' => 'error',
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
+            echo json_encode([]);
         }
     }
 
@@ -2326,7 +2312,6 @@ final class OrcamentoController
             
             // Criar o item no orçamento
             $data = [
-                'orcamento_id' => $orcamentoId,
                 'codigo' => $codigo,
                 'descricao' => $descricao,
                 'unidade' => $unidade,
@@ -2345,7 +2330,7 @@ final class OrcamentoController
                 'margem_personalizada' => 0
             ];
             
-            $itemId = OrcamentoItem::create($data);
+            $itemId = OrcamentoItem::create($orcamentoId, $data);
             
             Logger::info('orcamentos.itemStoreAjax.success', [
                 'orcamento_id' => $orcamentoId,
