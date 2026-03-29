@@ -265,7 +265,7 @@ final class Orcamento
                         'nome' => trim((string)$area['nome']),
                         'm2' => !empty($area['m2']) ? (float)$area['m2'] : 0,
                         'fator' => !empty($area['fator']) ? (float)$area['fator'] : 1,
-                        'nao_compoe' => !empty($area['nao_compoe']) ? 1 : 0,
+                        'tipo_area' => !empty($area['tipo_area']) ? (string)$area['tipo_area'] : 'terreno',
                     ];
                 }
             }

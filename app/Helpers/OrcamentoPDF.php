@@ -7,14 +7,15 @@ namespace App\Helpers;
 final class OrcamentoPDF
 {
     /**
-     * Calcula áreas do orçamento separando terreno e área construída
-     * @return array ['terreno' => float, 'construida' => float, 'total' => float, 'areas' => array]
+     * Calcula áreas do orçamento separando terreno, construída térrea e construída superior
+     * @return array ['terreno' => float, 'terrea' => float, 'superior' => float, 'total' => float, 'areas' => array]
      */
     private static function calcularAreas(array $orcamento): array
     {
         $areasPersonalizadas = [];
-        $areaTerreno = 0; // Áreas que compõem o terreno
-        $areaConstruida = 0; // Áreas que não compõem o terreno
+        $areaTerreno = 0;     // Áreas que compõem o terreno
+        $areaTerrea = 0;      // Áreas construídas térreo/pavimento superior
+        $areaSuperior = 0;    // Áreas construídas superiores (telhado, etc)
         
         if (!empty($orcamento['areas_personalizadas'])) {
             $areasPersonalizadas = json_decode($orcamento['areas_personalizadas'], true);
@@ -22,11 +23,13 @@ final class OrcamentoPDF
                 foreach ($areasPersonalizadas as $area) {
                     $m2 = (float)($area['m2'] ?? 0);
                     $fator = (float)($area['fator'] ?? 1);
-                    $naoCompoe = !empty($area['nao_compoe']);
+                    $tipoArea = (string)($area['tipo_area'] ?? 'terreno');
                     $m2xFator = $m2 * $fator;
                     
-                    if ($naoCompoe) {
-                        $areaConstruida += $m2xFator;
+                    if ($tipoArea === 'terrea') {
+                        $areaTerrea += $m2xFator;
+                    } elseif ($tipoArea === 'superior') {
+                        $areaSuperior += $m2xFator;
                     } else {
                         $areaTerreno += $m2xFator;
                     }
@@ -34,8 +37,8 @@ final class OrcamentoPDF
             }
         }
         
-        // Área total = terreno + construída
-        $areaTotal = $areaTerreno + $areaConstruida;
+        // Área total = terreno + térrea + superior
+        $areaTotal = $areaTerreno + $areaTerrea + $areaSuperior;
         
         // Se não tiver áreas personalizadas ou área total for zero, usar área do orçamento
         if ($areaTotal == 0) {
@@ -45,7 +48,8 @@ final class OrcamentoPDF
         
         return [
             'terreno' => $areaTerreno,
-            'construida' => $areaConstruida,
+            'terrea' => $areaTerrea,
+            'superior' => $areaSuperior,
             'total' => $areaTotal,
             'areas' => $areasPersonalizadas
         ];
@@ -145,7 +149,8 @@ final class OrcamentoPDF
         // Processar áreas personalizadas
         $dadosAreas = self::calcularAreas($orcamento);
         $areaTerreno = $dadosAreas['terreno'];
-        $areaConstruida = $dadosAreas['construida'];
+        $areaTerrea = $dadosAreas['terrea'];
+        $areaSuperior = $dadosAreas['superior'];
         $areaTotal = $dadosAreas['total'];
         $areasPersonalizadas = $dadosAreas['areas'];
         
@@ -190,11 +195,16 @@ final class OrcamentoPDF
                 $nome = htmlspecialchars((string)($area['nome'] ?? ''));
                 $m2 = (float)($area['m2'] ?? 0);
                 $fator = (float)($area['fator'] ?? 1);
-                $naoCompoe = !empty($area['nao_compoe']);
+                $tipoArea = (string)($area['tipo_area'] ?? 'terreno');
                 $m2xFator = $m2 * $fator;
                 
-                // Adicionar indicador se não compõe o terreno
-                $nomeExibicao = $naoCompoe ? $nome . ' *' : $nome;
+                // Adicionar indicador conforme tipo de área
+                $nomeExibicao = $nome;
+                if ($tipoArea === 'terrea') {
+                    $nomeExibicao = $nome . ' *';
+                } elseif ($tipoArea === 'superior') {
+                    $nomeExibicao = $nome . ' **';
+                }
                 
                 $html .= sprintf(
                     '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
@@ -205,15 +215,25 @@ final class OrcamentoPDF
                 );
             }
             
-            // Linha de subtotal do terreno (se houver áreas que não compõem)
-            if ($areaConstruida > 0) {
+            // Linha de subtotal do terreno
+            $html .= sprintf(
+                '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA TOTAL DO TERRENO:</strong></td><td><strong>%s</strong></td></tr>',
+                number_format($areaTerreno, 2, ',', '.')
+            );
+            
+            // Linha de área construída térrea (se houver)
+            if ($areaTerrea > 0) {
                 $html .= sprintf(
-                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA DO TERRENO:</strong></td><td><strong>%s</strong></td></tr>',
-                    number_format($areaTerreno, 2, ',', '.')
+                    '<tr style="background:#d0d0d0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA TÉRREA (*):</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaTerrea, 2, ',', '.')
                 );
+            }
+            
+            // Linha de área construída superiores (se houver)
+            if ($areaSuperior > 0) {
                 $html .= sprintf(
-                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA (*):</strong></td><td><strong>%s</strong></td></tr>',
-                    number_format($areaConstruida, 2, ',', '.')
+                    '<tr style="background:#c0c0c0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA SUPERIORES (**):</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaSuperior, 2, ',', '.')
                 );
             }
         } else {
@@ -225,11 +245,18 @@ final class OrcamentoPDF
             );
         }
         
-        $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
+        $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL CONSTRUÍDA:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
         
-        // Adicionar nota explicativa se houver áreas que não compõem
-        if ($areaConstruida > 0) {
-            $html .= '<tr><td colspan="4" style="font-size:9px;color:#666;padding:8px;text-align:left;">(*) Áreas marcadas não compõem a metragem do terreno</td></tr>';
+        // Adicionar nota explicativa
+        if ($areaTerrea > 0 || $areaSuperior > 0) {
+            $html .= '<tr><td colspan="4" style="font-size:9px;color:#666;padding:8px;text-align:left;">';
+            if ($areaTerrea > 0) {
+                $html .= '(*) Área construída térrea - pavimentos superiores<br>';
+            }
+            if ($areaSuperior > 0) {
+                $html .= '(**) Área construída superiores - áreas verticais (telhado, etc)';
+            }
+            $html .= '</td></tr>';
         }
         
         $html .= '</tbody></table>';
@@ -573,7 +600,8 @@ HTML;
         // Processar áreas personalizadas
         $dadosAreas = self::calcularAreas($orcamento);
         $areaTerreno = $dadosAreas['terreno'];
-        $areaConstruida = $dadosAreas['construida'];
+        $areaTerrea = $dadosAreas['terrea'];
+        $areaSuperior = $dadosAreas['superior'];
         $areaTotal = $dadosAreas['total'];
         $areasPersonalizadas = $dadosAreas['areas'];
         
@@ -586,11 +614,16 @@ HTML;
                 $nome = htmlspecialchars((string)($area['nome'] ?? ''));
                 $m2 = (float)($area['m2'] ?? 0);
                 $fator = (float)($area['fator'] ?? 1);
-                $naoCompoe = !empty($area['nao_compoe']);
+                $tipoArea = (string)($area['tipo_area'] ?? 'terreno');
                 $m2xFator = $m2 * $fator;
                 
-                // Adicionar indicador se não compõe o terreno
-                $nomeExibicao = $naoCompoe ? $nome . ' *' : $nome;
+                // Adicionar indicador conforme tipo de área
+                $nomeExibicao = $nome;
+                if ($tipoArea === 'terrea') {
+                    $nomeExibicao = $nome . ' *';
+                } elseif ($tipoArea === 'superior') {
+                    $nomeExibicao = $nome . ' **';
+                }
                 
                 $html .= sprintf(
                     '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
@@ -601,15 +634,25 @@ HTML;
                 );
             }
             
-            // Linha de subtotal do terreno (se houver áreas que não compõem)
-            if ($areaConstruida > 0) {
+            // Linha de subtotal do terreno
+            $html .= sprintf(
+                '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA TOTAL DO TERRENO:</strong></td><td><strong>%s</strong></td></tr>',
+                number_format($areaTerreno, 2, ',', '.')
+            );
+            
+            // Linha de área construída térrea (se houver)
+            if ($areaTerrea > 0) {
                 $html .= sprintf(
-                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA DO TERRENO:</strong></td><td><strong>%s</strong></td></tr>',
-                    number_format($areaTerreno, 2, ',', '.')
+                    '<tr style="background:#d0d0d0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA TÉRREA (*):</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaTerrea, 2, ',', '.')
                 );
+            }
+            
+            // Linha de área construída superiores (se houver)
+            if ($areaSuperior > 0) {
                 $html .= sprintf(
-                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA (*):</strong></td><td><strong>%s</strong></td></tr>',
-                    number_format($areaConstruida, 2, ',', '.')
+                    '<tr style="background:#c0c0c0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA SUPERIORES (**):</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaSuperior, 2, ',', '.')
                 );
             }
         } else {
@@ -621,11 +664,18 @@ HTML;
             );
         }
         
-        $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
+        $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL CONSTRUÍDA:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
         
-        // Adicionar nota explicativa se houver áreas que não compõem
-        if ($areaConstruida > 0) {
-            $html .= '<tr><td colspan="4" style="font-size:9px;color:#666;padding:8px;text-align:left;">(*) Áreas marcadas não compõem a metragem do terreno</td></tr>';
+        // Adicionar nota explicativa
+        if ($areaTerrea > 0 || $areaSuperior > 0) {
+            $html .= '<tr><td colspan="4" style="font-size:9px;color:#666;padding:8px;text-align:left;">';
+            if ($areaTerrea > 0) {
+                $html .= '(*) Área construída térrea - pavimentos superiores<br>';
+            }
+            if ($areaSuperior > 0) {
+                $html .= '(**) Área construída superiores - áreas verticais (telhado, etc)';
+            }
+            $html .= '</td></tr>';
         }
         
         $html .= '</tbody></table>';
