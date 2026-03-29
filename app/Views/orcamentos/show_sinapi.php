@@ -432,18 +432,19 @@ function toggleAdicionarItem() {
                         $margemUnit = $valorCobranca - $custoBase;
                         $valorTotal = round($quantidade * $valorCobranca, 2);
                         
-                        // Calcular % BDI aplicado
+                        // Calcular % BDI aplicado baseado na classificacao_custo
+                        $classificacaoCusto = (string)($row['classificacao_custo'] ?? '');
                         $percentualBdi = 0;
+                        
                         if ($usaMargemPersonalizada && $margemPersonalizada > 0) {
                             $percentualBdi = $margemPersonalizada;
-                        } elseif (!$usaMargemPersonalizada) {
-                            // Detectar se é mão de obra, equipamento ou material pela categoria
-                            $categoriaUpper = strtoupper($categoria);
-                            if (strpos($categoriaUpper, 'MÃO DE OBRA') !== false || strpos($categoriaUpper, 'MAO DE OBRA') !== false) {
+                        } elseif (!$usaMargemPersonalizada && $classificacaoCusto !== '') {
+                            // Usar margem baseada na classificacao_custo
+                            if ($classificacaoCusto === 'mao_obra') {
                                 $percentualBdi = $margemMaoObraGlobal;
-                            } elseif (strpos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                            } elseif ($classificacaoCusto === 'equipamento') {
                                 $percentualBdi = $margemEquipamentosGlobal;
-                            } else {
+                            } elseif ($classificacaoCusto === 'material') {
                                 $percentualBdi = $margemMateriaisGlobal;
                             }
                         } elseif ($custoBase > 0.01 && $valorCobranca > $custoBase) {

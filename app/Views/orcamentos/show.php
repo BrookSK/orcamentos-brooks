@@ -180,6 +180,19 @@ $totalGeral = 0.0;
             </div>
 
             <div class="field">
+                <label>Tipo de Custo <span style="color:#f44336;">*</span></label>
+                <?php $currentClassificacao = (string)($item['classificacao_custo'] ?? ''); ?>
+                <select name="classificacao_custo" required>
+                    <option value="">Selecione o tipo de custo</option>
+                    <option value="material" <?php echo $currentClassificacao === 'material' ? 'selected' : ''; ?>>Material (usa margem de materiais)</option>
+                    <option value="mao_obra" <?php echo $currentClassificacao === 'mao_obra' ? 'selected' : ''; ?>>Mão de Obra (usa margem de mão de obra)</option>
+                    <option value="equipamento" <?php echo $currentClassificacao === 'equipamento' ? 'selected' : ''; ?>>Equipamento (usa margem de equipamentos)</option>
+                </select>
+                <?php if (!empty($errors['classificacao_custo'])) : ?><div class="error"><?php echo htmlspecialchars((string)$errors['classificacao_custo']); ?></div><?php endif; ?>
+                <div class="muted" style="font-size:12px;margin-top:4px;">Define qual margem do cabeçalho será aplicada (se não usar margem personalizada)</div>
+            </div>
+
+            <div class="field">
                 <label>Código</label>
                 <input name="codigo" value="<?php echo htmlspecialchars((string)($item['codigo'] ?? '')); ?>">
                 <?php if (!empty($errors['codigo'])) : ?><div class="error"><?php echo htmlspecialchars((string)$errors['codigo']); ?></div><?php endif; ?>
@@ -406,22 +419,23 @@ function toggleAdicionarItem() {
                         $margemUnit = $valorCobranca - $custoBase;
                         $valorTotal = round($quantidade * $valorCobranca, 2);
                         
-                        // Calcular % BDI aplicado
+                        // Calcular % BDI aplicado baseado na classificacao_custo
+                        $classificacaoCusto = (string)($row['classificacao_custo'] ?? '');
                         $percentualBdi = 0;
+                        
                         if ($usaMargemPersonalizada && $margemPersonalizada > 0) {
                             $percentualBdi = $margemPersonalizada;
-                        } elseif (!$usaMargemPersonalizada) {
-                            // Detectar se é mão de obra, equipamento ou material pela categoria
-                            $categoriaUpper = strtoupper($categoria);
-                            if (strpos($categoriaUpper, 'MÃO DE OBRA') !== false || strpos($categoriaUpper, 'MAO DE OBRA') !== false) {
+                        } elseif (!$usaMargemPersonalizada && $classificacaoCusto !== '') {
+                            // Usar margem baseada na classificacao_custo
+                            if ($classificacaoCusto === 'mao_obra') {
                                 $percentualBdi = $margemMaoObraGlobal;
-                            } elseif (strpos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+                            } elseif ($classificacaoCusto === 'equipamento') {
                                 $percentualBdi = $margemEquipamentosGlobal;
-                            } else {
+                            } elseif ($classificacaoCusto === 'material') {
                                 $percentualBdi = $margemMateriaisGlobal;
                             }
                             // DEBUG
-                            echo "<!-- Item {$row['id']}: cat={$categoria} | usa_pers={$usaMargemPersonalizada} | BDI={$percentualBdi}% -->\n";
+                            echo "<!-- Item {$row['id']}: classificacao_custo={$classificacaoCusto} | usa_pers={$usaMargemPersonalizada} | BDI={$percentualBdi}% -->\n";
                         } elseif ($custoBase > 0.01 && $valorCobranca > $custoBase) {
                             $percentualBdi = (($valorCobranca - $custoBase) / $custoBase) * 100;
                             if ($percentualBdi > 999) {

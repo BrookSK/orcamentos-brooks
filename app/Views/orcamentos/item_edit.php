@@ -55,6 +55,19 @@ declare(strict_types=1);
             </div>
 
             <div class="field">
+                <label>Tipo de Custo <span style="color:#f44336;">*</span></label>
+                <?php $currentClassificacao = (string)($item['classificacao_custo'] ?? ''); ?>
+                <select name="classificacao_custo" required>
+                    <option value="">Selecione o tipo de custo</option>
+                    <option value="material" <?php echo $currentClassificacao === 'material' ? 'selected' : ''; ?>>Material (usa margem de materiais)</option>
+                    <option value="mao_obra" <?php echo $currentClassificacao === 'mao_obra' ? 'selected' : ''; ?>>Mão de Obra (usa margem de mão de obra)</option>
+                    <option value="equipamento" <?php echo $currentClassificacao === 'equipamento' ? 'selected' : ''; ?>>Equipamento (usa margem de equipamentos)</option>
+                </select>
+                <?php if (!empty($errors['classificacao_custo'])) : ?><div class="error"><?php echo htmlspecialchars((string)$errors['classificacao_custo']); ?></div><?php endif; ?>
+                <div class="muted" style="font-size:12px;margin-top:4px;">Define qual margem do cabeçalho será aplicada (se não usar margem personalizada)</div>
+            </div>
+
+            <div class="field">
                 <label>Código</label>
                 <input name="codigo" value="<?php echo htmlspecialchars((string)($item['codigo'] ?? '')); ?>">
                 <?php if (!empty($errors['codigo'])) : ?><div class="error"><?php echo htmlspecialchars((string)$errors['codigo']); ?></div><?php endif; ?>

@@ -730,9 +730,9 @@ final class OrcamentoController
             'categoria' => $data['categoria'] ?? 'NAO_EXISTE'
         ]);
         
-        // Determinar qual margem usar
+        // Determinar qual margem usar baseado na classificacao_custo
         $usaMargemPersonalizada = (int)($data['usa_margem_personalizada'] ?? 0);
-        $categoria = (string)($data['categoria'] ?? '');
+        $classificacaoCusto = (string)($data['classificacao_custo'] ?? '');
         
         if ($usaMargemPersonalizada) {
             // Usar margem personalizada do item
@@ -740,37 +740,42 @@ final class OrcamentoController
             Logger::info('orcamentos.itemStore.margem', [
                 'tipo' => 'personalizada',
                 'margem' => $margem,
-                'categoria' => $categoria
+                'classificacao_custo' => $classificacaoCusto
             ]);
         } else {
-            // Usar margem global do orçamento baseada na categoria
+            // Usar margem global do orçamento baseada na classificacao_custo
             Logger::info('orcamentos.itemStore.orcamento_margens', [
                 'margem_mao_obra' => $orcamento['margem_mao_obra'] ?? 'NAO_EXISTE',
                 'margem_materiais' => $orcamento['margem_materiais'] ?? 'NAO_EXISTE',
                 'margem_equipamentos' => $orcamento['margem_equipamentos'] ?? 'NAO_EXISTE'
             ]);
             
-            $categoriaUpper = strtoupper($categoria);
-            if (stripos($categoriaUpper, 'MÃO DE OBRA') !== false || stripos($categoriaUpper, 'MAO DE OBRA') !== false) {
+            if ($classificacaoCusto === 'mao_obra') {
                 $margem = (float)($orcamento['margem_mao_obra'] ?? 50);
                 Logger::info('orcamentos.itemStore.margem', [
                     'tipo' => 'global_mao_obra',
                     'margem' => $margem,
-                    'categoria' => $categoria
+                    'classificacao_custo' => $classificacaoCusto
                 ]);
-            } elseif (stripos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+            } elseif ($classificacaoCusto === 'equipamento') {
                 $margem = (float)($orcamento['margem_equipamentos'] ?? 20);
                 Logger::info('orcamentos.itemStore.margem', [
                     'tipo' => 'global_equipamentos',
                     'margem' => $margem,
-                    'categoria' => $categoria
+                    'classificacao_custo' => $classificacaoCusto
                 ]);
-            } else {
+            } elseif ($classificacaoCusto === 'material') {
                 $margem = (float)($orcamento['margem_materiais'] ?? 20);
                 Logger::info('orcamentos.itemStore.margem', [
                     'tipo' => 'global_materiais',
                     'margem' => $margem,
-                    'categoria' => $categoria
+                    'classificacao_custo' => $classificacaoCusto
+                ]);
+            } else {
+                // Se classificacao_custo não foi definido, usar 0 (sem margem)
+                $margem = 0;
+                Logger::warning('orcamentos.itemStore.classificacao_custo_nao_definido', [
+                    'classificacao_custo' => $classificacaoCusto
                 ]);
             }
         }
@@ -895,22 +900,24 @@ final class OrcamentoController
             $data['percentual_realizado'] = (float)($existing['percentual_realizado'] ?? 0);
         }
         
-        // Determinar qual margem usar
+        // Determinar qual margem usar baseado na classificacao_custo
         $usaMargemPersonalizada = (int)($data['usa_margem_personalizada'] ?? 0);
-        $categoria = (string)($data['categoria'] ?? '');
+        $classificacaoCusto = (string)($data['classificacao_custo'] ?? '');
         
         if ($usaMargemPersonalizada) {
             // Usar margem personalizada do item
             $margem = (float)($data['margem_personalizada'] ?? 0);
         } else {
-            // Usar margem global do orçamento baseada na categoria
-            $categoriaUpper = strtoupper($categoria);
-            if (stripos($categoriaUpper, 'MÃO DE OBRA') !== false || stripos($categoriaUpper, 'MAO DE OBRA') !== false) {
+            // Usar margem global do orçamento baseada na classificacao_custo
+            if ($classificacaoCusto === 'mao_obra') {
                 $margem = (float)($orcamento['margem_mao_obra'] ?? 50);
-            } elseif (stripos($categoriaUpper, 'EQUIPAMENTO') !== false) {
+            } elseif ($classificacaoCusto === 'equipamento') {
                 $margem = (float)($orcamento['margem_equipamentos'] ?? 20);
-            } else {
+            } elseif ($classificacaoCusto === 'material') {
                 $margem = (float)($orcamento['margem_materiais'] ?? 20);
+            } else {
+                // Se classificacao_custo não foi definido, usar 0 (sem margem)
+                $margem = 0;
             }
         }
         
