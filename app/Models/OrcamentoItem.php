@@ -291,6 +291,7 @@ final class OrcamentoItem
         $out['quantidade'] = self::parsePtBrNumber((string)($data['quantidade'] ?? '0'));
         $out['custo_material'] = self::parsePtBrNumber((string)($data['custo_material'] ?? '0'));
         $out['custo_mao_obra'] = self::parsePtBrNumber((string)($data['custo_mao_obra'] ?? '0'));
+        $out['custo_equipamento'] = self::parsePtBrNumber((string)($data['custo_equipamento'] ?? '0'));
         $out['margem_lucro'] = self::parsePtBrNumber((string)($data['margem_lucro'] ?? '0'));
         $out['desconto_item'] = self::parsePtBrNumber((string)($data['desconto_item'] ?? '0'));
         $out['margem_personalizada'] = self::parsePtBrNumber((string)($data['margem_personalizada'] ?? '0'));

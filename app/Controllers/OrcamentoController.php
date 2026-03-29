@@ -801,6 +801,39 @@ final class OrcamentoController
             ]);
         }
         
+        // Calcular custos detalhados baseado na classificacao_custo
+        // Para orçamentos manuais, distribuir o valor_unitario nos campos de custo apropriados
+        if (!isset($data['custo_material']) || $data['custo_material'] == 0) {
+            $data['custo_material'] = 0;
+        }
+        if (!isset($data['custo_mao_obra']) || $data['custo_mao_obra'] == 0) {
+            $data['custo_mao_obra'] = 0;
+        }
+        if (!isset($data['custo_equipamento']) || $data['custo_equipamento'] == 0) {
+            $data['custo_equipamento'] = 0;
+        }
+        
+        // Se os custos não foram preenchidos manualmente, calcular baseado na classificacao_custo
+        $custoTotal = $data['custo_material'] + $data['custo_mao_obra'] + $data['custo_equipamento'];
+        if ($custoTotal == 0 && $valorUnitario > 0 && $classificacaoCusto !== '') {
+            // Distribuir valor_unitario no campo de custo apropriado
+            if ($classificacaoCusto === 'material') {
+                $data['custo_material'] = $valorUnitario;
+            } elseif ($classificacaoCusto === 'mao_obra') {
+                $data['custo_mao_obra'] = $valorUnitario;
+            } elseif ($classificacaoCusto === 'equipamento') {
+                $data['custo_equipamento'] = $valorUnitario;
+            }
+            
+            Logger::info('orcamentos.itemStore.custos_calculados', [
+                'classificacao_custo' => $classificacaoCusto,
+                'valor_unitario' => $valorUnitario,
+                'custo_material' => $data['custo_material'],
+                'custo_mao_obra' => $data['custo_mao_obra'],
+                'custo_equipamento' => $data['custo_equipamento']
+            ]);
+        }
+        
         $errors = OrcamentoItem::validate($data);
 
         if ($errors) {
@@ -928,6 +961,34 @@ final class OrcamentoController
             $data['valor_cobranca'] = (string)$valorCobrancaCalculado;
         } else {
             $data['valor_cobranca'] = (string)$valorUnitario;
+        }
+        
+        // Calcular custos detalhados baseado na classificacao_custo
+        // Para orçamentos manuais, distribuir o valor_unitario nos campos de custo apropriados
+        $custoTotal = $data['custo_material'] + $data['custo_mao_obra'] + (float)($data['custo_equipamento'] ?? 0);
+        if ($custoTotal == 0 && $valorUnitario > 0 && $classificacaoCusto !== '') {
+            // Distribuir valor_unitario no campo de custo apropriado
+            if ($classificacaoCusto === 'material') {
+                $data['custo_material'] = $valorUnitario;
+                $data['custo_mao_obra'] = 0;
+                $data['custo_equipamento'] = 0;
+            } elseif ($classificacaoCusto === 'mao_obra') {
+                $data['custo_material'] = 0;
+                $data['custo_mao_obra'] = $valorUnitario;
+                $data['custo_equipamento'] = 0;
+            } elseif ($classificacaoCusto === 'equipamento') {
+                $data['custo_material'] = 0;
+                $data['custo_mao_obra'] = 0;
+                $data['custo_equipamento'] = $valorUnitario;
+            }
+            
+            Logger::info('orcamentos.itemUpdate.custos_calculados', [
+                'classificacao_custo' => $classificacaoCusto,
+                'valor_unitario' => $valorUnitario,
+                'custo_material' => $data['custo_material'],
+                'custo_mao_obra' => $data['custo_mao_obra'],
+                'custo_equipamento' => $data['custo_equipamento'] ?? 0
+            ]);
         }
 
         $errors = OrcamentoItem::validate($data);
