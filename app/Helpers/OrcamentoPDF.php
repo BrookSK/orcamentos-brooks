@@ -541,9 +541,93 @@ HTML;
             $totalGeral += $valor;
         }
         
-        // Se não houver categorias, retornar vazio
+        // Se não houver categorias, gerar apenas página de áreas
         if (empty($categorias)) {
-            return '';
+            $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
+            $html .= '<div class="etapa-header">RESUMO GERAL</div>';
+            
+            // TABELAS DE ÁREAS
+            $dadosAreas = self::calcularAreas($orcamento);
+            $areaTerreno = $dadosAreas['terreno'];
+            $areaTerrea = $dadosAreas['terrea'];
+            $areaSuperior = $dadosAreas['superior'];
+            $areaTotal = $dadosAreas['total'];
+            $areasPersonalizadas = $dadosAreas['areas'];
+            
+            // Gerar tabela de áreas
+            $html .= '<div style="page-break-inside: avoid;">';
+            $html .= '<table class="table-areas" style="margin-top:20px;"><thead><tr><th>ÁREAS</th><th>m2</th><th>FATOR</th><th>m2 x FATOR</th></tr></thead><tbody>';
+            
+            if (!empty($areasPersonalizadas)) {
+                foreach ($areasPersonalizadas as $area) {
+                    $nome = htmlspecialchars((string)($area['nome'] ?? ''));
+                    $m2 = (float)($area['m2'] ?? 0);
+                    $fator = (float)($area['fator'] ?? 1);
+                    $tipoArea = (string)($area['tipo_area'] ?? 'terreno');
+                    $m2xFator = $m2 * $fator;
+                    
+                    $nomeExibicao = $nome;
+                    if ($tipoArea === 'terrea') {
+                        $nomeExibicao = $nome . ' *';
+                    } elseif ($tipoArea === 'superior') {
+                        $nomeExibicao = $nome . ' **';
+                    }
+                    
+                    $html .= sprintf(
+                        '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+                        $nomeExibicao,
+                        number_format($m2, 2, ',', '.'),
+                        number_format($fator, 2, ',', '.'),
+                        number_format($m2xFator, 2, ',', '.')
+                    );
+                }
+                
+                $html .= sprintf(
+                    '<tr style="background:#e0e0e0;"><td colspan="3"><strong>ÁREA TOTAL DO TERRENO:</strong></td><td><strong>%s</strong></td></tr>',
+                    number_format($areaTerreno, 2, ',', '.')
+                );
+                
+                if ($areaTerrea > 0) {
+                    $html .= sprintf(
+                        '<tr style="background:#d0d0d0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA TÉRREA (*):</strong></td><td><strong>%s</strong></td></tr>',
+                        number_format($areaTerrea, 2, ',', '.')
+                    );
+                }
+                
+                if ($areaSuperior > 0) {
+                    $html .= sprintf(
+                        '<tr style="background:#c0c0c0;"><td colspan="3"><strong>ÁREA CONSTRUÍDA SUPERIORES (**):</strong></td><td><strong>%s</strong></td></tr>',
+                        number_format($areaSuperior, 2, ',', '.')
+                    );
+                }
+            } else {
+                $html .= sprintf(
+                    '<tr><td>ÁREA TOTAL</td><td>%s</td><td>1</td><td>%s</td></tr>',
+                    number_format($areaTotal, 2, ',', '.'),
+                    number_format($areaTotal, 2, ',', '.')
+                );
+            }
+            
+            $html .= sprintf('<tr class="total-row"><td colspan="3">ÁREA TOTAL CONSTRUÍDA:</td><td>%s</td></tr>', number_format($areaTotal, 2, ',', '.'));
+            
+            if ($areaTerrea > 0 || $areaSuperior > 0) {
+                $html .= '<tr><td colspan="4" style="font-size:9px;color:#666;padding:8px;text-align:left;">';
+                if ($areaTerrea > 0) {
+                    $html .= '(*) Área construída térrea - pavimentos superiores<br>';
+                }
+                if ($areaSuperior > 0) {
+                    $html .= '(**) Área construída superiores - áreas verticais (telhado, etc)';
+                }
+                $html .= '</td></tr>';
+            }
+            
+            $html .= '</tbody></table>';
+            $html .= '</div>';
+            
+            $html .= '<div class="page-footer"><div>FOLHA: 1</div></div>';
+            $html .= '</div>';
+            
+            return $html;
         }
         
         // Gerar páginas de resumo por categoria
@@ -589,7 +673,9 @@ HTML;
         $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
         // Tabela de total geral
-        $html .= '<table class="table-resumo" style="margin-top:15px;"><tbody>';
+        $html .= '<table class="table-resumo" style="margin-top:15px;">';
+        $html .= '<thead><tr><th colspan="2">DESCRIÇÃO</th><th class="right">VALOR TOTAL</th><th class="center">%</th></tr></thead>';
+        $html .= '<tbody>';
         $html .= sprintf(
             '<tr class="total-row"><td colspan="2">VALOR TOTAL GERAL:</td><td class="right">R$ %s</td><td class="center">100,00%%</td></tr>',
             self::formatarValor($totalGeral)
@@ -703,7 +789,7 @@ HTML;
         $html .= '</tbody></table>';
         
         $html .= sprintf('<div class="page-footer"><div>FOLHA: %d</div></div>', $paginaNum);
-        $html .= '</div>';
+        $html .= '</div>'; // Fecha <div class="page">
         
         return $html;
     }
