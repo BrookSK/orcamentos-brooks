@@ -414,7 +414,6 @@ HTML;
     
     <div class="capa-title">
         <h1>PLANILHA<br/>ORÇAMENTÁRIA</h1>
-        <div class="capa-title-sub">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>
     </div>
     
     <div class="capa-info">
@@ -492,7 +491,6 @@ HTML;
         {$logoHtml}
     </div>
     <div class="page-title">{$tituloSecao}</div>
-    <div class="page-subtitle">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>
     <div style="display:flex;justify-content:space-between;margin-top:15px;font-size:8pt;">
         <div class="page-header-info">
             <div><strong>{$numeroProposta}</strong></div>
@@ -1181,19 +1179,19 @@ CSS;
         $html .= '</tr></thead><tbody>';
         
         $html .= '<tr>';
-        $html .= '<td class="left">🧱 Total em Materiais</td>';
+        $html .= '<td class="left">Total em Materiais</td>';
         $html .= '<td class="right">R$ ' . self::formatarValor($totalMateriais) . '</td>';
         $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalMateriais/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
         
         $html .= '<tr>';
-        $html .= '<td class="left">👷 Total em Mão de Obra</td>';
+        $html .= '<td class="left">Total em Mão de Obra</td>';
         $html .= '<td class="right">R$ ' . self::formatarValor($totalMaoObra) . '</td>';
         $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalMaoObra/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
         
         $html .= '<tr>';
-        $html .= '<td class="left">⚙️ Total em Equipamentos</td>';
+        $html .= '<td class="left">Total em Equipamentos</td>';
         $html .= '<td class="right">R$ ' . self::formatarValor($totalEquipamentos) . '</td>';
         $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalEquipamentos/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
@@ -1227,13 +1225,6 @@ CSS;
         $html .= '</tr>';
         
         $html .= '</tbody></table>';
-        
-        $html .= '<div style="margin-top:30px; padding:15px; background:#F5F5F5; border-left:4px solid #C9973A; font-size:8pt;">';
-        $html .= '<strong>Observações:</strong><br>';
-        $html .= '• Valores incluem BDI (Benefícios e Despesas Indiretas) conforme especificado por item<br>';
-        $html .= '• Custos administrativos e impostos calculados sobre o subtotal da obra<br>';
-        $html .= '• Este documento é confidencial e destinado apenas para uso administrativo interno';
-        $html .= '</div>';
         
         $html .= '</div>';
         return $html;
