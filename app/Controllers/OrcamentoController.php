@@ -2145,6 +2145,8 @@ final class OrcamentoController
         
         $query = $_GET['q'] ?? '';
         
+        Logger::info('orcamentos.buscarSinapi', ['query' => $query]);
+        
         if (strlen($query) < 3) {
             echo json_encode([]);
             return;
@@ -2162,6 +2164,8 @@ final class OrcamentoController
             );
             $stmt->execute([':query' => '%' . $query . '%']);
             $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            Logger::info('orcamentos.buscarSinapi.results', ['count' => count($resultados)]);
             
             echo json_encode($resultados);
         } catch (\Throwable $e) {
@@ -2269,8 +2273,8 @@ final class OrcamentoController
                 $sinapiCodigo = 'MANUAL-' . time() . '-' . rand(1000, 9999);
                 
                 $stmt = $pdo->prepare(
-                    "INSERT INTO sinapi_insumos (codigo, descricao, unidade, preco_unit, tipo, origem) 
-                     VALUES (:codigo, :descricao, :unidade, :preco, 'COMPOSICAO', 'MANUAL')"
+                    "INSERT INTO sinapi_insumos (codigo, descricao, unidade, preco_unit, tipo) 
+                     VALUES (:codigo, :descricao, :unidade, :preco, 'COMPOSICAO')"
                 );
                 $stmt->execute([
                     ':codigo' => $sinapiCodigo,

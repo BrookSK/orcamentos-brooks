@@ -917,11 +917,20 @@ function buscarSINAPI(query, hash) {
         return;
     }
     
+    console.log('Buscando SINAPI:', query);
+    
     // Aguardar 300ms antes de buscar (debounce)
     sinapiTimeout = setTimeout(() => {
-        fetch('/?route=orcamentos/buscarSinapi&q=' + encodeURIComponent(query))
-            .then(response => response.json())
+        const url = '/?route=orcamentos/buscarSinapi&q=' + encodeURIComponent(query);
+        console.log('URL:', url);
+        
+        fetch(url)
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Dados recebidos:', data);
                 mostrarSugestoesSINAPI(data, hash);
             })
             .catch(error => {
