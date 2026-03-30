@@ -813,24 +813,53 @@ HTML;
             $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
             $html .= '<div class="etapa-header">' . htmlspecialchars(strtoupper($categoriaNome)) . '</div>';
             $html .= '<table class="table-resumo"><thead><tr>';
-            $html .= '<th style="width:8%;">Nº</th><th style="width:60%;">DESCRIÇÃO</th>';
-            $html .= '<th class="right" style="width:22%;">VALOR TOTAL</th><th class="center" style="width:10%;">%</th>';
+            $html .= '<th style="width:8%;">Nº</th><th style="width:42%;">DESCRIÇÃO</th>';
+            $html .= '<th class="right" style="width:18%;">VALOR TOTAL</th>';
+            $html .= '<th class="center" style="width:8%;">% Etapa</th>';
+            $html .= '<th class="center" style="width:8%;">% Obra</th>';
+            $html .= '<th class="center" style="width:16%;">Status</th>';
             $html .= '</tr></thead><tbody>';
             
             foreach ($categoriaData['itens'] as $item) {
-                $pct = $totalGeral > 0 ? ((float)$item['valor_total'] / $totalGeral) * 100 : 0;
+                $valorTotal = (float)$item['valor_total'];
+                $pctEtapa = $categoriaData['total'] > 0 ? ($valorTotal / $categoriaData['total']) * 100 : 0;
+                $pctObra = $totalGeral > 0 ? ($valorTotal / $totalGeral) * 100 : 0;
+                
+                // Buscar percentual_realizado do item
+                $stmtItem = $pdo->prepare('SELECT percentual_realizado FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND codigo = :codigo LIMIT 1');
+                $stmtItem->execute([':orcamento_id' => $orcamentoId, ':codigo' => $item['codigo']]);
+                $itemData = $stmtItem->fetch(\PDO::FETCH_ASSOC);
+                $percentualRealizado = (float)($itemData['percentual_realizado'] ?? 0);
+                
+                // Determinar status
+                $status = '';
+                $statusColor = '';
+                if ($percentualRealizado >= 100) {
+                    $status = 'Concluído';
+                    $statusColor = 'color:#4CAF50;font-weight:bold;';
+                } elseif ($percentualRealizado > 0) {
+                    $status = number_format($percentualRealizado, 0) . '%';
+                    $statusColor = 'color:#FF9800;';
+                } else {
+                    $status = 'Pendente';
+                    $statusColor = 'color:#999;';
+                }
+                
                 $html .= sprintf(
-                    '<tr><td>%s</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
+                    '<tr><td>%s</td><td>%s</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="center">%s%%</td><td class="center" style="%s">%s</td></tr>',
                     htmlspecialchars((string)$item['codigo']),
                     htmlspecialchars((string)$item['descricao']),
-                    self::formatarValor((float)$item['valor_total']),
-                    number_format($pct, 2, ',', '.')
+                    self::formatarValor($valorTotal),
+                    number_format($pctEtapa, 2, ',', '.'),
+                    number_format($pctObra, 2, ',', '.'),
+                    $statusColor,
+                    $status
                 );
             }
             
             $pctCategoria = $totalGeral > 0 ? ($categoriaData['total'] / $totalGeral) * 100 : 0;
             $html .= sprintf(
-                '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - %s</td><td class="right">R$ %s</td><td class="center">%s%%</td></tr>',
+                '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - %s</td><td class="right">R$ %s</td><td class="center">100,00%%</td><td class="center">%s%%</td><td class="center">—</td></tr>',
                 htmlspecialchars(strtoupper($categoriaNome)),
                 self::formatarValor($categoriaData['total']),
                 number_format($pctCategoria, 2, ',', '.')
@@ -907,14 +936,15 @@ HTML;
             
             $html .= '<table class="table-detalhes">';
             $html .= '<thead><tr>';
-            $html .= '<th class="left" style="width:8%;">Cód.</th>';
-            $html .= '<th class="left" style="width:35%;">Descrição</th>';
-            $html .= '<th class="center" style="width:6%;">Un</th>';
-            $html .= '<th class="center" style="width:8%;">Qtd</th>';
-            $html .= '<th class="right" style="width:13%;">Vlr Unit.</th>';
-            $html .= '<th class="right" style="width:15%;">Vlr Total</th>';
-            $html .= '<th class="center" style="width:8%;">% Etapa</th>';
+            $html .= '<th class="left" style="width:7%;">Cód.</th>';
+            $html .= '<th class="left" style="width:30%;">Descrição</th>';
+            $html .= '<th class="center" style="width:5%;">Un</th>';
+            $html .= '<th class="center" style="width:7%;">Qtd</th>';
+            $html .= '<th class="right" style="width:12%;">Vlr Unit.</th>';
+            $html .= '<th class="right" style="width:13%;">Vlr Total</th>';
+            $html .= '<th class="center" style="width:7%;">% Etapa</th>';
             $html .= '<th class="center" style="width:7%;">% Obra</th>';
+            $html .= '<th class="center" style="width:12%;">Status</th>';
             $html .= '</tr></thead><tbody>';
 
             // Calcular subtotal da categoria primeiro
@@ -931,9 +961,24 @@ HTML;
                 $quantidade = (float)($item['quantidade'] ?? 0);
                 $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
                 $valorTotal = $quantidade * $valorCobrancaUnitario;
+                $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
                 
                 $pctEtapa = $subtotalCategoria > 0 ? ($valorTotal / $subtotalCategoria) * 100 : 0.0;
                 $pctObra = $totalGeralObra > 0 ? ($valorTotal / $totalGeralObra) * 100 : 0.0;
+                
+                // Determinar status baseado no percentual realizado
+                $status = '';
+                $statusColor = '';
+                if ($percentualRealizado >= 100) {
+                    $status = 'Concluído';
+                    $statusColor = 'color:#4CAF50;font-weight:bold;';
+                } elseif ($percentualRealizado > 0) {
+                    $status = number_format($percentualRealizado, 0) . '%';
+                    $statusColor = 'color:#FF9800;';
+                } else {
+                    $status = 'Pendente';
+                    $statusColor = 'color:#999;';
+                }
                 
                 $html .= '<tr>';
                 $html .= '<td class="left">' . htmlspecialchars((string)$item['codigo']) . '</td>';
@@ -944,6 +989,7 @@ HTML;
                 $html .= '<td class="right">R$ ' . self::formatarValor($valorTotal) . '</td>';
                 $html .= '<td class="center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
                 $html .= '<td class="center">' . number_format($pctObra, 2, ',', '.') . '%</td>';
+                $html .= '<td class="center" style="' . $statusColor . '">' . $status . '</td>';
                 $html .= '</tr>';
             }
             
