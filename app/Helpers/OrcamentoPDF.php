@@ -1199,6 +1199,9 @@ CSS;
             $totalEquipamentos += $quantidade * $custoEquipamento;
         }
         
+        // Soma dos custos (base para calcular percentuais)
+        $somaCustos = $totalMateriais + $totalMaoObra + $totalEquipamentos;
+        
         $subtotal = $totalCobranca;
         $percentualCustosAdm = (float)($orcamento['percentual_custos_adm'] ?? 0);
         $percentualImpostos = (float)($orcamento['percentual_impostos'] ?? 0);
@@ -1221,19 +1224,19 @@ CSS;
         $html .= '<tr>';
         $html .= '<td class="left">Total em Materiais</td>';
         $html .= '<td class="right">R$ ' . self::formatarValor($totalMateriais) . '</td>';
-        $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalMateriais/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
+        $html .= '<td class="center">' . number_format($somaCustos > 0 ? ($totalMateriais/$somaCustos)*100 : 0, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
         
         $html .= '<tr>';
         $html .= '<td class="left">Total em Mão de Obra</td>';
         $html .= '<td class="right">R$ ' . self::formatarValor($totalMaoObra) . '</td>';
-        $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalMaoObra/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
+        $html .= '<td class="center">' . number_format($somaCustos > 0 ? ($totalMaoObra/$somaCustos)*100 : 0, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
         
         $html .= '<tr>';
         $html .= '<td class="left">Total em Equipamentos</td>';
         $html .= '<td class="right">R$ ' . self::formatarValor($totalEquipamentos) . '</td>';
-        $html .= '<td class="center">' . number_format($subtotal > 0 ? ($totalEquipamentos/$subtotal)*100 : 0, 2, ',', '.') . '%</td>';
+        $html .= '<td class="center">' . number_format($somaCustos > 0 ? ($totalEquipamentos/$somaCustos)*100 : 0, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
         
         $html .= '<tr class="subtotal-row">';
