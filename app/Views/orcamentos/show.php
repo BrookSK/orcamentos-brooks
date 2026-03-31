@@ -761,7 +761,6 @@ function aplicarDescontoGrupo(grupo, orcamentoId) {
         setTimeout(() => loadingMsg.remove(), 3000);
     });
 }
-});
 </script>
 
 <script src="/public/sinapi-calc-data.js"></script>

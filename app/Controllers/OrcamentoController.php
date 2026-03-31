@@ -2221,13 +2221,15 @@ final class OrcamentoController
                     'count_categories' => count($categories)
                 ]);
                 
-                $stmtUpdate = $pdo->prepare('UPDATE orcamento_itens SET ordem = :ordem, codigo = :codigo WHERE id = :id AND orcamento_id = :orcamento_id');
+                $stmtUpdate = $pdo->prepare('UPDATE orcamento_itens SET ordem = :ordem, codigo = :codigo, categoria = :categoria, grupo = :grupo WHERE id = :id AND orcamento_id = :orcamento_id');
                 
                 $updatedCodes = [];
                 $totalUpdated = 0;
                 
                 foreach ($categories as $catData) {
                     $ordemCategoria = (int)($catData['ordem_categoria'] ?? 0);
+                    $categoria = (string)($catData['categoria'] ?? '');
+                    $grupo = (string)($catData['grupo'] ?? '');
                     $items = $catData['items'] ?? [];
                     
                     // Renumerar itens da categoria: categoria 1 = 1.1, 1.2, ...; categoria 4 = 4.1, 4.2, ...
@@ -2242,6 +2244,8 @@ final class OrcamentoController
                             ':id' => $itemId,
                             ':ordem' => ($ordemCategoria * 1000) + $ordemItem, // Ordem global para manter sequência
                             ':codigo' => $newCode,
+                            ':categoria' => $categoria,
+                            ':grupo' => $grupo,
                             ':orcamento_id' => $orcamentoId
                         ]);
                         
