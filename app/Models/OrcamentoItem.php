@@ -58,7 +58,7 @@ final class OrcamentoItem
     public static function allByOrcamento(int $orcamentoId): array
     {
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare('SELECT * FROM orcamento_itens WHERE orcamento_id = :id ORDER BY ordem, grupo, categoria, id');
+        $stmt = $pdo->prepare('SELECT * FROM orcamento_itens WHERE orcamento_id = :id ORDER BY ordem, id');
         $stmt->execute([':id' => $orcamentoId]);
         $items = $stmt->fetchAll();
 

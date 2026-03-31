@@ -2232,6 +2232,13 @@ final class OrcamentoController
                     $grupo = (string)($catData['grupo'] ?? '');
                     $items = $catData['items'] ?? [];
                     
+                    Logger::info('orcamentos.reorderItems.processing_category', [
+                        'ordem' => $ordemCategoria,
+                        'categoria' => $categoria,
+                        'grupo' => $grupo,
+                        'items_count' => count($items)
+                    ]);
+                    
                     // Renumerar itens da categoria: categoria 1 = 1.1, 1.2, ...; categoria 4 = 4.1, 4.2, ...
                     foreach ($items as $item) {
                         $itemId = (int)($item['id'] ?? 0);
@@ -2239,6 +2246,13 @@ final class OrcamentoController
                         
                         // Código = ordem_categoria . ordem_item
                         $newCode = $ordemCategoria . '.' . $ordemItem;
+                        
+                        Logger::info('orcamentos.reorderItems.updating_item', [
+                            'item_id' => $itemId,
+                            'new_code' => $newCode,
+                            'new_categoria' => $categoria,
+                            'new_grupo' => $grupo
+                        ]);
                         
                         $stmtUpdate->execute([
                             ':id' => $itemId,
