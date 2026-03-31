@@ -1153,20 +1153,9 @@ final class OrcamentoController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            try {
-                OrcamentoOpcao::delete($id, 'grupo');
-                $this->redirect('/?route=orcamentos/grupos');
-            } catch (\Exception $e) {
-                $this->render('orcamentos/opcoes', [
-                    'tipo' => 'grupo',
-                    'titulo' => 'Grupos',
-                    'items' => OrcamentoOpcao::allByTipo('grupo'),
-                    'errors' => ['geral' => $e->getMessage()],
-                ]);
-            }
-        } else {
-            $this->redirect('/?route=orcamentos/grupos');
+            OrcamentoOpcao::delete($id, 'grupo');
         }
+        $this->redirect('/?route=orcamentos/grupos');
     }
 
     public function gruposUpdate(): void
@@ -1187,13 +1176,14 @@ final class OrcamentoController
         
         try {
             OrcamentoOpcao::update($id, 'grupo', $nome);
-            $this->redirect('/?route=orcamentos/grupos');
+            header('Location: /?route=orcamentos/grupos&success=1');
+            exit;
         } catch (\Exception $e) {
             $this->render('orcamentos/opcoes', [
                 'tipo' => 'grupo',
                 'titulo' => 'Grupos',
                 'items' => OrcamentoOpcao::allByTipo('grupo'),
-                'errors' => ['nome' => $e->getMessage()],
+                'errors' => ['geral' => $e->getMessage()],
             ]);
         }
     }
@@ -1230,20 +1220,9 @@ final class OrcamentoController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            try {
-                OrcamentoOpcao::delete($id, 'categoria');
-                $this->redirect('/?route=orcamentos/categorias');
-            } catch (\Exception $e) {
-                $this->render('orcamentos/opcoes', [
-                    'tipo' => 'categoria',
-                    'titulo' => 'Categorias',
-                    'items' => OrcamentoOpcao::allByTipo('categoria'),
-                    'errors' => ['geral' => $e->getMessage()],
-                ]);
-            }
-        } else {
-            $this->redirect('/?route=orcamentos/categorias');
+            OrcamentoOpcao::delete($id, 'categoria');
         }
+        $this->redirect('/?route=orcamentos/categorias');
     }
 
     public function categoriasUpdate(): void
@@ -1264,13 +1243,15 @@ final class OrcamentoController
         
         try {
             OrcamentoOpcao::update($id, 'categoria', $nome);
-            $this->redirect('/?route=orcamentos/categorias');
+            // Adicionar parâmetro de sucesso na URL
+            header('Location: /?route=orcamentos/categorias&success=1');
+            exit;
         } catch (\Exception $e) {
             $this->render('orcamentos/opcoes', [
                 'tipo' => 'categoria',
                 'titulo' => 'Categorias',
                 'items' => OrcamentoOpcao::allByTipo('categoria'),
-                'errors' => ['nome' => $e->getMessage()],
+                'errors' => ['geral' => $e->getMessage()],
             ]);
         }
     }
@@ -1307,20 +1288,9 @@ final class OrcamentoController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            try {
-                OrcamentoOpcao::delete($id, 'unidade');
-                $this->redirect('/?route=orcamentos/unidades');
-            } catch (\Exception $e) {
-                $this->render('orcamentos/opcoes', [
-                    'tipo' => 'unidade',
-                    'titulo' => 'Unidades',
-                    'items' => OrcamentoOpcao::allByTipo('unidade'),
-                    'errors' => ['geral' => $e->getMessage()],
-                ]);
-            }
-        } else {
-            $this->redirect('/?route=orcamentos/unidades');
+            OrcamentoOpcao::delete($id, 'unidade');
         }
+        $this->redirect('/?route=orcamentos/unidades');
     }
 
     public function unidadesUpdate(): void
@@ -1341,13 +1311,14 @@ final class OrcamentoController
         
         try {
             OrcamentoOpcao::update($id, 'unidade', $nome);
-            $this->redirect('/?route=orcamentos/unidades');
+            header('Location: /?route=orcamentos/unidades&success=1');
+            exit;
         } catch (\Exception $e) {
             $this->render('orcamentos/opcoes', [
                 'tipo' => 'unidade',
                 'titulo' => 'Unidades',
                 'items' => OrcamentoOpcao::allByTipo('unidade'),
-                'errors' => ['nome' => $e->getMessage()],
+                'errors' => ['geral' => $e->getMessage()],
             ]);
         }
     }
@@ -1361,6 +1332,49 @@ final class OrcamentoController
             Logger::info('orcamentos.itemDelete.deleted', ['orcamento_id' => $orcamentoId, 'item_id' => $itemId]);
         }
         $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
+    }
+
+    public function renomearCategoria(): void
+    {
+        header('Content-Type: application/json');
+        
+        $orcamentoId = (int)($_POST['orcamento_id'] ?? 0);
+        $categoriaAntiga = trim((string)($_POST['categoria_antiga'] ?? ''));
+        $categoriaNova = trim((string)($_POST['categoria_nova'] ?? ''));
+        
+        if ($orcamentoId <= 0 || $categoriaAntiga === '' || $categoriaNova === '') {
+            echo json_encode(['success' => false, 'error' => 'Parâmetros inválidos']);
+            return;
+        }
+        
+        try {
+            $pdo = \App\Core\Database::pdo();
+            
+            // Atualizar todos os itens deste orçamento que usam a categoria antiga
+            $stmt = $pdo->prepare('UPDATE orcamento_itens SET categoria = :categoria_nova WHERE orcamento_id = :orcamento_id AND categoria = :categoria_antiga');
+            $stmt->execute([
+                ':categoria_nova' => $categoriaNova,
+                ':categoria_antiga' => $categoriaAntiga,
+                ':orcamento_id' => $orcamentoId,
+            ]);
+            
+            $rowsAffected = $stmt->rowCount();
+            
+            Logger::info('orcamentos.renomearCategoria', [
+                'orcamento_id' => $orcamentoId,
+                'categoria_antiga' => $categoriaAntiga,
+                'categoria_nova' => $categoriaNova,
+                'items_updated' => $rowsAffected
+            ]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => "Categoria renomeada com sucesso. {$rowsAffected} itens atualizados."
+            ]);
+        } catch (\Exception $e) {
+            Logger::error('orcamentos.renomearCategoria.error', ['error' => $e->getMessage()]);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
     }
 
     public function print(): void

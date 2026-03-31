@@ -144,26 +144,8 @@ final class OrcamentoOpcao
     {
         $pdo = Database::pdo();
         
-        // Buscar o nome da opção que será excluída
-        $stmt = $pdo->prepare('SELECT nome FROM orcamento_opcoes WHERE id = :id AND tipo = :tipo LIMIT 1');
-        $stmt->execute([':id' => $id, ':tipo' => $tipo]);
-        $nome = $stmt->fetchColumn();
-        
-        if (!$nome) {
-            return; // Registro não encontrado
-        }
-        
-        // Verificar se há itens usando esta opção
-        $campoTabela = $tipo; // grupo, categoria, ou unidade
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM orcamento_itens WHERE {$campoTabela} = :nome");
-        $stmt->execute([':nome' => $nome]);
-        $count = (int)$stmt->fetchColumn();
-        
-        if ($count > 0) {
-            throw new \Exception("Não é possível excluir. Existem {$count} itens usando este(a) {$tipo}.");
-        }
-        
-        // Se não há itens usando, pode excluir
+        // Excluir diretamente sem verificar se há itens usando
+        // Os itens manterão o valor da categoria/grupo/unidade como texto
         $stmt = $pdo->prepare('DELETE FROM orcamento_opcoes WHERE id = :id AND tipo = :tipo');
         $stmt->execute([':id' => $id, ':tipo' => $tipo]);
     }
@@ -171,6 +153,20 @@ final class OrcamentoOpcao
     public static function update(int $id, string $tipo, string $nome): void
     {
         $pdo = Database::pdo();
+        
+        // Buscar o nome atual
+        $stmt = $pdo->prepare('SELECT nome FROM orcamento_opcoes WHERE id = :id AND tipo = :tipo LIMIT 1');
+        $stmt->execute([':id' => $id, ':tipo' => $tipo]);
+        $nomeAtual = $stmt->fetchColumn();
+        
+        if (!$nomeAtual) {
+            throw new \Exception('Registro não encontrado.');
+        }
+        
+        // Se o nome não mudou, não fazer nada
+        if ($nomeAtual === $nome) {
+            return;
+        }
         
         // Verificar se já existe outro registro com o mesmo nome e tipo
         $stmt = $pdo->prepare('SELECT id FROM orcamento_opcoes WHERE tipo = :tipo AND nome = :nome AND id != :id LIMIT 1');
@@ -180,10 +176,26 @@ final class OrcamentoOpcao
             ':id' => $id,
         ]);
         
-        if ($stmt->fetchColumn()) {
-            throw new \Exception('Já existe um registro com este nome.');
+        $idExistente = $stmt->fetchColumn();
+        
+        if ($idExistente) {
+            // Já existe outro registro com este nome - fazer MERGE
+            // Atualizar todos os itens que usam o nome atual para usar o novo nome
+            $campoTabela = $tipo; // grupo, categoria, ou unidade
+            $stmtUpdate = $pdo->prepare("UPDATE orcamento_itens SET {$campoTabela} = :nome_novo WHERE {$campoTabela} = :nome_antigo");
+            $stmtUpdate->execute([
+                ':nome_novo' => $nome,
+                ':nome_antigo' => $nomeAtual,
+            ]);
+            
+            // Excluir o registro antigo (agora não tem mais itens usando)
+            $stmtDelete = $pdo->prepare('DELETE FROM orcamento_opcoes WHERE id = :id AND tipo = :tipo');
+            $stmtDelete->execute([':id' => $id, ':tipo' => $tipo]);
+            
+            return;
         }
         
+        // Se não existe duplicata, fazer update normal
         $stmt = $pdo->prepare('UPDATE orcamento_opcoes SET nome = :nome WHERE id = :id AND tipo = :tipo');
         $stmt->execute([
             ':id' => $id,

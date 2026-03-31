@@ -6,6 +6,7 @@ $tipo = (string)($tipo ?? '');
 $titulo = (string)($titulo ?? '');
 $items = $items ?? [];
 $errors = $errors ?? [];
+$success = isset($_GET['success']) && $_GET['success'] === '1';
 
 ?><div class="card" style="padding:16px; margin-bottom:12px;">
     <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
@@ -18,6 +19,12 @@ $errors = $errors ?? [];
         </div>
     </div>
 </div>
+
+<?php if ($success) : ?>
+<div class="card" style="padding:16px; margin-bottom:12px; background:#e8f5e9; border-left:4px solid #4caf50;">
+    <div style="color:#2e7d32; font-weight:600;">✓ Atualizado com sucesso! Todos os itens foram atualizados.</div>
+</div>
+<?php endif; ?>
 
 <?php if (!empty($errors['geral'])) : ?>
 <div class="card" style="padding:16px; margin-bottom:12px; background:#fee; border-left:4px solid #c33;">

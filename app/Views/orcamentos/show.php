@@ -333,8 +333,14 @@ function toggleAdicionarItem() {
             <?php foreach ($cats as $categoria => $rows) : ?>
                 <tr class="subtotal-row category-header" draggable="true" data-categoria="<?php echo htmlspecialchars($categoria); ?>" data-grupo="<?php echo htmlspecialchars($grupo); ?>" style="background: rgba(201, 151, 58, 0.15);">
                     <td style="cursor:move; text-align:center; width:30px; color:#C9973A; font-size:16px; padding:8px;">⋮⋮</td>
-                    <td colspan="13" style="cursor:move; font-weight:700; padding:10px;">
-                        <?php echo htmlspecialchars($categoria !== '' ? $categoria : 'SEM CATEGORIA'); ?>
+                    <td colspan="12" style="cursor:move; font-weight:700; padding:10px;">
+                        <span class="categoria-nome-display"><?php echo htmlspecialchars($categoria !== '' ? $categoria : 'SEM CATEGORIA'); ?></span>
+                        <input type="text" class="categoria-nome-edit" value="<?php echo htmlspecialchars($categoria); ?>" style="display:none; width:400px; padding:8px; font-size:14px; font-weight:700; border:2px solid #C9973A; border-radius:4px;">
+                    </td>
+                    <td style="text-align:right; padding:10px;">
+                        <button class="btn btn-edit-categoria" onclick="editarCategoria(this); return false;" style="background:#C9973A; color:white; padding:6px 12px; font-size:12px;">✏️ Editar</button>
+                        <button class="btn btn-save-categoria" onclick="salvarCategoria(this, '<?php echo htmlspecialchars($grupo, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>'); return false;" style="display:none; background:#4CAF50; color:white; padding:6px 12px; font-size:12px;">✓ Salvar</button>
+                        <button class="btn btn-cancel-categoria" onclick="cancelarEdicaoCategoria(this); return false;" style="display:none; background:#666; color:white; padding:6px 12px; font-size:12px;">✕ Cancelar</button>
                     </td>
                 </tr>
                 
@@ -1091,5 +1097,107 @@ document.addEventListener('click', function(e) {
             el.style.display = 'none';
         });
     }
+});
+</script>
+
+
+<script>
+// Funções para editar nome da categoria inline
+function editarCategoria(btn) {
+    const tr = btn.closest('tr');
+    const display = tr.querySelector('.categoria-nome-display');
+    const input = tr.querySelector('.categoria-nome-edit');
+    const btnEdit = tr.querySelector('.btn-edit-categoria');
+    const btnSave = tr.querySelector('.btn-save-categoria');
+    const btnCancel = tr.querySelector('.btn-cancel-categoria');
+    
+    display.style.display = 'none';
+    input.style.display = 'inline-block';
+    btnEdit.style.display = 'none';
+    btnSave.style.display = 'inline-block';
+    btnCancel.style.display = 'inline-block';
+    
+    input.focus();
+    input.select();
+}
+
+function cancelarEdicaoCategoria(btn) {
+    const tr = btn.closest('tr');
+    const display = tr.querySelector('.categoria-nome-display');
+    const input = tr.querySelector('.categoria-nome-edit');
+    const btnEdit = tr.querySelector('.btn-edit-categoria');
+    const btnSave = tr.querySelector('.btn-save-categoria');
+    const btnCancel = tr.querySelector('.btn-cancel-categoria');
+    
+    // Restaurar valor original
+    input.value = display.textContent;
+    
+    display.style.display = 'inline';
+    input.style.display = 'none';
+    btnEdit.style.display = 'inline-block';
+    btnSave.style.display = 'none';
+    btnCancel.style.display = 'none';
+}
+
+function salvarCategoria(btn, grupo, categoriaAntiga) {
+    const tr = btn.closest('tr');
+    const input = tr.querySelector('.categoria-nome-edit');
+    const novoNome = input.value.trim();
+    
+    if (novoNome === '') {
+        alert('O nome da categoria não pode estar vazio.');
+        return;
+    }
+    
+    if (novoNome === categoriaAntiga) {
+        cancelarEdicaoCategoria(btn);
+        return;
+    }
+    
+    // Desabilitar botões durante o salvamento
+    btn.disabled = true;
+    btn.textContent = '⏳ Salvando...';
+    
+    // Enviar requisição AJAX para atualizar
+    const formData = new FormData();
+    formData.append('orcamento_id', <?php echo (int)$orcamento['id']; ?>);
+    formData.append('categoria_antiga', categoriaAntiga);
+    formData.append('categoria_nova', novoNome);
+    
+    fetch('/?route=orcamentos/renomearCategoria', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recarregar a página para mostrar as mudanças
+            window.location.reload();
+        } else {
+            alert('Erro ao salvar: ' + (data.error || 'Erro desconhecido'));
+            btn.disabled = false;
+            btn.textContent = '✓ Salvar';
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar a categoria. Tente novamente.');
+        btn.disabled = false;
+        btn.textContent = '✓ Salvar';
+    });
+}
+
+// Permitir salvar com Enter
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('keypress', function(e) {
+        if (e.target.classList.contains('categoria-nome-edit') && e.key === 'Enter') {
+            e.preventDefault();
+            const tr = e.target.closest('tr');
+            const btnSave = tr.querySelector('.btn-save-categoria');
+            if (btnSave) {
+                btnSave.click();
+            }
+        }
+    });
 });
 </script>

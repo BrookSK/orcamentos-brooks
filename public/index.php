@@ -314,6 +314,7 @@ if ($controllerName === 'orcamentos') {
         'itemEdit' => ['GET'],
         'itemUpdate' => ['POST'],
         'itemDelete' => ['POST'],
+        'renomearCategoria' => ['POST'],
         'reorderItems' => ['POST'],
         'aplicarDescontoGrupo' => ['POST'],
         'recalcularMargens' => ['POST'],
