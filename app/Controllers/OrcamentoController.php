@@ -1174,8 +1174,17 @@ final class OrcamentoController
             return;
         }
         
-        OrcamentoOpcao::update($id, 'grupo', $nome);
-        $this->redirect('/?route=orcamentos/grupos');
+        try {
+            OrcamentoOpcao::update($id, 'grupo', $nome);
+            $this->redirect('/?route=orcamentos/grupos');
+        } catch (\Exception $e) {
+            $this->render('orcamentos/opcoes', [
+                'tipo' => 'grupo',
+                'titulo' => 'Grupos',
+                'items' => OrcamentoOpcao::allByTipo('grupo'),
+                'errors' => ['nome' => $e->getMessage()],
+            ]);
+        }
     }
 
     public function categorias(): void
@@ -1231,8 +1240,17 @@ final class OrcamentoController
             return;
         }
         
-        OrcamentoOpcao::update($id, 'categoria', $nome);
-        $this->redirect('/?route=orcamentos/categorias');
+        try {
+            OrcamentoOpcao::update($id, 'categoria', $nome);
+            $this->redirect('/?route=orcamentos/categorias');
+        } catch (\Exception $e) {
+            $this->render('orcamentos/opcoes', [
+                'tipo' => 'categoria',
+                'titulo' => 'Categorias',
+                'items' => OrcamentoOpcao::allByTipo('categoria'),
+                'errors' => ['nome' => $e->getMessage()],
+            ]);
+        }
     }
 
     public function unidades(): void
@@ -1288,8 +1306,17 @@ final class OrcamentoController
             return;
         }
         
-        OrcamentoOpcao::update($id, 'unidade', $nome);
-        $this->redirect('/?route=orcamentos/unidades');
+        try {
+            OrcamentoOpcao::update($id, 'unidade', $nome);
+            $this->redirect('/?route=orcamentos/unidades');
+        } catch (\Exception $e) {
+            $this->render('orcamentos/opcoes', [
+                'tipo' => 'unidade',
+                'titulo' => 'Unidades',
+                'items' => OrcamentoOpcao::allByTipo('unidade'),
+                'errors' => ['nome' => $e->getMessage()],
+            ]);
+        }
     }
 
     public function itemDelete(): void

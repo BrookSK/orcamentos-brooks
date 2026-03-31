@@ -150,6 +150,19 @@ final class OrcamentoOpcao
     public static function update(int $id, string $tipo, string $nome): void
     {
         $pdo = Database::pdo();
+        
+        // Verificar se já existe outro registro com o mesmo nome e tipo
+        $stmt = $pdo->prepare('SELECT id FROM orcamento_opcoes WHERE tipo = :tipo AND nome = :nome AND id != :id LIMIT 1');
+        $stmt->execute([
+            ':tipo' => $tipo,
+            ':nome' => $nome,
+            ':id' => $id,
+        ]);
+        
+        if ($stmt->fetchColumn()) {
+            throw new \Exception('Já existe um registro com este nome.');
+        }
+        
         $stmt = $pdo->prepare('UPDATE orcamento_opcoes SET nome = :nome WHERE id = :id AND tipo = :tipo');
         $stmt->execute([
             ':id' => $id,
