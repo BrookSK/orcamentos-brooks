@@ -1190,19 +1190,13 @@ CSS;
             $custoMaoObra = (float)($item['custo_mao_obra'] ?? 0);
             $custoEquipamento = (float)($item['custo_equipamento'] ?? 0);
             $valorCobranca = (float)($item['valor_cobranca'] ?? 0);
-            $classificacaoCusto = (string)($item['classificacao_custo'] ?? '');
             
             $totalCobranca += $quantidade * $valorCobranca;
             
-            // Usar classificacao_custo para determinar o tipo de custo
-            if ($classificacaoCusto === 'equipamento') {
-                $totalEquipamentos += $quantidade * $custoEquipamento;
-            } elseif ($classificacaoCusto === 'mao_obra') {
-                $totalMaoObra += $quantidade * $custoMaoObra;
-            } else {
-                // Default: material (ou quando classificacao_custo está vazio)
-                $totalMateriais += $quantidade * $custoMaterial;
-            }
+            // Somar TODOS os custos de TODOS os itens
+            $totalMateriais += $quantidade * $custoMaterial;
+            $totalMaoObra += $quantidade * $custoMaoObra;
+            $totalEquipamentos += $quantidade * $custoEquipamento;
         }
         
         $subtotal = $totalCobranca;
