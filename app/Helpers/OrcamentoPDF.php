@@ -44,8 +44,8 @@ final class OrcamentoPDF
             }
         }
         
-        // Área total construída = terreno + térrea + superior
-        $areaTotal = $areaTerreno + $areaTerrea + $areaSuperior;
+        // Área total construída = térrea + superior (não incluir terreno do cabeçalho)
+        $areaTotal = $areaTerrea + $areaSuperior;
         
         return [
             'terreno' => $areaTerreno,
