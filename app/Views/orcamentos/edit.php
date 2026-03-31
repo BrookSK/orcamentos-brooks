@@ -197,6 +197,7 @@ declare(strict_types=1);
                                 <option value="terreno" <?php echo $tipoArea === 'terreno' ? 'selected' : ''; ?>>Terreno</option>
                                 <option value="terrea" <?php echo $tipoArea === 'terrea' ? 'selected' : ''; ?>>Construída Térrea</option>
                                 <option value="superior" <?php echo $tipoArea === 'superior' ? 'selected' : ''; ?>>Construída Superior</option>
+                                <option value="nao_somar" <?php echo $tipoArea === 'nao_somar' ? 'selected' : ''; ?>>❌ Não somar à área construída</option>
                             </select>
                         </div>
                         <button type="button" class="btn-remove-area" style="background:#f44336; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-size:16px;" onclick="removerArea(this)">🗑️</button>
@@ -272,6 +273,7 @@ function adicionarArea() {
                 <option value="terreno">Terreno</option>
                 <option value="terrea">Construída Térrea</option>
                 <option value="superior">Construída Superior</option>
+                <option value="nao_somar">❌ Não somar à área construída</option>
             </select>
         </div>
         <button type="button" class="btn-remove-area" style="background:#f44336; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-size:16px;" onclick="removerArea(this)">🗑️</button>

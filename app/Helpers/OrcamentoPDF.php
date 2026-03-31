@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -25,6 +25,11 @@ final class OrcamentoPDF
                     $fator = (float)($area['fator'] ?? 1);
                     $tipoArea = (string)($area['tipo_area'] ?? 'terreno');
                     $m2xFator = $m2 * $fator;
+                    
+                    // Não somar áreas marcadas como "nao_somar"
+                    if ($tipoArea === 'nao_somar') {
+                        continue;
+                    }
                     
                     if ($tipoArea === 'terrea') {
                         $areaTerrea += $m2xFator;
@@ -204,7 +209,13 @@ final class OrcamentoPDF
                 if ($tipoArea === 'terrea') {
                     $nomeExibicao = $nome . ' *';
                 } elseif ($tipoArea === 'superior') {
+
                     $nomeExibicao = $nome . ' **';
+
+                } elseif ($tipoArea === 'nao_somar') {
+
+                    $nomeExibicao = $nome . ' (não somada)';
+
                 }
                 
                 $html .= sprintf(
@@ -569,7 +580,13 @@ HTML;
                     if ($tipoArea === 'terrea') {
                         $nomeExibicao = $nome . ' *';
                     } elseif ($tipoArea === 'superior') {
+
                         $nomeExibicao = $nome . ' **';
+
+                    } elseif ($tipoArea === 'nao_somar') {
+
+                        $nomeExibicao = $nome . ' (não somada)';
+
                     }
                     
                     $html .= sprintf(
@@ -744,7 +761,13 @@ HTML;
                 if ($tipoArea === 'terrea') {
                     $nomeExibicao = $nome . ' *';
                 } elseif ($tipoArea === 'superior') {
+
                     $nomeExibicao = $nome . ' **';
+
+                } elseif ($tipoArea === 'nao_somar') {
+
+                    $nomeExibicao = $nome . ' (não somada)';
+
                 }
                 
                 $html .= sprintf(
