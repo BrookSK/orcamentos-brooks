@@ -19,6 +19,12 @@ $errors = $errors ?? [];
     </div>
 </div>
 
+<?php if (!empty($errors['geral'])) : ?>
+<div class="card" style="padding:16px; margin-bottom:12px; background:#fee; border-left:4px solid #c33;">
+    <div style="color:#c33; font-weight:600;">⚠️ <?php echo htmlspecialchars((string)$errors['geral']); ?></div>
+</div>
+<?php endif; ?>
+
 <div class="card" style="padding:16px; margin-bottom:12px;">
     <form method="post" action="/?route=orcamentos/<?php echo htmlspecialchars($tipo); ?>sStore">
         <div class="form" style="padding:0;">

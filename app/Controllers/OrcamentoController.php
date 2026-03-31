@@ -1153,9 +1153,20 @@ final class OrcamentoController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            OrcamentoOpcao::delete($id, 'grupo');
+            try {
+                OrcamentoOpcao::delete($id, 'grupo');
+                $this->redirect('/?route=orcamentos/grupos');
+            } catch (\Exception $e) {
+                $this->render('orcamentos/opcoes', [
+                    'tipo' => 'grupo',
+                    'titulo' => 'Grupos',
+                    'items' => OrcamentoOpcao::allByTipo('grupo'),
+                    'errors' => ['geral' => $e->getMessage()],
+                ]);
+            }
+        } else {
+            $this->redirect('/?route=orcamentos/grupos');
         }
-        $this->redirect('/?route=orcamentos/grupos');
     }
 
     public function gruposUpdate(): void
@@ -1219,9 +1230,20 @@ final class OrcamentoController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            OrcamentoOpcao::delete($id, 'categoria');
+            try {
+                OrcamentoOpcao::delete($id, 'categoria');
+                $this->redirect('/?route=orcamentos/categorias');
+            } catch (\Exception $e) {
+                $this->render('orcamentos/opcoes', [
+                    'tipo' => 'categoria',
+                    'titulo' => 'Categorias',
+                    'items' => OrcamentoOpcao::allByTipo('categoria'),
+                    'errors' => ['geral' => $e->getMessage()],
+                ]);
+            }
+        } else {
+            $this->redirect('/?route=orcamentos/categorias');
         }
-        $this->redirect('/?route=orcamentos/categorias');
     }
 
     public function categoriasUpdate(): void
@@ -1285,9 +1307,20 @@ final class OrcamentoController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            OrcamentoOpcao::delete($id, 'unidade');
+            try {
+                OrcamentoOpcao::delete($id, 'unidade');
+                $this->redirect('/?route=orcamentos/unidades');
+            } catch (\Exception $e) {
+                $this->render('orcamentos/opcoes', [
+                    'tipo' => 'unidade',
+                    'titulo' => 'Unidades',
+                    'items' => OrcamentoOpcao::allByTipo('unidade'),
+                    'errors' => ['geral' => $e->getMessage()],
+                ]);
+            }
+        } else {
+            $this->redirect('/?route=orcamentos/unidades');
         }
-        $this->redirect('/?route=orcamentos/unidades');
     }
 
     public function unidadesUpdate(): void

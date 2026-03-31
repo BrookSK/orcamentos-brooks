@@ -143,6 +143,27 @@ final class OrcamentoOpcao
     public static function delete(int $id, string $tipo): void
     {
         $pdo = Database::pdo();
+        
+        // Buscar o nome da opção que será excluída
+        $stmt = $pdo->prepare('SELECT nome FROM orcamento_opcoes WHERE id = :id AND tipo = :tipo LIMIT 1');
+        $stmt->execute([':id' => $id, ':tipo' => $tipo]);
+        $nome = $stmt->fetchColumn();
+        
+        if (!$nome) {
+            return; // Registro não encontrado
+        }
+        
+        // Verificar se há itens usando esta opção
+        $campoTabela = $tipo; // grupo, categoria, ou unidade
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM orcamento_itens WHERE {$campoTabela} = :nome");
+        $stmt->execute([':nome' => $nome]);
+        $count = (int)$stmt->fetchColumn();
+        
+        if ($count > 0) {
+            throw new \Exception("Não é possível excluir. Existem {$count} itens usando este(a) {$tipo}.");
+        }
+        
+        // Se não há itens usando, pode excluir
         $stmt = $pdo->prepare('DELETE FROM orcamento_opcoes WHERE id = :id AND tipo = :tipo');
         $stmt->execute([':id' => $id, ':tipo' => $tipo]);
     }
