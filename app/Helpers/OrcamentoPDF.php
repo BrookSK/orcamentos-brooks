@@ -927,7 +927,15 @@ HTML;
         $html = '<div class="page"><div class="page-title">PLANILHA ORÇAMENTÁRIA</div>';
         $html .= '<div class="page-subtitle">Detalhamento por Item</div>';
 
+        // PRIMEIRO: Pré-calcular total geral da obra para % Obra correto
         $totalGeralObra = 0.0;
+        foreach ($grouped as $categoria => $itensCategoria) {
+            foreach ($itensCategoria as $item) {
+                $quantidade = (float)($item['quantidade'] ?? 0);
+                $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
+                $totalGeralObra += $quantidade * $valorCobrancaUnitario;
+            }
+        }
 
         foreach ($grouped as $categoria => $itensCategoria) {
             $html .= '<div class="banner-etapa">' . htmlspecialchars(strtoupper($categoria)) . '</div>';
@@ -947,13 +955,12 @@ HTML;
             $html .= '<th class="center" style="width:12%;">Status</th>';
             $html .= '</tr></thead><tbody>';
 
-            // Calcular subtotal da categoria primeiro
+            // Calcular subtotal da categoria
             foreach ($itensCategoria as $item) {
                 $quantidade = (float)($item['quantidade'] ?? 0);
                 $valorCobrancaUnitario = (float)($item['valor_cobranca'] ?? 0);
                 $valorTotal = $quantidade * $valorCobrancaUnitario;
                 $subtotalCategoria += $valorTotal;
-                $totalGeralObra += $valorTotal;
             }
 
             // Agora gerar as linhas
