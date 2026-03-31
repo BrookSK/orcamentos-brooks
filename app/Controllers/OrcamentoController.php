@@ -2290,6 +2290,57 @@ final class OrcamentoController
         }
     }
 
+    public function excluirGrupo(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $json = file_get_contents('php://input');
+            $payload = json_decode($json, true);
+            
+            if (!$payload || !isset($payload['orcamento_id']) || !isset($payload['grupo'])) {
+                echo json_encode(['success' => false, 'error' => 'Payload inválido']);
+                return;
+            }
+            
+            $orcamentoId = (int)$payload['orcamento_id'];
+            $grupo = (string)$payload['grupo'];
+            
+            // Verificar se orçamento existe
+            $orcamento = Orcamento::find($orcamentoId);
+            if (!$orcamento) {
+                echo json_encode(['success' => false, 'error' => 'Orçamento não encontrado']);
+                return;
+            }
+            
+            $pdo = \App\Core\Database::pdo();
+            
+            // Excluir todos os itens do grupo
+            $stmt = $pdo->prepare('DELETE FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND grupo = :grupo');
+            $stmt->execute([
+                ':orcamento_id' => $orcamentoId,
+                ':grupo' => $grupo
+            ]);
+            
+            $count = $stmt->rowCount();
+            
+            Logger::info('orcamentos.excluirGrupo.success', [
+                'orcamento_id' => $orcamentoId,
+                'grupo' => $grupo,
+                'items_deleted' => $count
+            ]);
+            
+            echo json_encode([
+                'success' => true,
+                'count' => $count
+            ]);
+            
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.excluirGrupo.error', ['message' => $e->getMessage()]);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
     public function buscarSinapi(): void
     {
         header('Content-Type: application/json');

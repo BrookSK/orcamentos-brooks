@@ -317,6 +317,7 @@ if ($controllerName === 'orcamentos') {
         'renomearCategoria' => ['POST'],
         'reorderItems' => ['POST'],
         'aplicarDescontoGrupo' => ['POST'],
+        'excluirGrupo' => ['POST'],
         'recalcularMargens' => ['POST'],
         'grupos' => ['GET'],
         'gruposStore' => ['POST'],

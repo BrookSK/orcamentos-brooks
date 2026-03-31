@@ -327,6 +327,9 @@ function toggleAdicionarItem() {
                     <button class="btn" style="padding:6px 12px; font-size:12px; background:#4FC3F7; color:#000;" onclick="editarDescontoGrupo('<?php echo htmlspecialchars($grupo); ?>', <?php echo (int)$orcamento['id']; ?>); event.stopPropagation();">
                         ⚙️ Ajuste de Valores
                     </button>
+                    <button class="btn" style="padding:6px 12px; font-size:12px; background:#e94560; color:#fff; margin-left:8px;" onclick="excluirGrupo('<?php echo htmlspecialchars($grupo); ?>', <?php echo (int)$orcamento['id']; ?>); event.stopPropagation();">
+                        🗑️ Excluir
+                    </button>
                 </td>
             </tr>
 
@@ -746,6 +749,47 @@ function aplicarDescontoGrupo(grupo, orcamentoId) {
             loadingMsg.innerHTML = '✓ Ajuste aplicado em ' + data.count + ' itens!';
             loadingMsg.style.background = '#4CAF50';
             fecharModalDescontoGrupo();
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            loadingMsg.innerHTML = '✗ Erro: ' + (data.error || 'Erro desconhecido');
+            loadingMsg.style.background = '#f44336';
+            setTimeout(() => loadingMsg.remove(), 3000);
+        }
+    })
+    .catch(err => {
+        loadingMsg.innerHTML = '✗ Erro de conexão';
+        loadingMsg.style.background = '#f44336';
+        setTimeout(() => loadingMsg.remove(), 3000);
+    });
+}
+</script>
+
+<script>
+function excluirGrupo(grupo, orcamentoId) {
+    if (!confirm(`Tem certeza que deseja excluir o grupo "${grupo}" e TODOS os seus itens?\n\nEsta ação não pode ser desfeita!`)) {
+        return;
+    }
+    
+    const loadingMsg = document.createElement('div');
+    loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:10001;';
+    loadingMsg.innerHTML = '⏳ Excluindo grupo...';
+    document.body.appendChild(loadingMsg);
+    
+    fetch('/?route=orcamentos/excluirGrupo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            orcamento_id: orcamentoId,
+            grupo: grupo
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            loadingMsg.innerHTML = '✓ Grupo excluído! (' + data.count + ' itens removidos)';
+            loadingMsg.style.background = '#4CAF50';
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
