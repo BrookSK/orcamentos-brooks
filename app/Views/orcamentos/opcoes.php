@@ -39,7 +39,7 @@ $errors = $errors ?? [];
         <thead>
         <tr>
             <th>Nome</th>
-            <th style="width:120px"></th>
+            <th style="width:200px"></th>
         </tr>
         </thead>
         <tbody>
@@ -47,10 +47,19 @@ $errors = $errors ?? [];
             <tr><td colspan="2" class="muted">Nenhum cadastro ainda.</td></tr>
         <?php endif; ?>
         <?php foreach ($items as $row) : ?>
-            <tr>
-                <td><?php echo htmlspecialchars((string)($row['nome'] ?? '')); ?></td>
+            <tr data-id="<?php echo (int)($row['id'] ?? 0); ?>">
+                <td>
+                    <span class="nome-display"><?php echo htmlspecialchars((string)($row['nome'] ?? '')); ?></span>
+                    <form class="nome-edit" method="post" action="/?route=orcamentos/<?php echo htmlspecialchars($tipo); ?>sUpdate" style="display:none;">
+                        <input type="hidden" name="id" value="<?php echo (int)($row['id'] ?? 0); ?>">
+                        <input type="text" name="nome" value="<?php echo htmlspecialchars((string)($row['nome'] ?? '')); ?>" style="width:100%;padding:4px;">
+                    </form>
+                </td>
                 <td>
                     <div class="row-actions">
+                        <button class="btn btn-edit" type="button" onclick="editarNome(this)">Editar</button>
+                        <button class="btn primary btn-save" type="button" onclick="salvarNome(this)" style="display:none;">Salvar</button>
+                        <button class="btn btn-cancel" type="button" onclick="cancelarEdicao(this)" style="display:none;">Cancelar</button>
                         <form class="inline" method="post" action="/?route=orcamentos/<?php echo htmlspecialchars($tipo); ?>sDelete" onsubmit="return confirm('Excluir este registro?');">
                             <input type="hidden" name="id" value="<?php echo (int)($row['id'] ?? 0); ?>">
                             <button class="btn danger" type="submit">Excluir</button>
@@ -62,3 +71,61 @@ $errors = $errors ?? [];
         </tbody>
     </table>
 </div>
+
+<script>
+function editarNome(btn) {
+    const tr = btn.closest('tr');
+    const display = tr.querySelector('.nome-display');
+    const form = tr.querySelector('.nome-edit');
+    const btnEdit = tr.querySelector('.btn-edit');
+    const btnSave = tr.querySelector('.btn-save');
+    const btnCancel = tr.querySelector('.btn-cancel');
+    
+    display.style.display = 'none';
+    form.style.display = 'block';
+    btnEdit.style.display = 'none';
+    btnSave.style.display = 'inline-block';
+    btnCancel.style.display = 'inline-block';
+    
+    form.querySelector('input[name="nome"]').focus();
+}
+
+function salvarNome(btn) {
+    const tr = btn.closest('tr');
+    const form = tr.querySelector('.nome-edit');
+    form.submit();
+}
+
+function cancelarEdicao(btn) {
+    const tr = btn.closest('tr');
+    const display = tr.querySelector('.nome-display');
+    const form = tr.querySelector('.nome-edit');
+    const btnEdit = tr.querySelector('.btn-edit');
+    const btnSave = tr.querySelector('.btn-save');
+    const btnCancel = tr.querySelector('.btn-cancel');
+    
+    display.style.display = 'inline';
+    form.style.display = 'none';
+    btnEdit.style.display = 'inline-block';
+    btnSave.style.display = 'none';
+    btnCancel.style.display = 'none';
+    
+    // Restaurar valor original
+    const originalValue = display.textContent;
+    form.querySelector('input[name="nome"]').value = originalValue;
+}
+
+// Permitir salvar com Enter
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.nome-edit input[name="nome"]').forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tr = this.closest('tr');
+                const btnSave = tr.querySelector('.btn-save');
+                btnSave.click();
+            }
+        });
+    });
+});
+</script>

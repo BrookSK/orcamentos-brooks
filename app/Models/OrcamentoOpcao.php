@@ -147,6 +147,17 @@ final class OrcamentoOpcao
         $stmt->execute([':id' => $id, ':tipo' => $tipo]);
     }
 
+    public static function update(int $id, string $tipo, string $nome): void
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare('UPDATE orcamento_opcoes SET nome = :nome WHERE id = :id AND tipo = :tipo');
+        $stmt->execute([
+            ':id' => $id,
+            ':tipo' => $tipo,
+            ':nome' => $nome,
+        ]);
+    }
+
     public static function validate(string $nome): array
     {
         $errors = [];

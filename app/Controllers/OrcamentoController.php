@@ -1158,6 +1158,26 @@ final class OrcamentoController
         $this->redirect('/?route=orcamentos/grupos');
     }
 
+    public function gruposUpdate(): void
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        $nome = trim((string)($_POST['nome'] ?? ''));
+        
+        $errors = OrcamentoOpcao::validate($nome);
+        if ($errors || $id <= 0) {
+            $this->render('orcamentos/opcoes', [
+                'tipo' => 'grupo',
+                'titulo' => 'Grupos',
+                'items' => OrcamentoOpcao::allByTipo('grupo'),
+                'errors' => $errors,
+            ]);
+            return;
+        }
+        
+        OrcamentoOpcao::update($id, 'grupo', $nome);
+        $this->redirect('/?route=orcamentos/grupos');
+    }
+
     public function categorias(): void
     {
         Logger::info('orcamentos.categorias');
@@ -1195,6 +1215,26 @@ final class OrcamentoController
         $this->redirect('/?route=orcamentos/categorias');
     }
 
+    public function categoriasUpdate(): void
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        $nome = trim((string)($_POST['nome'] ?? ''));
+        
+        $errors = OrcamentoOpcao::validate($nome);
+        if ($errors || $id <= 0) {
+            $this->render('orcamentos/opcoes', [
+                'tipo' => 'categoria',
+                'titulo' => 'Categorias',
+                'items' => OrcamentoOpcao::allByTipo('categoria'),
+                'errors' => $errors,
+            ]);
+            return;
+        }
+        
+        OrcamentoOpcao::update($id, 'categoria', $nome);
+        $this->redirect('/?route=orcamentos/categorias');
+    }
+
     public function unidades(): void
     {
         Logger::info('orcamentos.unidades');
@@ -1229,6 +1269,26 @@ final class OrcamentoController
         if ($id > 0) {
             OrcamentoOpcao::delete($id, 'unidade');
         }
+        $this->redirect('/?route=orcamentos/unidades');
+    }
+
+    public function unidadesUpdate(): void
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        $nome = trim((string)($_POST['nome'] ?? ''));
+        
+        $errors = OrcamentoOpcao::validate($nome);
+        if ($errors || $id <= 0) {
+            $this->render('orcamentos/opcoes', [
+                'tipo' => 'unidade',
+                'titulo' => 'Unidades',
+                'items' => OrcamentoOpcao::allByTipo('unidade'),
+                'errors' => $errors,
+            ]);
+            return;
+        }
+        
+        OrcamentoOpcao::update($id, 'unidade', $nome);
         $this->redirect('/?route=orcamentos/unidades');
     }
 
