@@ -13,9 +13,11 @@ final class OrcamentoPDF
     private static function calcularAreas(array $orcamento): array
     {
         $areasPersonalizadas = [];
-        $areaTerreno = 0;     // Áreas que compõem o terreno
         $areaTerrea = 0;      // Áreas construídas térreo/pavimento superior
-        $areaSuperior = 0;    // Áreas construídas superiores (telhado, etc)
+        $areaSuperior = 0;    // Áreas construídas superiores
+        
+        // ÁREA TOTAL DO TERRENO sempre vem do campo area_m2 do cabeçalho
+        $areaTerreno = (float)($orcamento['area_m2'] ?? 0);
         
         if (!empty($orcamento['areas_personalizadas'])) {
             $areasPersonalizadas = json_decode($orcamento['areas_personalizadas'], true);
@@ -31,25 +33,19 @@ final class OrcamentoPDF
                         continue;
                     }
                     
+                    // Somar apenas áreas construídas (térrea e superior)
                     if ($tipoArea === 'terrea') {
                         $areaTerrea += $m2xFator;
                     } elseif ($tipoArea === 'superior') {
                         $areaSuperior += $m2xFator;
-                    } else {
-                        $areaTerreno += $m2xFator;
                     }
+                    // Áreas tipo 'terreno' não somam (já estão no area_m2 do cabeçalho)
                 }
             }
         }
         
-        // Área total = terreno + térrea + superior
+        // Área total construída = terreno + térrea + superior
         $areaTotal = $areaTerreno + $areaTerrea + $areaSuperior;
-        
-        // Se não tiver áreas personalizadas ou área total for zero, usar área do orçamento
-        if ($areaTotal == 0) {
-            $areaTotal = (float)($orcamento['area_m2'] ?? 0);
-            $areaTerreno = $areaTotal;
-        }
         
         return [
             'terreno' => $areaTerreno,
@@ -214,7 +210,7 @@ final class OrcamentoPDF
 
                 } elseif ($tipoArea === 'nao_somar') {
 
-                    $nomeExibicao = $nome . ' (não somada)';
+                    $nomeExibicao = $nome . '<br><span style="font-size:8px;">Não utilizado para cálculo</span>';
 
                 }
                 
@@ -266,7 +262,7 @@ final class OrcamentoPDF
                 $html .= '(*) Área construída térrea - pavimentos superiores<br>';
             }
             if ($areaSuperior > 0) {
-                $html .= '(**) Área construída superiores - áreas verticais (telhado, etc)';
+                $html .= '(**) Área construída superiores';
             }
             $html .= '</td></tr>';
         }
@@ -585,7 +581,7 @@ HTML;
 
                     } elseif ($tipoArea === 'nao_somar') {
 
-                        $nomeExibicao = $nome . ' (não somada)';
+                        $nomeExibicao = $nome . '<br><span style="font-size:8px;">Não utilizado para cálculo</span>';
 
                     }
                     
@@ -632,7 +628,7 @@ HTML;
                     $html .= '(*) Área construída térrea - pavimentos superiores<br>';
                 }
                 if ($areaSuperior > 0) {
-                    $html .= '(**) Área construída superiores - áreas verticais (telhado, etc)';
+                    $html .= '(**) Área construída superiores';
                 }
                 $html .= '</td></tr>';
             }
@@ -766,7 +762,7 @@ HTML;
 
                 } elseif ($tipoArea === 'nao_somar') {
 
-                    $nomeExibicao = $nome . ' (não somada)';
+                    $nomeExibicao = $nome . '<br><span style="font-size:8px;">Não utilizado para cálculo</span>';
 
                 }
                 
@@ -818,7 +814,7 @@ HTML;
                 $html .= '(*) Área construída térrea - pavimentos superiores<br>';
             }
             if ($areaSuperior > 0) {
-                $html .= '(**) Área construída superiores - áreas verticais (telhado, etc)';
+                $html .= '(**) Área construída superiores';
             }
             $html .= '</td></tr>';
         }
