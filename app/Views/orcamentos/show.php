@@ -344,6 +344,7 @@ function toggleAdicionarItem() {
                         <button class="btn btn-edit-categoria" onclick="editarCategoria(this); return false;" style="background:#C9973A; color:white; padding:6px 12px; font-size:12px;">✏️ Editar</button>
                         <button class="btn btn-save-categoria" onclick="salvarCategoria(this, '<?php echo htmlspecialchars($grupo, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>'); return false;" style="display:none; background:#4CAF50; color:white; padding:6px 12px; font-size:12px;">✓ Salvar</button>
                         <button class="btn btn-cancel-categoria" onclick="cancelarEdicaoCategoria(this); return false;" style="display:none; background:#666; color:white; padding:6px 12px; font-size:12px;">✕ Cancelar</button>
+                        <button class="btn" onclick="excluirCategoria('<?php echo htmlspecialchars($grupo, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($categoria, ENT_QUOTES); ?>', <?php echo (int)$orcamento['id']; ?>); return false;" style="background:#e94560; color:white; padding:6px 12px; font-size:12px; margin-left:8px;">🗑️ Excluir</button>
                     </td>
                 </tr>
                 
@@ -789,6 +790,48 @@ function excluirGrupo(grupo, orcamentoId) {
     .then(data => {
         if (data.success) {
             loadingMsg.innerHTML = '✓ Grupo excluído! (' + data.count + ' itens removidos)';
+            loadingMsg.style.background = '#4CAF50';
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            loadingMsg.innerHTML = '✗ Erro: ' + (data.error || 'Erro desconhecido');
+            loadingMsg.style.background = '#f44336';
+            setTimeout(() => loadingMsg.remove(), 3000);
+        }
+    })
+    .catch(err => {
+        loadingMsg.innerHTML = '✗ Erro de conexão';
+        loadingMsg.style.background = '#f44336';
+        setTimeout(() => loadingMsg.remove(), 3000);
+    });
+}
+</script>
+
+<script>
+function excluirCategoria(grupo, categoria, orcamentoId) {
+    if (!confirm(`Tem certeza que deseja excluir a categoria "${categoria}" do grupo "${grupo}" e TODOS os seus itens?\n\nEsta ação não pode ser desfeita!`)) {
+        return;
+    }
+    
+    const loadingMsg = document.createElement('div');
+    loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:10001;';
+    loadingMsg.innerHTML = '⏳ Excluindo categoria...';
+    document.body.appendChild(loadingMsg);
+    
+    fetch('/?route=orcamentos/excluirCategoria', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            orcamento_id: orcamentoId,
+            grupo: grupo,
+            categoria: categoria
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            loadingMsg.innerHTML = '✓ Categoria excluída! (' + data.count + ' itens removidos)';
             loadingMsg.style.background = '#4CAF50';
             setTimeout(() => {
                 window.location.reload();

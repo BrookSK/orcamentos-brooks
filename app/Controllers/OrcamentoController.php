@@ -2341,6 +2341,60 @@ final class OrcamentoController
         }
     }
 
+    public function excluirCategoria(): void
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $json = file_get_contents('php://input');
+            $payload = json_decode($json, true);
+            
+            if (!$payload || !isset($payload['orcamento_id']) || !isset($payload['grupo']) || !isset($payload['categoria'])) {
+                echo json_encode(['success' => false, 'error' => 'Payload inválido']);
+                return;
+            }
+            
+            $orcamentoId = (int)$payload['orcamento_id'];
+            $grupo = (string)$payload['grupo'];
+            $categoria = (string)$payload['categoria'];
+            
+            // Verificar se orçamento existe
+            $orcamento = Orcamento::find($orcamentoId);
+            if (!$orcamento) {
+                echo json_encode(['success' => false, 'error' => 'Orçamento não encontrado']);
+                return;
+            }
+            
+            $pdo = \App\Core\Database::pdo();
+            
+            // Excluir todos os itens da categoria
+            $stmt = $pdo->prepare('DELETE FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND grupo = :grupo AND categoria = :categoria');
+            $stmt->execute([
+                ':orcamento_id' => $orcamentoId,
+                ':grupo' => $grupo,
+                ':categoria' => $categoria
+            ]);
+            
+            $count = $stmt->rowCount();
+            
+            Logger::info('orcamentos.excluirCategoria.success', [
+                'orcamento_id' => $orcamentoId,
+                'grupo' => $grupo,
+                'categoria' => $categoria,
+                'items_deleted' => $count
+            ]);
+            
+            echo json_encode([
+                'success' => true,
+                'count' => $count
+            ]);
+            
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.excluirCategoria.error', ['message' => $e->getMessage()]);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
     public function buscarSinapi(): void
     {
         header('Content-Type: application/json');
