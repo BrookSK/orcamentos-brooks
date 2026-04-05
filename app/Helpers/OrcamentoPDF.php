@@ -68,7 +68,6 @@ final class OrcamentoPDF
             }
         }
         
-        $html .= self::gerarPaginaResumoPorFase($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarResumoFinal($orcamentoId, $orcamento); // Adicionar página de resumo final com impostos
         $html .= self::gerarRodapeHTML();
@@ -1189,11 +1188,20 @@ HTML;
     {
         $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
         
-        // Agrupar por GRUPO (usar os nomes reais do banco)
+        // Agrupar por GRUPO e depois por CATEGORIA
         $grouped = [];
         foreach ($itens as $item) {
             $grupo = (string)($item['grupo'] ?? 'SEM GRUPO');
-            $grouped[$grupo][] = $item;
+            $categoria = (string)($item['categoria'] ?? 'SEM CATEGORIA');
+            
+            if (!isset($grouped[$grupo])) {
+                $grouped[$grupo] = [];
+            }
+            if (!isset($grouped[$grupo][$categoria])) {
+                $grouped[$grupo][$categoria] = [];
+            }
+            
+            $grouped[$grupo][$categoria][] = $item;
         }
 
         $html = '<div class="page"><div class="page-title">PLANILHA ORÇAMENTÁRIA</div>';
@@ -1202,41 +1210,43 @@ HTML;
         // BDI global padrão
         $bdiGlobal = (float)($orcamento['margem_global'] ?? 18.0);
 
-        // PRIMEIRO: Pré-calcular total geral da obra para % Obra correto
+        // PRIMEIRO: Pré-calcular total geral da obra
         $totalGeralObra = 0.0;
-        foreach ($grouped as $grupo => $itensGrupo) {
-            foreach ($itensGrupo as $item) {
-                // Calcular valor usando custos + BDI
-                $quantidade = (float)($item['quantidade'] ?? 0);
-                $custoMat = (float)($item['custo_material'] ?? 0);
-                $custoMo = (float)($item['custo_mao_obra'] ?? 0);
-                $custoEquip = (float)($item['custo_equipamento'] ?? 0);
-                
-                $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
-                $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
-                
-                $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
-                    ? $margemPersonalizada 
-                    : $bdiGlobal;
-                
-                $fatorBDI = 1 + ($bdi / 100);
-                
-                $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
-                $vlrUnitMo = $custoMo * $fatorBDI;
-                $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
-                $vlrTotal = $vlrUnitTotal * $quantidade;
-                
-                $totalGeralObra += $vlrTotal;
+        foreach ($grouped as $grupo => $categorias) {
+            foreach ($categorias as $categoria => $itensCategoria) {
+                foreach ($itensCategoria as $item) {
+                    // Calcular valor usando custos + BDI
+                    $quantidade = (float)($item['quantidade'] ?? 0);
+                    $custoMat = (float)($item['custo_material'] ?? 0);
+                    $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+                    
+                    $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+                    $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                    
+                    $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                        ? $margemPersonalizada 
+                        : $bdiGlobal;
+                    
+                    $fatorBDI = 1 + ($bdi / 100);
+                    
+                    $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+                    $vlrUnitMo = $custoMo * $fatorBDI;
+                    $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+                    $vlrTotal = $vlrUnitTotal * $quantidade;
+                    
+                    $totalGeralObra += $vlrTotal;
+                }
             }
         }
 
         // Processar cada grupo
-        foreach ($grouped as $grupo => $itensGrupo) {
-            $html .= '<div class="banner-etapa">' . htmlspecialchars(strtoupper($grupo)) . '</div>';
+        foreach ($grouped as $nomeGrupo => $categorias) {
+            $html .= '<div class="banner-etapa">' . htmlspecialchars(strtoupper($nomeGrupo)) . '</div>';
             
             $subtotalGrupo = 0.0;
             
-            // Tabela com 11 colunas (adicionar % ETAPA, % CONCLUÍDO, STATUS)
+            // Tabela com 11 colunas
             $html .= '<!-- TABELA COM 11 COLUNAS - VERSAO ATUALIZADA -->';
             $html .= '<table class="table-detalhes">';
             $html .= '<thead><tr>';
@@ -1253,93 +1263,121 @@ HTML;
             $html .= '<th class="center" style="width:9%;">Status</th>';
             $html .= '</tr></thead><tbody>';
 
-            // Calcular subtotal do grupo
-            foreach ($itensGrupo as $item) {
-                $quantidade = (float)($item['quantidade'] ?? 0);
-                $custoMat = (float)($item['custo_material'] ?? 0);
-                $custoMo = (float)($item['custo_mao_obra'] ?? 0);
-                $custoEquip = (float)($item['custo_equipamento'] ?? 0);
-                
-                $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
-                $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
-                
-                $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
-                    ? $margemPersonalizada 
-                    : $bdiGlobal;
-                
-                $fatorBDI = 1 + ($bdi / 100);
-                
-                $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
-                $vlrUnitMo = $custoMo * $fatorBDI;
-                $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
-                $vlrTotal = $vlrUnitTotal * $quantidade;
-                
-                $subtotalGrupo += $vlrTotal;
+            // Calcular subtotal do grupo primeiro
+            foreach ($categorias as $categoria => $itensCategoria) {
+                foreach ($itensCategoria as $item) {
+                    $quantidade = (float)($item['quantidade'] ?? 0);
+                    $custoMat = (float)($item['custo_material'] ?? 0);
+                    $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+                    
+                    $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+                    $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                    
+                    $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                        ? $margemPersonalizada 
+                        : $bdiGlobal;
+                    
+                    $fatorBDI = 1 + ($bdi / 100);
+                    
+                    $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+                    $vlrUnitMo = $custoMo * $fatorBDI;
+                    $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+                    $vlrTotal = $vlrUnitTotal * $quantidade;
+                    
+                    $subtotalGrupo += $vlrTotal;
+                }
             }
 
-            // Agora gerar as linhas
-            foreach ($itensGrupo as $item) {
-                $quantidade = (float)($item['quantidade'] ?? 0);
-                $custoMat = (float)($item['custo_material'] ?? 0);
-                $custoMo = (float)($item['custo_mao_obra'] ?? 0);
-                $custoEquip = (float)($item['custo_equipamento'] ?? 0);
-                $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+            // Agora gerar as linhas por categoria
+            foreach ($categorias as $nomeCategoria => $itensCategoria) {
+                // Linha de cabeçalho da categoria
+                $html .= '<tr style="background:#4A5568;color:#FFF;font-weight:bold;">';
+                $html .= '<td colspan="11" class="left" style="padding:6px;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
+                $html .= '</tr>';
                 
-                $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
-                $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                $subtotalCategoria = 0.0;
+                $totalConcluidoCategoria = 0.0;
                 
-                $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
-                    ? $margemPersonalizada 
-                    : $bdiGlobal;
-                
-                $fatorBDI = 1 + ($bdi / 100);
-                
-                $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
-                $vlrUnitMo = $custoMo * $fatorBDI;
-                $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
-                $vlrTotal = $vlrUnitTotal * $quantidade;
-                
-                $pctEtapa = $subtotalGrupo > 0 ? ($vlrTotal / $subtotalGrupo) * 100 : 0.0;
-                $pctObra = $totalGeralObra > 0 ? ($vlrTotal / $totalGeralObra) * 100 : 0.0;
-                
-                // % CONCLUÍDO
-                $percentualConcluido = $percentualRealizado;
-                
-                // Determinar status baseado no percentual realizado
-                $status = '';
-                $statusColor = '';
-                if ($percentualRealizado >= 100) {
-                    $status = 'Concluído';
-                    $statusColor = 'color:#4CAF50;font-weight:bold;';
-                } elseif ($percentualRealizado > 0) {
-                    $status = number_format($percentualRealizado, 0) . '%';
-                    $statusColor = 'color:#FF9800;';
-                } else {
-                    $status = 'Pendente';
-                    $statusColor = 'color:#999;';
+                // Itens da categoria
+                foreach ($itensCategoria as $item) {
+                    $quantidade = (float)($item['quantidade'] ?? 0);
+                    $custoMat = (float)($item['custo_material'] ?? 0);
+                    $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+                    $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+                    
+                    $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+                    $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                    
+                    $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                        ? $margemPersonalizada 
+                        : $bdiGlobal;
+                    
+                    $fatorBDI = 1 + ($bdi / 100);
+                    
+                    $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+                    $vlrUnitMo = $custoMo * $fatorBDI;
+                    $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+                    $vlrTotal = $vlrUnitTotal * $quantidade;
+                    
+                    $subtotalCategoria += $vlrTotal;
+                    $totalConcluidoCategoria += $vlrTotal * ($percentualRealizado / 100);
+                    
+                    $pctEtapa = $subtotalGrupo > 0 ? ($vlrTotal / $subtotalGrupo) * 100 : 0.0;
+                    
+                    // % CONCLUÍDO
+                    $percentualConcluido = $percentualRealizado;
+                    
+                    // Determinar status baseado no percentual realizado
+                    $status = '';
+                    $statusColor = '';
+                    if ($percentualRealizado >= 100) {
+                        $status = 'Concluído';
+                        $statusColor = 'color:#4CAF50;font-weight:bold;';
+                    } elseif ($percentualRealizado > 0) {
+                        $status = number_format($percentualRealizado, 0) . '%';
+                        $statusColor = 'color:#FF9800;';
+                    } else {
+                        $status = 'Pendente';
+                        $statusColor = 'color:#999;';
+                    }
+                    
+                    // Formatar valores (exibir "—" quando zero)
+                    $displayMatUnit = $vlrUnitMat > 0.001 
+                        ? 'R$ ' . self::formatarValor($vlrUnitMat) 
+                        : '—';
+                    
+                    $displayMoUnit = $vlrUnitMo > 0.001 
+                        ? 'R$ ' . self::formatarValor($vlrUnitMo) 
+                        : '—';
+                    
+                    $html .= '<tr>';
+                    $html .= '<td class="left">' . htmlspecialchars((string)($item['codigo'] ?? '')) . '</td>';
+                    $html .= '<td class="left">' . nl2br(htmlspecialchars((string)($item['descricao'] ?? ''))) . '</td>';
+                    $html .= '<td class="center">' . htmlspecialchars((string)($item['unidade'] ?? '')) . '</td>';
+                    $html .= '<td class="center">' . number_format($quantidade, 2, ',', '.') . '</td>';
+                    $html .= '<td class="right">' . $displayMatUnit . '</td>';
+                    $html .= '<td class="right">' . $displayMoUnit . '</td>';
+                    $html .= '<td class="right">R$ ' . self::formatarValor($vlrUnitTotal) . '</td>';
+                    $html .= '<td class="right">R$ ' . self::formatarValor($vlrTotal) . '</td>';
+                    $html .= '<td class="center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
+                    $html .= '<td class="center">' . number_format($percentualConcluido, 2, ',', '.') . '%</td>';
+                    $html .= '<td class="center" style="' . $statusColor . '">' . $status . '</td>';
+                    $html .= '</tr>';
                 }
                 
-                // Formatar valores (exibir "—" quando zero)
-                $displayMatUnit = $vlrUnitMat > 0.001 
-                    ? 'R$ ' . self::formatarValor($vlrUnitMat) 
-                    : '—';
+                // Subtotal da categoria
+                $percentualConcluidoCategoria = $subtotalCategoria > 0 
+                    ? ($totalConcluidoCategoria / $subtotalCategoria) * 100 
+                    : 0.0;
                 
-                $displayMoUnit = $vlrUnitMo > 0.001 
-                    ? 'R$ ' . self::formatarValor($vlrUnitMo) 
-                    : '—';
-                
-                $html .= '<tr>';
-                $html .= '<td class="left">' . htmlspecialchars((string)($item['codigo'] ?? '')) . '</td>';
-                $html .= '<td class="left">' . nl2br(htmlspecialchars((string)($item['descricao'] ?? ''))) . '</td>';
-                $html .= '<td class="center">' . htmlspecialchars((string)($item['unidade'] ?? '')) . '</td>';
-                $html .= '<td class="center">' . number_format($quantidade, 2, ',', '.') . '</td>';
-                $html .= '<td class="right">' . $displayMatUnit . '</td>';
-                $html .= '<td class="right">' . $displayMoUnit . '</td>';
-                $html .= '<td class="right">R$ ' . self::formatarValor($vlrUnitTotal) . '</td>';
-                $html .= '<td class="right">R$ ' . self::formatarValor($vlrTotal) . '</td>';
-                $html .= '<td class="center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
-                $html .= '<td class="center">' . number_format($percentualConcluido, 2, ',', '.') . '%</td>';
-                $html .= '<td class="center" style="' . $statusColor . '">' . $status . '</td>';
+                $html .= '<tr style="background:#E2E8F0;font-weight:bold;">';
+                $html .= '<td colspan="7" class="left" style="padding:6px;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
+                $html .= '<td class="right" style="padding:6px;">R$ ' . self::formatarValor($subtotalCategoria) . '</td>';
+                $html .= '<td class="center" style="padding:6px;">—</td>';
+                $html .= '<td class="center" style="padding:6px;">' . number_format($percentualConcluidoCategoria, 2, ',', '.') . '%</td>';
+                $html .= '<td class="center" style="padding:6px;">—</td>';
                 $html .= '</tr>';
             }
             
