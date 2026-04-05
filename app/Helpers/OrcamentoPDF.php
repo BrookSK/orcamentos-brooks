@@ -1243,6 +1243,7 @@ HTML;
 
         // Processar cada grupo
         foreach ($grouped as $nomeGrupo => $categorias) {
+            $html .= '<!-- PROCESSANDO GRUPO: ' . htmlspecialchars($nomeGrupo) . ' com ' . count($categorias) . ' categorias -->';
             $html .= '<div class="banner-etapa">' . htmlspecialchars(strtoupper($nomeGrupo)) . '</div>';
             
             $subtotalGrupo = 0.0;
