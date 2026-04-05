@@ -1240,6 +1240,7 @@ HTML;
             $subtotalGrupo = 0.0;
             
             // Tabela com 11 colunas (adicionar % ETAPA, % CONCLUÍDO, STATUS)
+            $html .= '<!-- TABELA COM 11 COLUNAS - VERSAO ATUALIZADA -->';
             $html .= '<table class="table-detalhes">';
             $html .= '<thead><tr>';
             $html .= '<th class="left" style="width:6%;">Cód.</th>';
