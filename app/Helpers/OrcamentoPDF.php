@@ -69,6 +69,7 @@ final class OrcamentoPDF
         }
         
         $html .= self::gerarPaginasResumo($orcamentoId, $orcamento);
+        $html .= self::gerarPaginaResumoPorFase($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarResumoFinal($orcamentoId, $orcamento); // Adicionar página de resumo final com impostos
         $html .= self::gerarRodapeHTML();
@@ -930,6 +931,160 @@ HTML;
         if ($numero >= 18 && $numero <= 41) return 'acabamentos';
         if ($numero === 42) return 'gerenciamento';
         return 'adm_impostos';
+    }
+    
+    private static function gerarPaginaResumoPorFase(int $orcamentoId, array $orcamento): string
+    {
+        $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
+        
+        // BDI global padrão
+        $bdiGlobal = (float)($orcamento['margem_global'] ?? 18.0);
+        
+        // Agrupar itens por grupo (fase) e categoria
+        $itensAgrupados = [];
+        $totaisPorGrupo = [];
+        $totaisPorCategoria = [];
+        
+        foreach ($itens as $item) {
+            $grupo = (string)($item['grupo'] ?? 'SEM GRUPO');
+            $categoria = (string)($item['categoria'] ?? 'SEM CATEGORIA');
+            
+            // Calcular valor do item
+            $quantidade = (float)($item['quantidade'] ?? 0);
+            $custoMat = (float)($item['custo_material'] ?? 0);
+            $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+            $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+            
+            $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+            $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+            
+            $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                ? $margemPersonalizada 
+                : $bdiGlobal;
+            
+            $fatorBDI = 1 + ($bdi / 100);
+            
+            $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+            $vlrUnitMo = $custoMo * $fatorBDI;
+            $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+            $vlrTotal = $vlrUnitTotal * $quantidade;
+            
+            // Agrupar
+            if (!isset($itensAgrupados[$grupo])) {
+                $itensAgrupados[$grupo] = [];
+                $totaisPorGrupo[$grupo] = 0.0;
+            }
+            
+            if (!isset($itensAgrupados[$grupo][$categoria])) {
+                $itensAgrupados[$grupo][$categoria] = 0.0;
+            }
+            
+            $itensAgrupados[$grupo][$categoria] += $vlrTotal;
+            $totaisPorGrupo[$grupo] += $vlrTotal;
+        }
+        
+        // Calcular total geral da obra
+        $totalGeralObra = array_sum($totaisPorGrupo);
+        
+        // Iniciar HTML
+        $html = '<div class="page"><div class="page-title">PLANILHA RESUMO</div>';
+        $html .= '<div class="page-subtitle">ETAPA CINZA (BRUTA) + ACABAMENTOS | ADMINISTRAÇÃO</div>';
+        
+        // Contador de linha
+        $numeroLinha = 1;
+        
+        // Processar cada grupo (fase)
+        foreach ($itensAgrupados as $nomeGrupo => $categorias) {
+            // Banner do grupo
+            $html .= '<div class="banner-etapa">' . htmlspecialchars(strtoupper($nomeGrupo)) . '</div>';
+            
+            // Tabela com 4 colunas: Nº | DESCRIÇÃO | VALOR TOTAL | %
+            $html .= '<table class="table-detalhes">';
+            $html .= '<thead><tr>';
+            $html .= '<th class="center" style="width:8%;">Nº</th>';
+            $html .= '<th class="left" style="width:52%;">DESCRIÇÃO</th>';
+            $html .= '<th class="right" style="width:25%;">VALOR TOTAL</th>';
+            $html .= '<th class="center" style="width:15%;">%</th>';
+            $html .= '</tr></thead><tbody>';
+            
+            $totalGrupo = $totaisPorGrupo[$nomeGrupo];
+            
+            // Listar categorias do grupo
+            foreach ($categorias as $nomeCategoria => $valorCategoria) {
+                $percentualCategoria = $totalGrupo > 0 
+                    ? ($valorCategoria / $totalGrupo) * 100 
+                    : 0.0;
+                
+                $html .= '<tr>';
+                $html .= '<td class="center">' . $numeroLinha . '</td>';
+                $html .= '<td class="left">' . htmlspecialchars($nomeCategoria) . '</td>';
+                $html .= '<td class="right">R$ ' . self::formatarValor($valorCategoria) . '</td>';
+                $html .= '<td class="center">' . number_format($percentualCategoria, 2, ',', '.') . '%</td>';
+                $html .= '</tr>';
+                
+                $numeroLinha++;
+            }
+            
+            $html .= '</tbody></table>';
+            
+            // Subtotal do grupo com percentual na obra
+            $percentualGrupoNaObra = $totalGeralObra > 0 
+                ? ($totalGrupo / $totalGeralObra) * 100 
+                : 0.0;
+            
+            $html .= sprintf(
+                '<div class="subtotal-etapa">SUBTOTAL — %s: R$ %s (%s%%)</div>',
+                htmlspecialchars(strtoupper($nomeGrupo)),
+                self::formatarValor($totalGrupo),
+                number_format($percentualGrupoNaObra, 2, ',', '.')
+            );
+        }
+        
+        // Tabela final de fechamento
+        $html .= '<div style="margin-top:40px; padding:20px; background:rgba(255,255,255,0.02); border-radius:8px;">';
+        $html .= '<div style="font-weight:700; font-size:14px; margin-bottom:15px; text-align:center;">RESUMO GERAL</div>';
+        
+        foreach ($totaisPorGrupo as $nomeGrupo => $valorGrupo) {
+            $percentualGrupo = $totalGeralObra > 0 
+                ? ($valorGrupo / $totalGeralObra) * 100 
+                : 0.0;
+            
+            $html .= '<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1);">';
+            $html .= '<span>' . htmlspecialchars(strtoupper($nomeGrupo)) . '</span>';
+            $html .= '<span>R$ ' . self::formatarValor($valorGrupo) . ' (' . number_format($percentualGrupo, 2, ',', '.') . '%)</span>';
+            $html .= '</div>';
+        }
+        
+        // Linha separadora
+        $html .= '<div style="border-top:2px solid rgba(255,255,255,0.3); margin:10px 0;"></div>';
+        
+        // Subtotal da obra
+        $html .= '<div style="display:flex; justify-content:space-between; padding:8px 0; font-weight:700;">';
+        $html .= '<span>SUBTOTAL DA OBRA</span>';
+        $html .= '<span>R$ ' . self::formatarValor($totalGeralObra) . '</span>';
+        $html .= '</div>';
+        
+        // Impostos
+        $percentualImpostos = (float)($orcamento['percentual_impostos'] ?? 18.0);
+        $valorImpostos = $totalGeralObra * ($percentualImpostos / 100);
+        
+        $html .= '<div style="display:flex; justify-content:space-between; padding:8px 0;">';
+        $html .= '<span>IMPOSTOS (' . number_format($percentualImpostos, 0) . '%)</span>';
+        $html .= '<span>R$ ' . self::formatarValor($valorImpostos) . '</span>';
+        $html .= '</div>';
+        
+        // Total geral
+        $totalComImpostos = $totalGeralObra + $valorImpostos;
+        
+        $html .= '<div style="display:flex; justify-content:space-between; padding:12px 0; margin-top:8px; border-top:2px solid rgba(255,255,255,0.3); font-weight:800; font-size:16px;">';
+        $html .= '<span>TOTAL GERAL</span>';
+        $html .= '<span>R$ ' . self::formatarValor($totalComImpostos) . '</span>';
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        return $html;
     }
     
     private static function gerarPaginaDetalhamento(int $orcamentoId, array $orcamento): string
