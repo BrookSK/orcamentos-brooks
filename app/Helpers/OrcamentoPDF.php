@@ -1057,8 +1057,9 @@ HTML;
                         ? ($totalCategoria / $totalEtapa) * 100 
                         : 0.0;
                     
-                    $percentualConcluidoCategoria = $totalCategoria > 0 
-                        ? ($totalConcluidoCategoria / $totalCategoria) * 100 
+                    // % CONCLUÍDO = quanto do grupo esta categoria representa considerando o que foi concluído
+                    $percentualConcluidoNoGrupo = $totalGrupo > 0 
+                        ? ($totalConcluidoCategoria / $totalGrupo) * 100 
                         : 0.0;
                     
                     $html .= '<tr>';
@@ -1067,7 +1068,7 @@ HTML;
                     $html .= '<td class="center">' . number_format($percentualNoGrupo, 2, ',', '.') . '%</td>';
                     $html .= '<td class="center">' . number_format($percentualNaEtapa, 2, ',', '.') . '%</td>';
                     $html .= '<td class="right">R$ ' . self::formatarValor($totalConcluidoCategoria) . '</td>';
-                    $html .= '<td class="center">' . number_format($percentualConcluidoCategoria, 2, ',', '.') . '%</td>';
+                    $html .= '<td class="center">' . number_format($percentualConcluidoNoGrupo, 2, ',', '.') . '%</td>';
                     $html .= '</tr>';
                 }
                 
