@@ -68,6 +68,7 @@ final class OrcamentoPDF
             }
         }
         
+        $html .= self::gerarPaginaResumoPorFase($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarResumoFinal($orcamentoId, $orcamento); // Adicionar página de resumo final com impostos
         $html .= self::gerarRodapeHTML();
@@ -1292,8 +1293,8 @@ HTML;
             // Agora gerar as linhas por categoria
             foreach ($categorias as $nomeCategoria => $itensCategoria) {
                 // Linha de cabeçalho da categoria
-                $html .= '<tr style="background:#4A5568;color:#FFF;font-weight:bold;">';
-                $html .= '<td colspan="11" class="left" style="padding:6px;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
+                $html .= '<tr style="background:#4A5568 !important;color:#FFF !important;font-weight:bold;">';
+                $html .= '<td colspan="11" class="left" style="padding:6px;background:#4A5568 !important;color:#FFF !important;border:1px solid #4A5568 !important;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
                 $html .= '</tr>';
                 
                 $subtotalCategoria = 0.0;
@@ -1372,12 +1373,12 @@ HTML;
                     ? ($totalConcluidoCategoria / $subtotalCategoria) * 100 
                     : 0.0;
                 
-                $html .= '<tr style="background:#E2E8F0;font-weight:bold;">';
-                $html .= '<td colspan="7" class="left" style="padding:6px;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
-                $html .= '<td class="right" style="padding:6px;">R$ ' . self::formatarValor($subtotalCategoria) . '</td>';
-                $html .= '<td class="center" style="padding:6px;">—</td>';
-                $html .= '<td class="center" style="padding:6px;">' . number_format($percentualConcluidoCategoria, 2, ',', '.') . '%</td>';
-                $html .= '<td class="center" style="padding:6px;">—</td>';
+                $html .= '<tr style="background:#E2E8F0 !important;font-weight:bold;">';
+                $html .= '<td colspan="7" class="left" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
+                $html .= '<td class="right" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">R$ ' . self::formatarValor($subtotalCategoria) . '</td>';
+                $html .= '<td class="center" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">—</td>';
+                $html .= '<td class="center" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">' . number_format($percentualConcluidoCategoria, 2, ',', '.') . '%</td>';
+                $html .= '<td class="center" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">—</td>';
                 $html .= '</tr>';
             }
             
