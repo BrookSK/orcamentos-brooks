@@ -1189,6 +1189,9 @@ HTML;
     {
         $itens = \App\Models\OrcamentoItem::allByOrcamento($orcamentoId);
         
+        // BDI global padrão
+        $bdiGlobal = (float)($orcamento['margem_global'] ?? 18.0);
+        
         // Agrupar por GRUPO e depois por CATEGORIA
         $grouped = [];
         foreach ($itens as $item) {
