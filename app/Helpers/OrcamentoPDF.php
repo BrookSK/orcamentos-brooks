@@ -1384,28 +1384,30 @@ HTML;
             
             // Calcular totais do grupo para o subtotal
             $totalConcluidoGrupo = 0.0;
-            foreach ($itensGrupo as $item) {
-                $quantidade = (float)($item['quantidade'] ?? 0);
-                $custoMat = (float)($item['custo_material'] ?? 0);
-                $custoMo = (float)($item['custo_mao_obra'] ?? 0);
-                $custoEquip = (float)($item['custo_equipamento'] ?? 0);
-                $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
-                
-                $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
-                $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
-                
-                $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
-                    ? $margemPersonalizada 
-                    : $bdiGlobal;
-                
-                $fatorBDI = 1 + ($bdi / 100);
-                
-                $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
-                $vlrUnitMo = $custoMo * $fatorBDI;
-                $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
-                $vlrTotal = $vlrUnitTotal * $quantidade;
-                
-                $totalConcluidoGrupo += $vlrTotal * ($percentualRealizado / 100);
+            foreach ($categorias as $categoria => $itensCategoria) {
+                foreach ($itensCategoria as $item) {
+                    $quantidade = (float)($item['quantidade'] ?? 0);
+                    $custoMat = (float)($item['custo_material'] ?? 0);
+                    $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+                    $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+                    
+                    $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+                    $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                    
+                    $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                        ? $margemPersonalizada 
+                        : $bdiGlobal;
+                    
+                    $fatorBDI = 1 + ($bdi / 100);
+                    
+                    $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+                    $vlrUnitMo = $custoMo * $fatorBDI;
+                    $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+                    $vlrTotal = $vlrUnitTotal * $quantidade;
+                    
+                    $totalConcluidoGrupo += $vlrTotal * ($percentualRealizado / 100);
+                }
             }
             
             $percentualConcluidoGrupo = $subtotalGrupo > 0 
@@ -1413,12 +1415,12 @@ HTML;
                 : 0.0;
             
             // Linha de subtotal dentro da tabela
-            $html .= '<tr style="background:#2C3E50;color:#FFF;font-weight:bold;">';
-            $html .= '<td colspan="7" class="left" style="padding:8px;">SUBTOTAL — ' . htmlspecialchars(strtoupper($grupo)) . '</td>';
-            $html .= '<td class="right" style="padding:8px;">R$ ' . self::formatarValor($subtotalGrupo) . '</td>';
-            $html .= '<td class="center" style="padding:8px;">—</td>'; // % Etapa vazio
-            $html .= '<td class="center" style="padding:8px;">' . number_format($percentualConcluidoGrupo, 2, ',', '.') . '%</td>';
-            $html .= '<td class="center" style="padding:8px;">—</td>'; // Status vazio
+            $html .= '<tr style="background:#2C3E50 !important;color:#FFF !important;font-weight:bold;">';
+            $html .= '<td colspan="7" class="left" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
+            $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">R$ ' . self::formatarValor($subtotalGrupo) . '</td>';
+            $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">—</td>';
+            $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">' . number_format($percentualConcluidoGrupo, 2, ',', '.') . '%</td>';
+            $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">—</td>';
             $html .= '</tr>';
             
             $html .= '</tbody></table>';
