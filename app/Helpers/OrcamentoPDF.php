@@ -1292,9 +1292,12 @@ HTML;
 
             // Agora gerar as linhas por categoria
             foreach ($categorias as $nomeCategoria => $itensCategoria) {
-                // Linha de cabeçalho da categoria
-                $html .= '<tr style="background:#4A5568 !important;color:#FFF !important;font-weight:bold;">';
-                $html .= '<td colspan="11" class="left" style="padding:6px;background:#4A5568 !important;color:#FFF !important;border:1px solid #4A5568 !important;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
+                // DEBUG: Adicionar comentário HTML para verificar
+                $html .= '<!-- CATEGORIA: ' . htmlspecialchars($nomeCategoria) . ' com ' . count($itensCategoria) . ' itens -->';
+                
+                // Linha de cabeçalho da categoria - usar TD individual para cada coluna
+                $html .= '<tr>';
+                $html .= '<td colspan="11" class="left" style="padding:8px;background:#4A5568;color:#FFF;font-weight:bold;border:1px solid #4A5568;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
                 $html .= '</tr>';
                 
                 $subtotalCategoria = 0.0;
