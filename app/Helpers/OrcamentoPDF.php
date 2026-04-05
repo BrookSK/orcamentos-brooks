@@ -1081,9 +1081,7 @@ HTML;
                 $numeroLinha++;
             }
             
-            $html .= '</tbody></table>';
-            
-            // Subtotal do grupo
+            // Calcular percentual concluído do grupo
             $percentualGrupoNaObra = $totalGeralObra > 0 
                 ? ($totalGrupo / $totalGeralObra) * 100 
                 : 0.0;
@@ -1092,17 +1090,17 @@ HTML;
                 ? ($totalConcluidoGrupo / $totalGrupo) * 100 
                 : 0.0;
             
-            $html .= '<div class="subtotal-etapa">';
-            $html .= '<div>SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</div>';
-            $html .= '<div style="display:flex; justify-content:space-between; margin-top:5px;">';
-            $html .= '<span>Valor total do grupo: R$ ' . self::formatarValor($totalGrupo) . '</span>';
-            $html .= '<span>% do grupo na obra: ' . number_format($percentualGrupoNaObra, 2, ',', '.') . '%</span>';
-            $html .= '</div>';
-            $html .= '<div style="display:flex; justify-content:space-between;">';
-            $html .= '<span>Valor já concluído: R$ ' . self::formatarValor($totalConcluidoGrupo) . '</span>';
-            $html .= '<span>% concluído do grupo: ' . number_format($percentualConcluidoGrupo, 2, ',', '.') . '%</span>';
-            $html .= '</div>';
-            $html .= '</div>';
+            // Linha de subtotal dentro da tabela
+            $html .= '<tr style="background:#2C3E50;color:#FFF;font-weight:bold;">';
+            $html .= '<td colspan="2" class="left" style="padding:8px;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
+            $html .= '<td colspan="2" class="right" style="padding:8px;"></td>';
+            $html .= '<td colspan="4" class="right" style="padding:8px;">R$ ' . self::formatarValor($totalGrupo) . '</td>';
+            $html .= '<td class="center" style="padding:8px;">—</td>'; // % Etapa vazio
+            $html .= '<td class="center" style="padding:8px;">' . number_format($percentualConcluidoGrupo, 2, ',', '.') . '%</td>';
+            $html .= '<td class="center" style="padding:8px;">—</td>'; // Status vazio
+            $html .= '</tr>';
+            
+            $html .= '</tbody></table>';
         }
         
         // Rodapé geral consolidado
