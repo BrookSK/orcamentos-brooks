@@ -1239,20 +1239,20 @@ HTML;
             
             $subtotalGrupo = 0.0;
             
-            // Tabela com 11 colunas (separar Vlr Unit. em Mat. e M.O.)
+            // Tabela com 11 colunas (adicionar % ETAPA, % CONCLUÍDO, STATUS)
             $html .= '<table class="table-detalhes">';
             $html .= '<thead><tr>';
             $html .= '<th class="left" style="width:6%;">Cód.</th>';
-            $html .= '<th class="left" style="width:25%;">Descrição</th>';
+            $html .= '<th class="left" style="width:20%;">Descrição</th>';
             $html .= '<th class="center" style="width:4%;">Un</th>';
-            $html .= '<th class="center" style="width:6%;">Qtd</th>';
-            $html .= '<th class="right" style="width:10%;">Vlr Unit. Mat.</th>';
-            $html .= '<th class="right" style="width:10%;">Vlr Unit. M.O.</th>';
-            $html .= '<th class="right" style="width:10%;">Vlr Unit. Total</th>';
-            $html .= '<th class="right" style="width:11%;">Vlr Total</th>';
+            $html .= '<th class="center" style="width:5%;">Qtd</th>';
+            $html .= '<th class="right" style="width:8%;">Vlr Unit. Mat.</th>';
+            $html .= '<th class="right" style="width:8%;">Vlr Unit. M.O.</th>';
+            $html .= '<th class="right" style="width:9%;">Vlr Unit. Total</th>';
+            $html .= '<th class="right" style="width:10%;">Vlr Total</th>';
             $html .= '<th class="center" style="width:6%;">% Etapa</th>';
-            $html .= '<th class="center" style="width:6%;">% Obra</th>';
-            $html .= '<th class="center" style="width:6%;">Status</th>';
+            $html .= '<th class="center" style="width:7%;">% Concluído</th>';
+            $html .= '<th class="center" style="width:9%;">Status</th>';
             $html .= '</tr></thead><tbody>';
 
             // Calcular subtotal do grupo
@@ -1304,6 +1304,9 @@ HTML;
                 $pctEtapa = $subtotalGrupo > 0 ? ($vlrTotal / $subtotalGrupo) * 100 : 0.0;
                 $pctObra = $totalGeralObra > 0 ? ($vlrTotal / $totalGeralObra) * 100 : 0.0;
                 
+                // % CONCLUÍDO
+                $percentualConcluido = $percentualRealizado;
+                
                 // Determinar status baseado no percentual realizado
                 $status = '';
                 $statusColor = '';
@@ -1337,7 +1340,7 @@ HTML;
                 $html .= '<td class="right">R$ ' . self::formatarValor($vlrUnitTotal) . '</td>';
                 $html .= '<td class="right">R$ ' . self::formatarValor($vlrTotal) . '</td>';
                 $html .= '<td class="center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
-                $html .= '<td class="center">' . number_format($pctObra, 2, ',', '.') . '%</td>';
+                $html .= '<td class="center">' . number_format($percentualConcluido, 2, ',', '.') . '%</td>';
                 $html .= '<td class="center" style="' . $statusColor . '">' . $status . '</td>';
                 $html .= '</tr>';
             }
