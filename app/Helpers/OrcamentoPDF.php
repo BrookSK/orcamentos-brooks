@@ -68,7 +68,6 @@ final class OrcamentoPDF
             }
         }
         
-        $html .= self::gerarPaginasResumo($orcamentoId, $orcamento);
         $html .= self::gerarPaginaResumoPorFase($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarResumoFinal($orcamentoId, $orcamento); // Adicionar página de resumo final com impostos
