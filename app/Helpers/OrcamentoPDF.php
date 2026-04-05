@@ -1083,7 +1083,7 @@ HTML;
                 $html .= '<tr style="background:#2C3E50 !important;color:#FFF !important;font-weight:bold;">';
                 $html .= '<td class="left" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
                 $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($totalGrupo) . '</td>';
-                $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">100%</td>';
+                $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">—</td>';
                 $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualGrupoNaEtapa, 2, ',', '.') . '%</td>';
                 $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($totalConcluidoGrupo) . '</td>';
                 $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualConcluidoGrupo, 2, ',', '.') . '%</td>';
