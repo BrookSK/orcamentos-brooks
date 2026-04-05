@@ -1110,17 +1110,17 @@ HTML;
         }
         
         // Rodapé geral consolidado
-        $html .= '<div style="margin-top:40px; padding:20px; background:rgba(255,255,255,0.02); border-radius:8px;">';
-        $html .= '<div style="font-weight:700; font-size:14px; margin-bottom:15px; text-align:center;">RESUMO GERAL</div>';
+        $html .= '<div style="margin-top:40px;">';
+        $html .= '<div style="font-weight:700; font-size:16px; margin-bottom:15px; text-align:center;">RESUMO GERAL</div>';
         
-        // Tabela de resumo por etapa
-        $html .= '<table style="width:100%; border-collapse:collapse;">';
-        $html .= '<thead><tr style="border-bottom:2px solid rgba(255,255,255,0.3);">';
-        $html .= '<th style="text-align:left; padding:8px;">ETAPA</th>';
-        $html .= '<th style="text-align:right; padding:8px;">VLR TOTAL</th>';
-        $html .= '<th style="text-align:center; padding:8px;">% OBRA</th>';
-        $html .= '<th style="text-align:right; padding:8px;">VLR CONCLUÍDO</th>';
-        $html .= '<th style="text-align:center; padding:8px;">% CONCLUÍDO</th>';
+        // Tabela de resumo por etapa usando a classe table-detalhes
+        $html .= '<table class="table-detalhes">';
+        $html .= '<thead><tr>';
+        $html .= '<th class="left" style="width:30%;">ETAPA</th>';
+        $html .= '<th class="right" style="width:20%;">VLR TOTAL</th>';
+        $html .= '<th class="center" style="width:15%;">% OBRA</th>';
+        $html .= '<th class="right" style="width:20%;">VLR CONCLUÍDO</th>';
+        $html .= '<th class="center" style="width:15%;">% CONCLUÍDO</th>';
         $html .= '</tr></thead><tbody>';
         
         foreach ($totaisPorEtapa as $nomeEtapa => $valorEtapa) {
@@ -1133,29 +1133,26 @@ HTML;
                 ? ($valorConcluidoEtapa / $valorEtapa) * 100 
                 : 0.0;
             
-            $html .= '<tr style="border-bottom:1px solid rgba(255,255,255,0.1);">';
-            $html .= '<td style="padding:8px;">' . htmlspecialchars(strtoupper($nomeEtapa)) . '</td>';
-            $html .= '<td style="text-align:right; padding:8px;">R$ ' . self::formatarValor($valorEtapa) . '</td>';
-            $html .= '<td style="text-align:center; padding:8px;">' . number_format($percentualEtapa, 2, ',', '.') . '%</td>';
-            $html .= '<td style="text-align:right; padding:8px;">R$ ' . self::formatarValor($valorConcluidoEtapa) . '</td>';
-            $html .= '<td style="text-align:center; padding:8px;">' . number_format($percentualConcluidoEtapa, 2, ',', '.') . '%</td>';
+            $html .= '<tr>';
+            $html .= '<td class="left">' . htmlspecialchars(strtoupper($nomeEtapa)) . '</td>';
+            $html .= '<td class="right">R$ ' . self::formatarValor($valorEtapa) . '</td>';
+            $html .= '<td class="center">' . number_format($percentualEtapa, 2, ',', '.') . '%</td>';
+            $html .= '<td class="right">R$ ' . self::formatarValor($valorConcluidoEtapa) . '</td>';
+            $html .= '<td class="center">' . number_format($percentualConcluidoEtapa, 2, ',', '.') . '%</td>';
             $html .= '</tr>';
         }
-        
-        // Linha separadora
-        $html .= '<tr style="border-top:2px solid rgba(255,255,255,0.3);"><td colspan="5" style="padding:5px;"></td></tr>';
         
         // Subtotal da obra
         $percentualConcluidoObra = $totalGeralObra > 0 
             ? ($totalConcluidoObra / $totalGeralObra) * 100 
             : 0.0;
         
-        $html .= '<tr style="font-weight:700;">';
-        $html .= '<td style="padding:8px;">SUBTOTAL DA OBRA</td>';
-        $html .= '<td style="text-align:right; padding:8px;">R$ ' . self::formatarValor($totalGeralObra) . '</td>';
-        $html .= '<td style="text-align:center; padding:8px;">100%</td>';
-        $html .= '<td style="text-align:right; padding:8px;">R$ ' . self::formatarValor($totalConcluidoObra) . '</td>';
-        $html .= '<td style="text-align:center; padding:8px;">' . number_format($percentualConcluidoObra, 2, ',', '.') . '%</td>';
+        $html .= '<tr style="background:#E2E8F0 !important;font-weight:bold;">';
+        $html .= '<td class="left" style="padding:8px;background:#E2E8F0 !important;border:1px solid #CCC;">SUBTOTAL DA OBRA</td>';
+        $html .= '<td class="right" style="padding:8px;background:#E2E8F0 !important;border:1px solid #CCC;">R$ ' . self::formatarValor($totalGeralObra) . '</td>';
+        $html .= '<td class="center" style="padding:8px;background:#E2E8F0 !important;border:1px solid #CCC;">100%</td>';
+        $html .= '<td class="right" style="padding:8px;background:#E2E8F0 !important;border:1px solid #CCC;">R$ ' . self::formatarValor($totalConcluidoObra) . '</td>';
+        $html .= '<td class="center" style="padding:8px;background:#E2E8F0 !important;border:1px solid #CCC;">' . number_format($percentualConcluidoObra, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
         
         // Impostos
@@ -1163,22 +1160,22 @@ HTML;
         $valorImpostos = $totalGeralObra * ($percentualImpostos / 100);
         
         $html .= '<tr>';
-        $html .= '<td style="padding:8px;">IMPOSTOS (' . number_format($percentualImpostos, 0) . '%)</td>';
-        $html .= '<td style="text-align:right; padding:8px;">R$ ' . self::formatarValor($valorImpostos) . '</td>';
-        $html .= '<td style="text-align:center; padding:8px;">—</td>';
-        $html .= '<td style="text-align:right; padding:8px;">—</td>';
-        $html .= '<td style="text-align:center; padding:8px;">—</td>';
+        $html .= '<td class="left">IMPOSTOS (' . number_format($percentualImpostos, 0) . '%)</td>';
+        $html .= '<td class="right">R$ ' . self::formatarValor($valorImpostos) . '</td>';
+        $html .= '<td class="center">—</td>';
+        $html .= '<td class="right">—</td>';
+        $html .= '<td class="center">—</td>';
         $html .= '</tr>';
         
         // Total geral
         $totalComImpostos = $totalGeralObra + $valorImpostos;
         
-        $html .= '<tr style="border-top:2px solid rgba(255,255,255,0.3); font-weight:800; font-size:16px;">';
-        $html .= '<td style="padding:12px;">TOTAL GERAL</td>';
-        $html .= '<td style="text-align:right; padding:12px;">R$ ' . self::formatarValor($totalComImpostos) . '</td>';
-        $html .= '<td style="text-align:center; padding:12px;">—</td>';
-        $html .= '<td style="text-align:right; padding:12px;">—</td>';
-        $html .= '<td style="text-align:center; padding:12px;">—</td>';
+        $html .= '<tr style="background:#2C3E50 !important;color:#FFF !important;font-weight:bold;font-size:16px;">';
+        $html .= '<td class="left" style="padding:12px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">TOTAL GERAL</td>';
+        $html .= '<td class="right" style="padding:12px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">R$ ' . self::formatarValor($totalComImpostos) . '</td>';
+        $html .= '<td class="center" style="padding:12px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">—</td>';
+        $html .= '<td class="right" style="padding:12px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">—</td>';
+        $html .= '<td class="center" style="padding:12px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">—</td>';
         $html .= '</tr>';
         
         $html .= '</tbody></table>';
