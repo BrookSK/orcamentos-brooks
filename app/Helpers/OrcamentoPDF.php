@@ -1346,12 +1346,46 @@ HTML;
                 $html .= '</tr>';
             }
             
+            // Calcular totais do grupo para o subtotal
+            $totalConcluidoGrupo = 0.0;
+            foreach ($itensGrupo as $item) {
+                $quantidade = (float)($item['quantidade'] ?? 0);
+                $custoMat = (float)($item['custo_material'] ?? 0);
+                $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+                $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+                $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+                
+                $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+                $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                
+                $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                    ? $margemPersonalizada 
+                    : $bdiGlobal;
+                
+                $fatorBDI = 1 + ($bdi / 100);
+                
+                $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+                $vlrUnitMo = $custoMo * $fatorBDI;
+                $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+                $vlrTotal = $vlrUnitTotal * $quantidade;
+                
+                $totalConcluidoGrupo += $vlrTotal * ($percentualRealizado / 100);
+            }
+            
+            $percentualConcluidoGrupo = $subtotalGrupo > 0 
+                ? ($totalConcluidoGrupo / $subtotalGrupo) * 100 
+                : 0.0;
+            
+            // Linha de subtotal dentro da tabela
+            $html .= '<tr style="background:#2C3E50;color:#FFF;font-weight:bold;">';
+            $html .= '<td colspan="7" class="left" style="padding:8px;">SUBTOTAL — ' . htmlspecialchars(strtoupper($grupo)) . '</td>';
+            $html .= '<td class="right" style="padding:8px;">R$ ' . self::formatarValor($subtotalGrupo) . '</td>';
+            $html .= '<td class="center" style="padding:8px;">—</td>'; // % Etapa vazio
+            $html .= '<td class="center" style="padding:8px;">' . number_format($percentualConcluidoGrupo, 2, ',', '.') . '%</td>';
+            $html .= '<td class="center" style="padding:8px;">—</td>'; // Status vazio
+            $html .= '</tr>';
+            
             $html .= '</tbody></table>';
-            $html .= sprintf(
-                '<div class="subtotal-etapa">SUBTOTAL — %s: R$ %s</div>',
-                htmlspecialchars(strtoupper($grupo)),
-                self::formatarValor($subtotalGrupo)
-            );
         }
         
         $html .= sprintf(
