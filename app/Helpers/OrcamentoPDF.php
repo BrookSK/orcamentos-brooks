@@ -1057,7 +1057,7 @@ HTML;
                         ? ($totalCategoria / $totalEtapa) * 100 
                         : 0.0;
                     
-                    // % CONCLUÍDO = quanto da OBRA TOTAL esta categoria representa considerando o que foi concluído
+                    // % CONCLUÍDO = quanto da OBRA TOTAL foi concluído desta categoria
                     $percentualConcluidoNaObra = $totalGeralObra > 0 
                         ? ($totalConcluidoCategoria / $totalGeralObra) * 100 
                         : 0.0;
