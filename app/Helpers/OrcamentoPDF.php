@@ -1080,10 +1080,9 @@ HTML;
         // BDI global padrão
         $bdiGlobal = (float)($orcamento['margem_global'] ?? 18.0);
         
-        // Agrupar por ETAPA > GRUPO > CATEGORIA (3 níveis)
+        // Agrupar EXATAMENTE como na tela de edição: GRUPO > CATEGORIA
         $itensProcessados = [];
         foreach ($itens as $item) {
-            $etapa = (string)($item['etapa'] ?? 'SEM ETAPA');
             $grupo = (string)($item['grupo'] ?? 'SEM GRUPO');
             $categoria = (string)($item['categoria'] ?? 'SEM CATEGORIA');
             
@@ -1110,14 +1109,11 @@ HTML;
             $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
             $pagamentoRealizado = (int)($item['pagamento_realizado'] ?? 0);
             
-            if (!isset($itensProcessados[$etapa])) {
-                $itensProcessados[$etapa] = [];
+            if (!isset($itensProcessados[$grupo])) {
+                $itensProcessados[$grupo] = [];
             }
-            if (!isset($itensProcessados[$etapa][$grupo])) {
-                $itensProcessados[$etapa][$grupo] = [];
-            }
-            if (!isset($itensProcessados[$etapa][$grupo][$categoria])) {
-                $itensProcessados[$etapa][$grupo][$categoria] = [
+            if (!isset($itensProcessados[$grupo][$categoria])) {
+                $itensProcessados[$grupo][$categoria] = [
                     'total' => 0.0,
                     'concluido' => 0.0,
                     'a_pagar' => 0.0
@@ -1125,86 +1121,75 @@ HTML;
             }
             
             $valorConcluido = $vlrTotal * ($percentualRealizado / 100);
-            $itensProcessados[$etapa][$grupo][$categoria]['total'] += $vlrTotal;
-            $itensProcessados[$etapa][$grupo][$categoria]['concluido'] += $valorConcluido;
+            $itensProcessados[$grupo][$categoria]['total'] += $vlrTotal;
+            $itensProcessados[$grupo][$categoria]['concluido'] += $valorConcluido;
             
             // Só conta como "a pagar" se não foi pago
             if (!$pagamentoRealizado) {
-                $itensProcessados[$etapa][$grupo][$categoria]['a_pagar'] += $valorConcluido;
+                $itensProcessados[$grupo][$categoria]['a_pagar'] += $valorConcluido;
             }
         }
         
-        // Calcular totais por etapa
-        $totaisPorEtapa = [];
-        $totaisConcluidosPorEtapa = [];
+        // Calcular totais por grupo
+        $totaisPorGrupo = [];
+        $totaisConcluidosPorGrupo = [];
         
-        foreach ($itensProcessados as $etapa => $grupos) {
-            $totalEtapa = 0.0;
-            $totalConcluidoEtapa = 0.0;
+        foreach ($itensProcessados as $grupo => $categorias) {
+            $totalGrupo = 0.0;
+            $totalConcluidoGrupo = 0.0;
             
-            foreach ($grupos as $grupo => $categorias) {
-                foreach ($categorias as $categoria => $dados) {
-                    $totalEtapa += $dados['total'];
-                    $totalConcluidoEtapa += $dados['concluido'];
-                }
+            foreach ($categorias as $categoria => $dados) {
+                $totalGrupo += $dados['total'];
+                $totalConcluidoGrupo += $dados['concluido'];
             }
             
-            $totaisPorEtapa[$etapa] = $totalEtapa;
-            $totaisConcluidosPorEtapa[$etapa] = $totalConcluidoEtapa;
+            $totaisPorGrupo[$grupo] = $totalGrupo;
+            $totaisConcluidosPorGrupo[$grupo] = $totalConcluidoGrupo;
         }
         
         // Calcular total geral da obra
-        $totalGeralObra = array_sum($totaisPorEtapa);
-        $totalConcluidoObra = array_sum($totaisConcluidosPorEtapa);
+        $totalGeralObra = array_sum($totaisPorGrupo);
+        $totalConcluidoObra = array_sum($totaisConcluidosPorGrupo);
         
         // Iniciar HTML
         $html = '<div class="page"><div class="page-title">PLANILHA RESUMO</div>';
-        $html .= '<div class="page-subtitle">Resumo por Fase, Grupo e Categoria</div>';
+        $html .= '<div class="page-subtitle">Resumo por Grupo e Categoria</div>';
         
-        // Processar cada ETAPA
-        foreach ($itensProcessados as $nomeEtapa => $grupos) {
-            // Banner da etapa
-            $html .= '<div class="banner-etapa" style="background:#1a237e;color:#FFF;padding:12px;margin:20px 0 10px 0;font-weight:bold;font-size:16px;">' . htmlspecialchars(strtoupper($nomeEtapa)) . '</div>';
+        // Processar cada GRUPO (igual à tela de edição)
+        foreach ($itensProcessados as $nomeGrupo => $categorias) {
+            // Banner do grupo (azul)
+            $html .= '<div class="banner-etapa" style="background:#1e3a5f;color:#FFF;padding:12px;margin:20px 0 10px 0;font-weight:bold;font-size:16px;">' . htmlspecialchars(strtoupper($nomeGrupo)) . '</div>';
             
-            $totalEtapa = $totaisPorEtapa[$nomeEtapa];
-            $totalConcluidoEtapa = $totaisConcluidosPorEtapa[$nomeEtapa];
+            $totalGrupo = $totaisPorGrupo[$nomeGrupo];
+            $totalConcluidoGrupo = $totaisConcluidosPorGrupo[$nomeGrupo];
             
-            // Processar cada GRUPO dentro da etapa
-            foreach ($grupos as $nomeGrupo => $categorias) {
-                // Banner do grupo
-                $html .= '<div class="banner-etapa" style="background:#2C3350;color:#FFF;padding:10px;margin:15px 0 8px 0;font-weight:bold;font-size:14px;">' . htmlspecialchars(strtoupper($nomeGrupo)) . '</div>';
+            // Calcular total a pagar do grupo
+            $totalAPagarGrupo = 0.0;
+            foreach ($categorias as $categoria => $dados) {
+                $totalAPagarGrupo += $dados['a_pagar'];
+            }
+            
+            // Tabela de categorias dentro do grupo
+            $html .= '<table class="table-detalhes">';
+            $html .= '<thead><tr>';
+            $html .= '<th class="left" style="width:22%;">CATEGORIA</th>';
+            $html .= '<th class="right" style="width:12%;">VALOR TOTAL</th>';
+            $html .= '<th class="center" style="width:8%;">% GRUPO</th>';
+            $html .= '<th class="right" style="width:12%;">VLR CONCLUÍDO</th>';
+            $html .= '<th class="center" style="width:8%;">% OBRA</th>';
+            $html .= '<th class="right" style="width:12%;">VLR A PAGAR</th>';
+            $html .= '<th class="center" style="width:8%;">% DO SALDO RESTANTE</th>';
+            $html .= '</tr></thead><tbody>';
+            
+            // Listar categorias do grupo
+            foreach ($categorias as $nomeCategoria => $dados) {
+                $totalCategoria = $dados['total'];
+                $totalConcluidoCategoria = $dados['concluido'];
+                $totalAPagarCategoria = $dados['a_pagar'];
                 
-                // Calcular total do grupo
-                $totalGrupo = 0.0;
-                $totalConcluidoGrupo = 0.0;
-                $totalAPagarGrupo = 0.0;
-                foreach ($categorias as $categoria => $dados) {
-                    $totalGrupo += $dados['total'];
-                    $totalConcluidoGrupo += $dados['concluido'];
-                    $totalAPagarGrupo += $dados['a_pagar'];
-                }
-                
-                // Tabela de categorias dentro do grupo
-                $html .= '<table class="table-detalhes">';
-                $html .= '<thead><tr>';
-                $html .= '<th class="left" style="width:22%;">CATEGORIA</th>';
-                $html .= '<th class="right" style="width:12%;">VALOR TOTAL</th>';
-                $html .= '<th class="center" style="width:8%;">% ETAPA</th>';
-                $html .= '<th class="right" style="width:12%;">VLR CONCLUÍDO</th>';
-                $html .= '<th class="center" style="width:8%;">% OBRA</th>';
-                $html .= '<th class="right" style="width:12%;">VLR A PAGAR</th>';
-                $html .= '<th class="center" style="width:8%;">% DO SALDO RESTANTE</th>';
-                $html .= '</tr></thead><tbody>';
-                
-                // Listar categorias do grupo
-                foreach ($categorias as $nomeCategoria => $dados) {
-                    $totalCategoria = $dados['total'];
-                    $totalConcluidoCategoria = $dados['concluido'];
-                    $totalAPagarCategoria = $dados['a_pagar'];
-                    
-                    $percentualNaEtapa = $totalEtapa > 0 
-                        ? ($totalCategoria / $totalEtapa) * 100 
-                        : 0.0;
+                $percentualNoGrupo = $totalGrupo > 0 
+                    ? ($totalCategoria / $totalGrupo) * 100 
+                    : 0.0;
                     
                     // % OBRA = quanto da OBRA TOTAL foi concluído desta categoria
                     $percentualConcluidoNaObra = $totalGeralObra > 0 
