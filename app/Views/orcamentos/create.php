@@ -156,6 +156,14 @@ declare(strict_types=1);
                 <div class="muted" style="font-size:12px;">Você pode editar/remover os itens depois.</div>
             </div>
 
+            <div class="field full">
+                <label>
+                    <input type="checkbox" name="save_as_template" value="1">
+                    Tornar esse o novo template padrão
+                </label>
+                <div class="muted" style="font-size:12px;">Ao salvar, os itens deste orçamento substituirão o template atual usado para criar novos orçamentos.</div>
+            </div>
+
             <div class="field full" style="display:flex; justify-content:flex-end; gap:8px; flex-direction:row; align-items:center;">
                 <a class="btn" href="/?route=orcamentos/index">Cancelar</a>
                 <button class="btn primary" type="submit">Salvar</button>

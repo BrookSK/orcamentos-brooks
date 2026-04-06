@@ -195,9 +195,66 @@ final class OrcamentoController
             Logger::info('orcamentos.store.template_items_seeded', ['id' => $id]);
         }
 
+        // Salvar como novo template se checkbox estiver marcado
+        $saveAsTemplate = (string)($_POST['save_as_template'] ?? '') === '1';
+        if ($saveAsTemplate && $useTemplateItems) {
+            try {
+                $this->saveItemsAsTemplate($id);
+                Logger::info('orcamentos.store.saved_as_template', ['id' => $id]);
+            } catch (\Exception $e) {
+                Logger::error('orcamentos.store.save_template_failed', ['error' => $e->getMessage()]);
+            }
+        }
+
         $this->redirect('/?route=orcamentos/show&id=' . $id);
     }
 
+    /**
+     * Salva os itens de um orçamento como novo template padrão
+     */
+    private function saveItemsAsTemplate(int $orcamentoId): void
+    {
+        $itens = OrcamentoItem::allByOrcamento($orcamentoId);
+        
+        if (empty($itens)) {
+            return;
+        }
+        
+        // Preparar array de itens para o template
+        $templateItems = [];
+        foreach ($itens as $item) {
+            $templateItems[] = [
+                'etapa' => $item['etapa'] ?? '',
+                'grupo' => $item['grupo'] ?? '',
+                'categoria' => $item['categoria'] ?? '',
+                'codigo' => $item['codigo'] ?? '',
+                'descricao' => $item['descricao'] ?? '',
+                'quantidade' => $item['quantidade'] ?? 0,
+                'unidade' => $item['unidade'] ?? '',
+                'custo_material' => $item['custo_material'] ?? 0,
+                'custo_mao_obra' => $item['custo_mao_obra'] ?? 0,
+                'custo_equipamento' => $item['custo_equipamento'] ?? 0,
+                'classificacao_custo' => $item['classificacao_custo'] ?? null,
+            ];
+        }
+        
+        // Salvar no arquivo estimativa_custos.json
+        $templatePath = __DIR__ . '/../../estimativa_custos.json';
+        $templateData = [
+            'template_version' => '2.0',
+            'updated_at' => date('Y-m-d H:i:s'),
+            'source_orcamento_id' => $orcamentoId,
+            'items' => $templateItems
+        ];
+        
+        $json = json_encode($templateData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        file_put_contents($templatePath, $json);
+        
+        Logger::info('orcamentos.template_updated', [
+            'orcamento_id' => $orcamentoId,
+            'items_count' => count($templateItems)
+        ]);
+    }
     private static function templateItems(): array
     {
         $jsonPath = __DIR__ . '/../../estimativa_custos.json';
@@ -206,6 +263,37 @@ final class OrcamentoController
             if (is_string($raw) && $raw !== '') {
                 $decoded = json_decode($raw, true);
                 if (is_array($decoded)) {
+                    
+                    // Novo formato: template salvo de um orçamento existente
+                    if (isset($decoded['template_version']) && $decoded['template_version'] === '2.0' && isset($decoded['items'])) {
+                        $rows = [];
+                        $ordem = 1;
+                        foreach ($decoded['items'] as $item) {
+                            if (!is_array($item)) {
+                                continue;
+                            }
+                            $rows[] = [
+                                'etapa' => (string)($item['etapa'] ?? ''),
+                                'grupo' => (string)($item['grupo'] ?? ''),
+                                'categoria' => (string)($item['categoria'] ?? ''),
+                                'codigo' => (string)($item['codigo'] ?? ''),
+                                'descricao' => (string)($item['descricao'] ?? ''),
+                                'quantidade' => self::formatPtBrNumber((float)($item['quantidade'] ?? 0), 2),
+                                'unidade' => (string)($item['unidade'] ?? ''),
+                                'custo_material' => self::formatPtBrNumber((float)($item['custo_material'] ?? 0), 2),
+                                'custo_mao_obra' => self::formatPtBrNumber((float)($item['custo_mao_obra'] ?? 0), 2),
+                                'custo_equipamento' => self::formatPtBrNumber((float)($item['custo_equipamento'] ?? 0), 2),
+                                'classificacao_custo' => $item['classificacao_custo'] ?? null,
+                                'ordem' => $ordem,
+                            ];
+                            $ordem++;
+                        }
+                        if (!empty($rows)) {
+                            return $rows;
+                        }
+                    }
+                    
+                    // Formato antigo: estrutura complexa com servicos_preliminares e obra
                     $rows = [];
                     $ordem = 1;
 
