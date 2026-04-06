@@ -743,13 +743,16 @@ function salvarNomeGrupo(grupoAtual, novoNome, tr, btnElement) {
     // Buscar o ID do grupo na tabela orcamento_opcoes
     fetch('/?route=orcamentos/buscarIdGrupo', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         body: 'nome=' + encodeURIComponent(grupoAtual)
     })
     .then(r => r.json())
     .then(data => {
         if (!data.id) {
-            alert('Erro: Grupo não encontrado no sistema');
+            alert('Erro: ' + (data.error || 'Grupo não encontrado no sistema'));
             cancelarEdicaoGrupo(tr, btnElement, grupoAtual);
             return;
         }
