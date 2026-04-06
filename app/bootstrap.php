@@ -30,6 +30,10 @@ set_exception_handler(static function (\Throwable $e): void {
 
     http_response_code(500);
     $debug = ((string)($_GET['debug'] ?? '') === '1') || ((string)getenv('APP_DEBUG') === '1');
+    
+    // SEMPRE mostrar erro detalhado (remova esta linha em produção)
+    $debug = true;
+    
     if ($debug) {
         header('Content-Type: text/plain; charset=utf-8');
         echo "Exception: " . get_class($e) . "\n";
