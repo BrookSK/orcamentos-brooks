@@ -101,6 +101,12 @@ declare(strict_types=1);
                 <input name="percentual_impostos" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['percentual_impostos'] ?? '0')); ?>">
                 <div class="muted" style="font-size:12px;margin-top:4px;">Percentual sobre o valor da obra (ex: 8.65 para 8,65%)</div>
             </div>
+            
+            <div class="field">
+                <label>Valor de Entrada (R$)</label>
+                <input name="valor_entrada" inputmode="decimal" value="<?php echo htmlspecialchars((string)($orcamento['valor_entrada'] ?? '0')); ?>">
+                <div class="muted" style="font-size:12px;margin-top:4px;">Valor já pago pelo cliente como entrada (ex: 50000.00)</div>
+            </div>
 
             <div class="field">
                 <label>% Margem Mão de Obra (Padrão)</label>

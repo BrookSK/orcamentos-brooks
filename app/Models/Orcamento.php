@@ -142,6 +142,7 @@ final class Orcamento
             . ' capa_path_4 = :capa_path_4,'
             . ' percentual_custos_adm = :percentual_custos_adm,'
             . ' percentual_impostos = :percentual_impostos,'
+            . ' valor_entrada = :valor_entrada,'
             . ' margem_mao_obra = :margem_mao_obra,'
             . ' margem_materiais = :margem_materiais,'
             . ' margem_equipamentos = :margem_equipamentos,'
@@ -178,6 +179,7 @@ final class Orcamento
             ':capa_path_4' => $data['capa_path_4'] !== '' ? (string)$data['capa_path_4'] : null,
             ':percentual_custos_adm' => (float)($data['percentual_custos_adm'] ?? 0),
             ':percentual_impostos' => (float)($data['percentual_impostos'] ?? 0),
+            ':valor_entrada' => (float)($data['valor_entrada'] ?? 0),
             ':margem_mao_obra' => (float)($data['margem_mao_obra'] ?? 0),
             ':margem_materiais' => (float)($data['margem_materiais'] ?? 0),
             ':margem_equipamentos' => (float)($data['margem_equipamentos'] ?? 20),
@@ -236,6 +238,7 @@ final class Orcamento
             'capa_path_4',
             'percentual_custos_adm',
             'percentual_impostos',
+            'valor_entrada',
             'margem_mao_obra',
             'margem_materiais',
             'margem_equipamentos',
@@ -251,6 +254,7 @@ final class Orcamento
         $out['prazo_dias'] = $out['prazo_dias'] !== '' ? (string)(int)$out['prazo_dias'] : '';
         $out['percentual_custos_adm'] = $out['percentual_custos_adm'] !== '' ? self::parsePtBrNumber((string)$out['percentual_custos_adm']) : 0.0;
         $out['percentual_impostos'] = $out['percentual_impostos'] !== '' ? self::parsePtBrNumber((string)$out['percentual_impostos']) : 0.0;
+        $out['valor_entrada'] = $out['valor_entrada'] !== '' ? self::parsePtBrNumber((string)$out['valor_entrada']) : 0.0;
         $out['margem_mao_obra'] = $out['margem_mao_obra'] !== '' ? self::parsePtBrNumber((string)$out['margem_mao_obra']) : 50.0;
         $out['margem_materiais'] = $out['margem_materiais'] !== '' ? self::parsePtBrNumber((string)$out['margem_materiais']) : 20.0;
         $out['margem_equipamentos'] = $out['margem_equipamentos'] !== '' ? self::parsePtBrNumber((string)$out['margem_equipamentos']) : 20.0;
