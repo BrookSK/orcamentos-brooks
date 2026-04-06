@@ -167,15 +167,14 @@ final class OrcamentoPDF
         $html .= '<th class="right" style="width:23%;">PREÇO / m2</th>';
         $html .= '</tr></thead><tbody>';
         
-        foreach ($grupos as $grupoNome => $grupoData) {
-            $totalGrupo = $grupoData['total'];
-            $pctObra = $totalGeral > 0 ? ($totalGrupo / $totalGeral) * 100 : 0;
-            $precoM2 = $areaTotal > 0 ? $totalGrupo / $areaTotal : 0;
+        foreach ($categoriasAgrupadas as $categoriaNome => $totalCategoria) {
+            $pctObra = $totalGeral > 0 ? ($totalCategoria / $totalGeral) * 100 : 0;
+            $precoM2 = $areaTotal > 0 ? $totalCategoria / $areaTotal : 0;
             
             $html .= sprintf(
                 '<tr><td class="left">%s</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="center">%s</td><td class="right">R$ %s</td></tr>',
-                htmlspecialchars(strtoupper($grupoNome)),
-                self::formatarValor($totalGrupo),
+                htmlspecialchars(strtoupper($categoriaNome)),
+                self::formatarValor($totalCategoria),
                 number_format($pctObra, 2, ',', '.'),
                 number_format($areaTotal, 2, ',', '.'),
                 self::formatarValor($precoM2)
@@ -1221,98 +1220,81 @@ HTML;
                     
                     // VALOR A PAGAR = valor concluído que ainda não foi pago
                     $valorAPagar = $totalAPagarCategoria;
-                    
-                    $html .= '<tr>';
-                    $html .= '<td class="left">' . htmlspecialchars($nomeCategoria) . '</td>';
-                    $html .= '<td class="right">R$ ' . self::formatarValor($totalCategoria) . '</td>';
-                    $html .= '<td class="center">' . number_format($percentualNaEtapa, 2, ',', '.') . '%</td>';
-                    $html .= '<td class="right">R$ ' . self::formatarValor($totalConcluidoCategoria) . '</td>';
-                    $html .= '<td class="center">' . number_format($percentualConcluidoNaObra, 2, ',', '.') . '%</td>';
-                    $html .= '<td class="right">R$ ' . self::formatarValor($valorAPagar) . '</td>';
-                    $html .= '<td class="center">' . number_format($percentualAPagar, 2, ',', '.') . '%</td>';
-                    $html .= '</tr>';
-                }
                 
-                // Subtotal do grupo
-                $percentualGrupoNaEtapa = $totalEtapa > 0 
-                    ? ($totalGrupo / $totalEtapa) * 100 
-                    : 0.0;
-                
-                // % OBRA do grupo = quanto da OBRA TOTAL o grupo representa considerando o que foi concluído
-                $percentualConcluidoGrupoNaObra = $totalGeralObra > 0 
-                    ? ($totalConcluidoGrupo / $totalGeralObra) * 100 
-                    : 0.0;
-                
-                // % DO SALDO RESTANTE do grupo
-                $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
-                $saldoAPagar = $totalGeralObra - $valorEntrada;
-                $percentualAPagarGrupo = $saldoAPagar > 0 
-                    ? ($totalAPagarGrupo / $saldoAPagar) * 100 
-                    : 0.0;
-                
-                // VALOR A PAGAR do grupo = valor concluído que ainda não foi pago
-                $valorAPagarGrupo = $totalAPagarGrupo;
-                
-                $html .= '<tr style="background:#2C3E50 !important;color:#FFF !important;font-weight:bold;">';
-                $html .= '<td class="left" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
-                $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($totalGrupo) . '</td>';
-                $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualGrupoNaEtapa, 2, ',', '.') . '%</td>';
-                $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($totalConcluidoGrupo) . '</td>';
-                $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualConcluidoGrupoNaObra, 2, ',', '.') . '%</td>';
-                $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($valorAPagarGrupo) . '</td>';
-                $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualAPagarGrupo, 2, ',', '.') . '%</td>';
+                $html .= '<tr>';
+                $html .= '<td class="left">' . htmlspecialchars($nomeCategoria) . '</td>';
+                $html .= '<td class="right">R$ ' . self::formatarValor($totalCategoria) . '</td>';
+                $html .= '<td class="center">' . number_format($percentualNoGrupo, 2, ',', '.') . '%</td>';
+                $html .= '<td class="right">R$ ' . self::formatarValor($totalConcluidoCategoria) . '</td>';
+                $html .= '<td class="center">' . number_format($percentualConcluidoNaObra, 2, ',', '.') . '%</td>';
+                $html .= '<td class="right">R$ ' . self::formatarValor($valorAPagar) . '</td>';
+                $html .= '<td class="center">' . number_format($percentualAPagar, 2, ',', '.') . '%</td>';
                 $html .= '</tr>';
-                
-                $html .= '</tbody></table>';
             }
             
-            // Subtotal da etapa
-            $percentualEtapaNaObra = $totalGeralObra > 0 
-                ? ($totalEtapa / $totalGeralObra) * 100 
+            // Subtotal do grupo
+            $percentualGrupoNaObra = $totalGeralObra > 0 
+                ? ($totalGrupo / $totalGeralObra) * 100 
                 : 0.0;
             
-            $percentualConcluidoEtapa = $totalEtapa > 0 
-                ? ($totalConcluidoEtapa / $totalEtapa) * 100 
+            // % OBRA do grupo = quanto da OBRA TOTAL o grupo representa considerando o que foi concluído
+            $percentualConcluidoGrupoNaObra = $totalGeralObra > 0 
+                ? ($totalConcluidoGrupo / $totalGeralObra) * 100 
                 : 0.0;
             
-            $html .= '<div style="background:#1a237e;color:#FFF;padding:10px;margin:10px 0;font-weight:bold;font-size:14px;">';
-            $html .= 'SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeEtapa));
-            $html .= ' | Valor: R$ ' . self::formatarValor($totalEtapa);
-            $html .= ' | % na Obra: ' . number_format($percentualEtapaNaObra, 2, ',', '.') . '%';
-            $html .= ' | % Concluído: ' . number_format($percentualConcluidoEtapa, 2, ',', '.') . '%';
-            $html .= '</div>';
+            // % DO SALDO RESTANTE do grupo
+            $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
+            $saldoAPagar = $totalGeralObra - $valorEntrada;
+            $percentualAPagarGrupo = $saldoAPagar > 0 
+                ? ($totalAPagarGrupo / $saldoAPagar) * 100 
+                : 0.0;
+            
+            // VALOR A PAGAR do grupo = valor concluído que ainda não foi pago
+            $valorAPagarGrupo = $totalAPagarGrupo;
+            
+            $html .= '<tr style="background:#2C3E50 !important;color:#FFF !important;font-weight:bold;">';
+            $html .= '<td class="left" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
+            $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($totalGrupo) . '</td>';
+            $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">100,00%</td>';
+            $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($totalConcluidoGrupo) . '</td>';
+            $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualConcluidoGrupoNaObra, 2, ',', '.') . '%</td>';
+            $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($valorAPagarGrupo) . '</td>';
+            $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualAPagarGrupo, 2, ',', '.') . '%</td>';
+            $html .= '</tr>';
+            
+            $html .= '</tbody></table>';
         }
         
         // Rodapé geral consolidado
         $html .= '<div style="margin-top:40px;">';
         $html .= '<div style="font-weight:700; font-size:16px; margin-bottom:15px; text-align:center;">RESUMO GERAL</div>';
         
-        // Tabela de resumo por etapa usando a classe table-detalhes
+        // Tabela de resumo por grupo usando a classe table-detalhes
         $html .= '<table class="table-detalhes">';
         $html .= '<thead><tr>';
-        $html .= '<th class="left" style="width:30%;">ETAPA</th>';
+        $html .= '<th class="left" style="width:30%;">GRUPO</th>';
         $html .= '<th class="right" style="width:20%;">VLR TOTAL</th>';
         $html .= '<th class="center" style="width:15%;">% OBRA</th>';
         $html .= '<th class="right" style="width:20%;">VLR CONCLUÍDO</th>';
         $html .= '<th class="center" style="width:15%;">% CONCLUÍDO</th>';
         $html .= '</tr></thead><tbody>';
         
-        foreach ($totaisPorEtapa as $nomeEtapa => $valorEtapa) {
-            $percentualEtapa = $totalGeralObra > 0 
-                ? ($valorEtapa / $totalGeralObra) * 100 
+        foreach ($totaisPorGrupo as $nomeGrupo => $valorGrupo) {
+            $percentualGrupo = $totalGeralObra > 0 
+                ? ($valorGrupo / $totalGeralObra) * 100 
                 : 0.0;
             
-            $valorConcluidoEtapa = $totaisConcluidosPorEtapa[$nomeEtapa];
-            $percentualConcluidoEtapa = $valorEtapa > 0 
-                ? ($valorConcluidoEtapa / $valorEtapa) * 100 
+            $valorConcluidoGrupo = $totaisConcluidosPorGrupo[$nomeGrupo];
+            $percentualConcluidoGrupo = $valorGrupo > 0 
+                ? ($valorConcluidoGrupo / $valorGrupo) * 100 
                 : 0.0;
             
             $html .= '<tr>';
-            $html .= '<td class="left">' . htmlspecialchars(strtoupper($nomeEtapa)) . '</td>';
-            $html .= '<td class="right">R$ ' . self::formatarValor($valorEtapa) . '</td>';
-            $html .= '<td class="center">' . number_format($percentualEtapa, 2, ',', '.') . '%</td>';
-            $html .= '<td class="right">R$ ' . self::formatarValor($valorConcluidoEtapa) . '</td>';
-            $html .= '<td class="center">' . number_format($percentualConcluidoEtapa, 2, ',', '.') . '%</td>';
+            $html .= '<td class="left">' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
+            $html .= '<td class="right">R$ ' . self::formatarValor($valorGrupo) . '</td>';
+            $html .= '<td class="center">' . number_format($percentualGrupo, 2, ',', '.') . '%</td>';
+            $html .= '<td class="right">R$ ' . self::formatarValor($valorConcluidoGrupo) . '</td>';
+            $html .= '<td class="center">' . number_format($percentualConcluidoGrupo, 2, ',', '.') . '%</td>';
             $html .= '</tr>';
         }
         
@@ -1366,24 +1348,20 @@ HTML;
         // BDI global padrão
         $bdiGlobal = (float)($orcamento['margem_global'] ?? 18.0);
         
-        // Agrupar por ETAPA > GRUPO > CATEGORIA (3 níveis hierárquicos)
+        // Agrupar EXATAMENTE como na tela de edição: GRUPO > CATEGORIA
         $grouped = [];
         foreach ($itens as $item) {
-            $etapa = (string)($item['etapa'] ?? 'SEM ETAPA');
             $grupo = (string)($item['grupo'] ?? 'SEM GRUPO');
             $categoria = (string)($item['categoria'] ?? 'SEM CATEGORIA');
             
-            if (!isset($grouped[$etapa])) {
-                $grouped[$etapa] = [];
+            if (!isset($grouped[$grupo])) {
+                $grouped[$grupo] = [];
             }
-            if (!isset($grouped[$etapa][$grupo])) {
-                $grouped[$etapa][$grupo] = [];
-            }
-            if (!isset($grouped[$etapa][$grupo][$categoria])) {
-                $grouped[$etapa][$grupo][$categoria] = [];
+            if (!isset($grouped[$grupo][$categoria])) {
+                $grouped[$grupo][$categoria] = [];
             }
             
-            $grouped[$etapa][$grupo][$categoria][] = $item;
+            $grouped[$grupo][$categoria][] = $item;
         }
 
         $html = '<div class="page"><div class="page-title">PLANILHA ORÇAMENTÁRIA</div>';
@@ -1391,54 +1369,43 @@ HTML;
 
         // PRIMEIRO: Pré-calcular total geral da obra
         $totalGeralObra = 0.0;
-        foreach ($grouped as $etapa => $grupos) {
-            foreach ($grupos as $grupo => $categorias) {
-                foreach ($categorias as $categoria => $itensCategoria) {
-                    foreach ($itensCategoria as $item) {
-                        // Calcular valor usando custos + BDI
-                        $quantidade = (float)($item['quantidade'] ?? 0);
-                        $custoMat = (float)($item['custo_material'] ?? 0);
-                        $custoMo = (float)($item['custo_mao_obra'] ?? 0);
-                        $custoEquip = (float)($item['custo_equipamento'] ?? 0);
-                        
-                        $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
-                        $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
-                        
-                        $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
-                            ? $margemPersonalizada 
-                            : $bdiGlobal;
-                        
-                        $fatorBDI = 1 + ($bdi / 100);
-                        
-                        $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
-                        $vlrUnitMo = $custoMo * $fatorBDI;
-                        $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
-                        $vlrTotal = $vlrUnitTotal * $quantidade;
-                        
-                        $totalGeralObra += $vlrTotal;
-                    }
+        foreach ($grouped as $grupo => $categorias) {
+            foreach ($categorias as $categoria => $itensCategoria) {
+                foreach ($itensCategoria as $item) {
+                    // Calcular valor usando custos + BDI
+                    $quantidade = (float)($item['quantidade'] ?? 0);
+                    $custoMat = (float)($item['custo_material'] ?? 0);
+                    $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+                    
+                    $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+                    $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                    
+                    $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                        ? $margemPersonalizada 
+                        : $bdiGlobal;
+                    
+                    $fatorBDI = 1 + ($bdi / 100);
+                    
+                    $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+                    $vlrUnitMo = $custoMo * $fatorBDI;
+                    $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+                    $vlrTotal = $vlrUnitTotal * $quantidade;
+                    
+                    $totalGeralObra += $vlrTotal;
                 }
             }
         }
 
-        // Processar cada ETAPA (fase)
-        foreach ($grouped as $nomeEtapa => $grupos) {
-            $html .= '<!-- PROCESSANDO ETAPA: ' . htmlspecialchars($nomeEtapa) . ' com ' . count($grupos) . ' grupos -->';
+        // Processar cada GRUPO
+        foreach ($grouped as $nomeGrupo => $categorias) {
+            $html .= '<!-- PROCESSANDO GRUPO: ' . htmlspecialchars($nomeGrupo) . ' com ' . count($categorias) . ' categorias -->';
             
-            // Banner da ETAPA (azul escuro)
-            $html .= '<div class="banner-etapa" style="background:#1a237e;color:#FFF;padding:12px;margin:20px 0 10px 0;font-weight:bold;font-size:16px;">' . htmlspecialchars(strtoupper($nomeEtapa)) . '</div>';
+            // Banner do GRUPO (azul)
+            $html .= '<div class="banner-etapa" style="background:#1e3a5f;color:#FFF;padding:12px;margin:20px 0 10px 0;font-weight:bold;font-size:16px;">' . htmlspecialchars(strtoupper($nomeGrupo)) . '</div>';
             
-            $subtotalEtapa = 0.0;
-            $totalConcluidoEtapa = 0.0;
-            
-            // Processar cada GRUPO dentro da etapa
-            foreach ($grupos as $nomeGrupo => $categorias) {
-                $html .= '<!-- PROCESSANDO GRUPO: ' . htmlspecialchars($nomeGrupo) . ' com ' . count($categorias) . ' categorias -->';
-                
-                // Banner do GRUPO (azul médio)
-                $html .= '<div class="banner-etapa" style="background:#2C3350;color:#FFF;padding:10px;margin:15px 0 8px 0;font-weight:bold;font-size:14px;">' . htmlspecialchars(strtoupper($nomeGrupo)) . '</div>';
-                
-                $subtotalGrupo = 0.0;
+            $subtotalGrupo = 0.0;
+            $totalConcluidoGrupo = 0.0;
                 
                 // Tabela com 14 colunas (adicionando VLR CONCLUÍDO, % OBRA, VLR A PAGAR, % DO SALDO RESTANTE)
                 $html .= '<table class="table-detalhes">';
@@ -1643,64 +1610,41 @@ HTML;
                 $html .= '</tr>';
                 
                 $html .= '</tbody></table>';
-                
-                $subtotalEtapa += $subtotalGrupo;
-                $totalConcluidoEtapa += $totalConcluidoGrupo;
-            }
-            
-            // Subtotal da ETAPA (após todos os grupos)
-            $percentualConcluidoEtapa = $subtotalEtapa > 0 
-                ? ($totalConcluidoEtapa / $subtotalEtapa) * 100 
-                : 0.0;
-            
-            $pctObraEtapa = $totalGeralObra > 0 ? ($totalConcluidoEtapa / $totalGeralObra) * 100 : 0.0;
-            $pctSaldoEtapa = ($totalGeralObra - $valorEntrada) > 0 ? ($totalConcluidoEtapa / ($totalGeralObra - $valorEntrada)) * 100 : 0.0;
-            
-            $html .= '<div style="background:#1a237e;color:#FFF;padding:10px;margin:10px 0;font-weight:bold;font-size:14px;">';
-            $html .= 'SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeEtapa));
-            $html .= ' | Valor: R$ ' . self::formatarValor($subtotalEtapa);
-            $html .= ' | Vlr Concluído: R$ ' . self::formatarValor($totalConcluidoEtapa);
-            $html .= ' | % Obra: ' . number_format($pctObraEtapa, 2, ',', '.') . '%';
-            $html .= ' | Vlr A Pagar: R$ ' . self::formatarValor($totalConcluidoEtapa);
-            $html .= ' | % do Saldo Restante: ' . number_format($pctSaldoEtapa, 2, ',', '.') . '%';
-            $html .= '</div>';
         }
         
         // Calcular totais gerais de todos os itens executados e a pagar
         $totalConcluidoGeral = 0.0;
         $totalAPagarGeral = 0.0;
-        foreach ($grouped as $etapa => $grupos) {
-            foreach ($grupos as $grupo => $categorias) {
-                foreach ($categorias as $categoria => $itensCategoria) {
-                    foreach ($itensCategoria as $item) {
-                        $quantidade = (float)($item['quantidade'] ?? 0);
-                        $custoMat = (float)($item['custo_material'] ?? 0);
-                        $custoMo = (float)($item['custo_mao_obra'] ?? 0);
-                        $custoEquip = (float)($item['custo_equipamento'] ?? 0);
-                        $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
-                        $pagamentoRealizado = (int)($item['pagamento_realizado'] ?? 0);
-                        
-                        $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
-                        $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
-                        
-                        $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
-                            ? $margemPersonalizada 
-                            : $bdiGlobal;
-                        
-                        $fatorBDI = 1 + ($bdi / 100);
-                        
-                        $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
-                        $vlrUnitMo = $custoMo * $fatorBDI;
-                        $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
-                        $vlrTotal = $vlrUnitTotal * $quantidade;
-                        
-                        $vlrConcluido = $vlrTotal * ($percentualRealizado / 100);
-                        $totalConcluidoGeral += $vlrConcluido;
-                        
-                        // Só conta como "a pagar" se não foi pago
-                        if (!$pagamentoRealizado) {
-                            $totalAPagarGeral += $vlrConcluido;
-                        }
+        foreach ($grouped as $grupo => $categorias) {
+            foreach ($categorias as $categoria => $itensCategoria) {
+                foreach ($itensCategoria as $item) {
+                    $quantidade = (float)($item['quantidade'] ?? 0);
+                    $custoMat = (float)($item['custo_material'] ?? 0);
+                    $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+                    $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+                    $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+                    $pagamentoRealizado = (int)($item['pagamento_realizado'] ?? 0);
+                    
+                    $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+                    $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                    
+                    $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                        ? $margemPersonalizada 
+                        : $bdiGlobal;
+                    
+                    $fatorBDI = 1 + ($bdi / 100);
+                    
+                    $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+                    $vlrUnitMo = $custoMo * $fatorBDI;
+                    $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+                    $vlrTotal = $vlrUnitTotal * $quantidade;
+                    
+                    $vlrConcluido = $vlrTotal * ($percentualRealizado / 100);
+                    $totalConcluidoGeral += $vlrConcluido;
+                    
+                    // Só conta como "a pagar" se não foi pago
+                    if (!$pagamentoRealizado) {
+                        $totalAPagarGeral += $vlrConcluido;
                     }
                 }
             }
