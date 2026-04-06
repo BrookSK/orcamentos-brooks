@@ -842,7 +842,7 @@ HTML;
             $html .= '<th class="right" style="width:11%;">VLR CONCLUÍDO</th>';
             $html .= '<th class="center" style="width:7%;">% Obra</th>';
             $html .= '<th class="right" style="width:11%;">VLR A PAGAR</th>';
-            $html .= '<th class="center" style="width:7%;">% Saldo</th>';
+            $html .= '<th class="center" style="width:7%;">% do Saldo Restante</th>';
             $html .= '<th class="center" style="width:12%;">Status</th>';
             $html .= '</tr></thead><tbody>';
             
@@ -1074,7 +1074,7 @@ HTML;
                 $html .= '<th class="right" style="width:12%;">VLR CONCLUÍDO</th>';
                 $html .= '<th class="center" style="width:8%;">% OBRA</th>';
                 $html .= '<th class="right" style="width:12%;">VLR A PAGAR</th>';
-                $html .= '<th class="center" style="width:8%;">% SALDO</th>';
+                $html .= '<th class="center" style="width:8%;">% DO SALDO RESTANTE</th>';
                 $html .= '</tr></thead><tbody>';
                 
                 // Listar categorias do grupo
@@ -1091,7 +1091,7 @@ HTML;
                         ? ($totalConcluidoCategoria / $totalGeralObra) * 100 
                         : 0.0;
                     
-                    // % SALDO = quanto representa do saldo restante (após entrada)
+                    // % DO SALDO RESTANTE = quanto representa do saldo restante (após entrada)
                     $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
                     $saldoAPagar = $totalGeralObra - $valorEntrada;
                     $percentualAPagar = $saldoAPagar > 0 
@@ -1122,7 +1122,7 @@ HTML;
                     ? ($totalConcluidoGrupo / $totalGeralObra) * 100 
                     : 0.0;
                 
-                // % SALDO do grupo
+                // % DO SALDO RESTANTE do grupo
                 $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
                 $saldoAPagar = $totalGeralObra - $valorEntrada;
                 $percentualAPagarGrupo = $saldoAPagar > 0 
@@ -1319,7 +1319,7 @@ HTML;
                 
                 $subtotalGrupo = 0.0;
                 
-                // Tabela com 14 colunas (adicionando VLR CONCLUÍDO, % OBRA, VLR A PAGAR, % SALDO)
+                // Tabela com 14 colunas (adicionando VLR CONCLUÍDO, % OBRA, VLR A PAGAR, % DO SALDO RESTANTE)
                 $html .= '<table class="table-detalhes">';
                 $html .= '<thead><tr>';
                 $html .= '<th class="left" style="width:5%;">Cód.</th>';
@@ -1334,7 +1334,7 @@ HTML;
                 $html .= '<th class="right" style="width:7%;">Vlr Concluído</th>';
                 $html .= '<th class="center" style="width:5%;">% Obra</th>';
                 $html .= '<th class="right" style="width:7%;">Vlr A Pagar</th>';
-                $html .= '<th class="center" style="width:5%;">% Saldo</th>';
+                $html .= '<th class="center" style="width:5%;">% do Saldo Restante</th>';
                 $html .= '<th class="center" style="width:7%;">Status</th>';
                 $html .= '</tr></thead><tbody>';
 
@@ -1535,7 +1535,7 @@ HTML;
             $html .= ' | Vlr Concluído: R$ ' . self::formatarValor($totalConcluidoEtapa);
             $html .= ' | % Obra: ' . number_format($pctObraEtapa, 2, ',', '.') . '%';
             $html .= ' | Vlr A Pagar: R$ ' . self::formatarValor($totalConcluidoEtapa);
-            $html .= ' | % Saldo: ' . number_format($pctSaldoEtapa, 2, ',', '.') . '%';
+            $html .= ' | % do Saldo Restante: ' . number_format($pctSaldoEtapa, 2, ',', '.') . '%';
             $html .= '</div>';
         }
         
