@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Database;
 use App\Core\Logger;
 use App\Models\Orcamento;
 use App\Models\OrcamentoAdequacao;
