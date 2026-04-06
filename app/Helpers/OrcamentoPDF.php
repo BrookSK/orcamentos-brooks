@@ -1319,23 +1319,28 @@ HTML;
                 
                 $subtotalGrupo = 0.0;
                 
-                // Tabela com 11 colunas
+                // Tabela com 14 colunas (adicionando VLR CONCLUÍDO, % OBRA, VLR A PAGAR, % SALDO)
                 $html .= '<table class="table-detalhes">';
                 $html .= '<thead><tr>';
-                $html .= '<th class="left" style="width:6%;">Cód.</th>';
-                $html .= '<th class="left" style="width:20%;">Descrição</th>';
-                $html .= '<th class="center" style="width:4%;">Un</th>';
-                $html .= '<th class="center" style="width:5%;">Qtd</th>';
-                $html .= '<th class="right" style="width:8%;">Vlr Unit. Mat.</th>';
-                $html .= '<th class="right" style="width:8%;">Vlr Unit. M.O.</th>';
-                $html .= '<th class="right" style="width:9%;">Vlr Unit. Total</th>';
-                $html .= '<th class="right" style="width:10%;">Vlr Total</th>';
-                $html .= '<th class="center" style="width:6%;">% Etapa</th>';
-                $html .= '<th class="center" style="width:7%;">% Concluído</th>';
-                $html .= '<th class="center" style="width:9%;">Status</th>';
+                $html .= '<th class="left" style="width:5%;">Cód.</th>';
+                $html .= '<th class="left" style="width:16%;">Descrição</th>';
+                $html .= '<th class="center" style="width:3%;">Un</th>';
+                $html .= '<th class="center" style="width:4%;">Qtd</th>';
+                $html .= '<th class="right" style="width:7%;">Vlr Unit. Mat.</th>';
+                $html .= '<th class="right" style="width:7%;">Vlr Unit. M.O.</th>';
+                $html .= '<th class="right" style="width:7%;">Vlr Unit.Total</th>';
+                $html .= '<th class="right" style="width:8%;">Vlr Total</th>';
+                $html .= '<th class="center" style="width:5%;">% Etapa</th>';
+                $html .= '<th class="right" style="width:7%;">Vlr Concluído</th>';
+                $html .= '<th class="center" style="width:5%;">% Obra</th>';
+                $html .= '<th class="right" style="width:7%;">Vlr A Pagar</th>';
+                $html .= '<th class="center" style="width:5%;">% Saldo</th>';
+                $html .= '<th class="center" style="width:7%;">Status</th>';
                 $html .= '</tr></thead><tbody>';
 
-                // Calcular subtotal do grupo primeiro
+                // Calcular subtotal do grupo primeiro e obter valor de entrada
+                $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
+                $saldoAPagar = $totalGeralObra - $valorEntrada;
                 foreach ($categorias as $categoria => $itensCategoria) {
                     foreach ($itensCategoria as $item) {
                         $quantidade = (float)($item['quantidade'] ?? 0);
@@ -1367,7 +1372,7 @@ HTML;
                     
                     // Linha de cabeçalho da CATEGORIA (cinza)
                     $html .= '<tr>';
-                    $html .= '<td colspan="11" class="left" style="padding:8px;background:#4A5568;color:#FFF;font-weight:bold;border:1px solid #4A5568;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
+                    $html .= '<td colspan="14" class="left" style="padding:8px;background:#4A5568;color:#FFF;font-weight:bold;border:1px solid #4A5568;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
                     $html .= '</tr>';
                     
                     $subtotalCategoria = 0.0;
@@ -1400,8 +1405,11 @@ HTML;
                         
                         $pctEtapa = $subtotalGrupo > 0 ? ($vlrTotal / $subtotalGrupo) * 100 : 0.0;
                         
-                        // % CONCLUÍDO
-                        $percentualConcluido = $percentualRealizado;
+                        // Calcular valores concluídos e a pagar
+                        $vlrConcluido = $vlrTotal * ($percentualRealizado / 100);
+                        $pctObra = $totalGeralObra > 0 ? ($vlrConcluido / $totalGeralObra) * 100 : 0.0;
+                        $vlrAPagar = $vlrConcluido;
+                        $pctSaldo = $saldoAPagar > 0 ? ($vlrConcluido / $saldoAPagar) * 100 : 0.0;
                         
                         // Determinar status baseado no percentual realizado
                         $status = '';
@@ -1436,21 +1444,26 @@ HTML;
                         $html .= '<td class="right">R$ ' . self::formatarValor($vlrUnitTotal) . '</td>';
                         $html .= '<td class="right">R$ ' . self::formatarValor($vlrTotal) . '</td>';
                         $html .= '<td class="center">' . number_format($pctEtapa, 2, ',', '.') . '%</td>';
-                        $html .= '<td class="center">' . number_format($percentualConcluido, 2, ',', '.') . '%</td>';
+                        $html .= '<td class="right">R$ ' . self::formatarValor($vlrConcluido) . '</td>';
+                        $html .= '<td class="center">' . number_format($pctObra, 2, ',', '.') . '%</td>';
+                        $html .= '<td class="right">R$ ' . self::formatarValor($vlrAPagar) . '</td>';
+                        $html .= '<td class="center">' . number_format($pctSaldo, 2, ',', '.') . '%</td>';
                         $html .= '<td class="center" style="' . $statusColor . '">' . $status . '</td>';
                         $html .= '</tr>';
                     }
                     
                     // Subtotal da categoria
-                    $percentualConcluidoCategoria = $subtotalCategoria > 0 
-                        ? ($totalConcluidoCategoria / $subtotalCategoria) * 100 
-                        : 0.0;
+                    $pctObraCategoria = $totalGeralObra > 0 ? ($totalConcluidoCategoria / $totalGeralObra) * 100 : 0.0;
+                    $pctSaldoCategoria = $saldoAPagar > 0 ? ($totalConcluidoCategoria / $saldoAPagar) * 100 : 0.0;
                     
                     $html .= '<tr style="background:#E2E8F0 !important;font-weight:bold;">';
                     $html .= '<td colspan="7" class="left" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
                     $html .= '<td class="right" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">R$ ' . self::formatarValor($subtotalCategoria) . '</td>';
                     $html .= '<td class="center" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">—</td>';
-                    $html .= '<td class="center" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">' . number_format($percentualConcluidoCategoria, 2, ',', '.') . '%</td>';
+                    $html .= '<td class="right" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">R$ ' . self::formatarValor($totalConcluidoCategoria) . '</td>';
+                    $html .= '<td class="center" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">' . number_format($pctObraCategoria, 2, ',', '.') . '%</td>';
+                    $html .= '<td class="right" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">R$ ' . self::formatarValor($totalConcluidoCategoria) . '</td>';
+                    $html .= '<td class="center" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">' . number_format($pctSaldoCategoria, 2, ',', '.') . '%</td>';
                     $html .= '<td class="center" style="padding:6px;background:#E2E8F0 !important;border:1px solid #CCC;">—</td>';
                     $html .= '</tr>';
                 }
@@ -1487,12 +1500,18 @@ HTML;
                     ? ($totalConcluidoGrupo / $subtotalGrupo) * 100 
                     : 0.0;
                 
+                $pctObraGrupo = $totalGeralObra > 0 ? ($totalConcluidoGrupo / $totalGeralObra) * 100 : 0.0;
+                $pctSaldoGrupo = $saldoAPagar > 0 ? ($totalConcluidoGrupo / $saldoAPagar) * 100 : 0.0;
+                
                 // Linha de subtotal do GRUPO dentro da tabela
                 $html .= '<tr style="background:#2C3E50 !important;color:#FFF !important;font-weight:bold;">';
                 $html .= '<td colspan="7" class="left" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
                 $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">R$ ' . self::formatarValor($subtotalGrupo) . '</td>';
                 $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">—</td>';
-                $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">' . number_format($percentualConcluidoGrupo, 2, ',', '.') . '%</td>';
+                $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">R$ ' . self::formatarValor($totalConcluidoGrupo) . '</td>';
+                $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">' . number_format($pctObraGrupo, 2, ',', '.') . '%</td>';
+                $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">R$ ' . self::formatarValor($totalConcluidoGrupo) . '</td>';
+                $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">' . number_format($pctSaldoGrupo, 2, ',', '.') . '%</td>';
                 $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;border:1px solid #2C3E50 !important;">—</td>';
                 $html .= '</tr>';
                 
@@ -1507,17 +1526,89 @@ HTML;
                 ? ($totalConcluidoEtapa / $subtotalEtapa) * 100 
                 : 0.0;
             
+            $pctObraEtapa = $totalGeralObra > 0 ? ($totalConcluidoEtapa / $totalGeralObra) * 100 : 0.0;
+            $pctSaldoEtapa = ($totalGeralObra - $valorEntrada) > 0 ? ($totalConcluidoEtapa / ($totalGeralObra - $valorEntrada)) * 100 : 0.0;
+            
             $html .= '<div style="background:#1a237e;color:#FFF;padding:10px;margin:10px 0;font-weight:bold;font-size:14px;">';
             $html .= 'SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeEtapa));
             $html .= ' | Valor: R$ ' . self::formatarValor($subtotalEtapa);
-            $html .= ' | % Concluído: ' . number_format($percentualConcluidoEtapa, 2, ',', '.') . '%';
+            $html .= ' | Vlr Concluído: R$ ' . self::formatarValor($totalConcluidoEtapa);
+            $html .= ' | % Obra: ' . number_format($pctObraEtapa, 2, ',', '.') . '%';
+            $html .= ' | Vlr A Pagar: R$ ' . self::formatarValor($totalConcluidoEtapa);
+            $html .= ' | % Saldo: ' . number_format($pctSaldoEtapa, 2, ',', '.') . '%';
             $html .= '</div>';
         }
         
-        $html .= sprintf(
-            '<div class="total-obra">VALOR TOTAL DE OBRA: R$ %s</div>',
-            self::formatarValor($totalGeralObra)
-        );
+        // Calcular totais gerais de todos os itens executados
+        $totalConcluidoGeral = 0.0;
+        foreach ($grouped as $etapa => $grupos) {
+            foreach ($grupos as $grupo => $categorias) {
+                foreach ($categorias as $categoria => $itensCategoria) {
+                    foreach ($itensCategoria as $item) {
+                        $quantidade = (float)($item['quantidade'] ?? 0);
+                        $custoMat = (float)($item['custo_material'] ?? 0);
+                        $custoMo = (float)($item['custo_mao_obra'] ?? 0);
+                        $custoEquip = (float)($item['custo_equipamento'] ?? 0);
+                        $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+                        
+                        $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
+                        $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
+                        
+                        $bdi = $usaMargemPersonalizada && $margemPersonalizada > 0 
+                            ? $margemPersonalizada 
+                            : $bdiGlobal;
+                        
+                        $fatorBDI = 1 + ($bdi / 100);
+                        
+                        $vlrUnitMat = ($custoMat + $custoEquip) * $fatorBDI;
+                        $vlrUnitMo = $custoMo * $fatorBDI;
+                        $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
+                        $vlrTotal = $vlrUnitTotal * $quantidade;
+                        
+                        $totalConcluidoGeral += $vlrTotal * ($percentualRealizado / 100);
+                    }
+                }
+            }
+        }
+        
+        $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
+        $saldoAPagar = $totalGeralObra - $valorEntrada;
+        $pctObraGeral = $totalGeralObra > 0 ? ($totalConcluidoGeral / $totalGeralObra) * 100 : 0.0;
+        $pctSaldoGeral = $saldoAPagar > 0 ? ($totalConcluidoGeral / $saldoAPagar) * 100 : 0.0;
+        
+        $html .= '<div style="margin-top:30px;padding:20px;background:#f8f9fa;border:2px solid #1a237e;">';
+        $html .= '<div style="font-weight:700;font-size:18px;margin-bottom:15px;text-align:center;color:#1a237e;">RESUMO GERAL DE EXECUÇÃO</div>';
+        $html .= '<table style="width:100%;border-collapse:collapse;">';
+        $html .= '<tr style="background:#1a237e;color:#FFF;font-weight:bold;">';
+        $html .= '<td style="padding:10px;border:1px solid #1a237e;">VALOR TOTAL DA OBRA</td>';
+        $html .= '<td style="padding:10px;border:1px solid #1a237e;text-align:right;">R$ ' . self::formatarValor($totalGeralObra) . '</td>';
+        $html .= '</tr>';
+        $html .= '<tr style="background:#e3f2fd;">';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;">VALOR DE ENTRADA</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">R$ ' . self::formatarValor($valorEntrada) . '</td>';
+        $html .= '</tr>';
+        $html .= '<tr style="background:#fff;">';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;">SALDO A PAGAR</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">R$ ' . self::formatarValor($saldoAPagar) . '</td>';
+        $html .= '</tr>';
+        $html .= '<tr style="background:#c8e6c9;">';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;font-weight:bold;">VALOR TOTAL EXECUTADO</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;font-weight:bold;">R$ ' . self::formatarValor($totalConcluidoGeral) . '</td>';
+        $html .= '</tr>';
+        $html .= '<tr style="background:#fff;">';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;">% DA OBRA EXECUTADA</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">' . number_format($pctObraGeral, 2, ',', '.') . '%</td>';
+        $html .= '</tr>';
+        $html .= '<tr style="background:#fff3cd;font-weight:bold;">';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;">VALOR A PAGAR (EXECUTADO)</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">R$ ' . self::formatarValor($totalConcluidoGeral) . '</td>';
+        $html .= '</tr>';
+        $html .= '<tr style="background:#fff;">';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;">% DO SALDO</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">' . number_format($pctSaldoGeral, 2, ',', '.') . '%</td>';
+        $html .= '</tr>';
+        $html .= '</table>';
+        $html .= '</div>';
         
         $html .= '</div>';
         return $html;
