@@ -327,7 +327,7 @@ tfoot { display: table-footer-group; }
 /* TABELAS RESUMO */
 .etapa-header { background: #666; color: #FFF; padding: 8px 12px; font-weight: bold; font-size: 9pt; margin: 20px 0 0 0; text-align: center; page-break-after: avoid; }
 .table-resumo { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 8pt; margin-top: 10px; }
-.table-resumo thead th { background: #666; color: #FFF; padding: 6px 8px; text-align: center; font-weight: bold; font-size: 8pt; border: 1px solid #666; }
+.table-resumo thead th { background: #666; color: #FFF; padding: 8px; text-align: center; font-weight: bold; font-size: 8pt; border: 1px solid #666; vertical-align: middle; height: 35px; line-height: 1.2; }
 .table-resumo thead th.left { text-align: left; }
 .table-resumo tbody tr { page-break-inside: avoid; }
 .table-resumo tbody tr:nth-last-child(-n+2) { page-break-after: avoid; }
@@ -341,7 +341,7 @@ tfoot { display: table-footer-group; }
 
 /* TABELAS ÁREAS */
 .table-areas { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 8pt; margin-top: 20px; }
-.table-areas thead th { background: #666; color: #FFF; padding: 6px 8px; font-weight: bold; text-align: center; font-size: 8pt; border: 1px solid #666; }
+.table-areas thead th { background: #666; color: #FFF; padding: 8px; font-weight: bold; text-align: center; font-size: 8pt; border: 1px solid #666; vertical-align: middle; height: 35px; line-height: 1.2; }
 .table-areas tbody td { padding: 5px 8px; border: 1px solid #CCC; text-align: center; background: #FFF; }
 .table-areas .total-row td { background: #666; color: #FFF; font-weight: bold; padding: 8px; border: 1px solid #666; }
 
@@ -350,7 +350,7 @@ tfoot { display: table-footer-group; }
 .banner-etapa:first-of-type { margin-top: 20px; }
 .table-detalhes { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 7pt; margin-top: 10px; }
 .table-detalhes thead { display: table-header-group; }
-.table-detalhes thead th { background: #666; color: #FFF; padding: 5px 4px; text-align: center; font-weight: bold; font-size: 7pt; border: 1px solid #666; }
+.table-detalhes thead th { background: #666; color: #FFF; padding: 8px 4px; text-align: center; font-weight: bold; font-size: 7pt; border: 1px solid #666; vertical-align: middle; height: 35px; line-height: 1.2; }
 .table-detalhes thead th.left { text-align: left; padding-left: 6px; }
 .table-detalhes thead th.right { text-align: right; padding-right: 6px; }
 .table-detalhes tbody td { padding: 4px; border: 1px solid #CCC; vertical-align: middle; background: #FFF; font-size: 7pt; }
