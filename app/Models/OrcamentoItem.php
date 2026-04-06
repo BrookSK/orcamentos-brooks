@@ -134,7 +134,7 @@ final class OrcamentoItem
             ':pagamento_realizado' => (int)($data['pagamento_realizado'] ?? 0),
             ':margem_personalizada' => $margemPersonalizada,
             ':usa_margem_personalizada' => $usaMargemPersonalizada,
-            ':classificacao_custo' => (string)($data['classificacao_custo'] ?? ''),
+            ':classificacao_custo' => !empty($data['classificacao_custo']) ? (string)$data['classificacao_custo'] : null,
         ]);
 
         return (int)$pdo->lastInsertId();
