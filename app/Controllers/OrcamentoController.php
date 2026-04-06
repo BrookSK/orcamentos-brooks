@@ -57,6 +57,17 @@ final class OrcamentoController
 
     public function store(): void
     {
+        // Capturar TODOS os erros, incluindo fatais
+        set_error_handler(function($errno, $errstr, $errfile, $errline) {
+            http_response_code(500);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "ERRO PHP ($errno):\n";
+            echo "Mensagem: $errstr\n";
+            echo "Arquivo: $errfile\n";
+            echo "Linha: $errline\n";
+            exit;
+        });
+        
         Logger::info('orcamentos.store.start');
         
         try {
@@ -65,6 +76,11 @@ final class OrcamentoController
             Logger::error('orcamentos.store.normalize_failed', ['error' => $e->getMessage()]);
             http_response_code(500);
             echo 'Erro ao processar dados: ' . htmlspecialchars($e->getMessage());
+            return;
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.store.normalize_fatal', ['error' => $e->getMessage()]);
+            http_response_code(500);
+            echo 'Erro fatal ao processar dados: ' . htmlspecialchars($e->getMessage());
             return;
         }
         
@@ -127,10 +143,38 @@ final class OrcamentoController
         try {
             $id = Orcamento::create($data);
             Logger::info('orcamentos.store.created', ['id' => $id, 'numero_proposta' => $data['numero_proposta'] ?? null]);
+        } catch (\PDOException $e) {
+            Logger::error('orcamentos.store.database_error', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            http_response_code(500);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "ERRO DE BANCO DE DADOS:\n\n";
+            echo "Mensagem: " . $e->getMessage() . "\n";
+            echo "Código: " . $e->getCode() . "\n\n";
+            echo "Isso geralmente significa que uma coluna está faltando no banco de dados.\n";
+            echo "Verifique se você executou todas as migrations.\n";
+            return;
         } catch (\Exception $e) {
             Logger::error('orcamentos.store.create_failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             http_response_code(500);
             echo 'Erro ao criar orçamento: ' . htmlspecialchars($e->getMessage());
+            return;
+        } catch (\Throwable $e) {
+            Logger::error('orcamentos.store.create_fatal', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            http_response_code(500);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "ERRO FATAL:\n\n";
+            echo "Mensagem: " . $e->getMessage() . "\n";
+            echo "Arquivo: " . $e->getFile() . "\n";
+            echo "Linha: " . $e->getLine() . "\n";
             return;
         }
 
