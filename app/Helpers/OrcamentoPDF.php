@@ -1831,7 +1831,7 @@ CSS;
 
         // Processar cada grupo na ordem em que aparecem
         foreach ($itensPorGrupo as $nomeGrupo => $itensGrupo) {
-            if (empty($itensGrupo)) {
+            if (empty($itensGrupo) || !is_array($itensGrupo)) {
                 continue;
             }
             

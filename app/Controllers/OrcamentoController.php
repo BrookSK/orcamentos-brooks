@@ -58,7 +58,15 @@ final class OrcamentoController
     public function store(): void
     {
         Logger::info('orcamentos.store.start');
-        $data = Orcamento::normalize($_POST);
+        
+        try {
+            $data = Orcamento::normalize($_POST);
+        } catch (\Exception $e) {
+            Logger::error('orcamentos.store.normalize_failed', ['error' => $e->getMessage()]);
+            http_response_code(500);
+            echo 'Erro ao processar dados: ' . htmlspecialchars($e->getMessage());
+            return;
+        }
         
         // Inicializar logo_path e capa_path vazios
         $data['logo_path'] = '';
@@ -116,8 +124,15 @@ final class OrcamentoController
             return;
         }
 
-        $id = Orcamento::create($data);
-        Logger::info('orcamentos.store.created', ['id' => $id, 'numero_proposta' => $data['numero_proposta'] ?? null]);
+        try {
+            $id = Orcamento::create($data);
+            Logger::info('orcamentos.store.created', ['id' => $id, 'numero_proposta' => $data['numero_proposta'] ?? null]);
+        } catch (\Exception $e) {
+            Logger::error('orcamentos.store.create_failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            http_response_code(500);
+            echo 'Erro ao criar orçamento: ' . htmlspecialchars($e->getMessage());
+            return;
+        }
 
         $useTemplateItems = (string)($_POST['use_template_items'] ?? '') === '1';
         if ($useTemplateItems) {
