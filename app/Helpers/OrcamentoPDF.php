@@ -952,25 +952,31 @@ HTML;
                 $pctEtapa = $categoriaData['total'] > 0 ? ($valorTotal / $categoriaData['total']) * 100 : 0;
                 
                 // Buscar percentual_realizado do item
-                $stmtItem = $pdo->prepare('SELECT percentual_realizado FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND codigo = :codigo LIMIT 1');
+                $stmtItem = $pdo->prepare('SELECT percentual_realizado, pagamento_realizado FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND codigo = :codigo LIMIT 1');
                 $stmtItem->execute([':orcamento_id' => $orcamentoId, ':codigo' => $item['codigo']]);
                 $itemData = $stmtItem->fetch(\PDO::FETCH_ASSOC);
                 $percentualRealizado = (float)($itemData['percentual_realizado'] ?? 0);
+                $pagamentoRealizado = (int)($itemData['pagamento_realizado'] ?? 0);
                 
                 // Calcular valores concluídos
                 $valorConcluido = $valorTotal * ($percentualRealizado / 100);
                 $pctObra = $totalGeral > 0 ? ($valorConcluido / $totalGeral) * 100 : 0;
                 
-                // Calcular valores a pagar
-                $valorAPagar = $valorConcluido;
-                $pctSaldo = $saldoAPagar > 0 ? ($valorConcluido / $saldoAPagar) * 100 : 0;
+                // Calcular valores a pagar (só conta se não foi pago)
+                $valorAPagar = $pagamentoRealizado ? 0 : $valorConcluido;
+                $pctSaldo = $saldoAPagar > 0 ? ($valorAPagar / $saldoAPagar) * 100 : 0;
                 
-                // Determinar status
+                // Determinar status baseado em execução e pagamento
                 $status = '';
                 $statusColor = '';
                 if ($percentualRealizado >= 100) {
-                    $status = 'Concluído';
-                    $statusColor = 'color:#4CAF50;font-weight:bold;';
+                    if ($pagamentoRealizado) {
+                        $status = 'Concluído - Pago';
+                        $statusColor = 'color:#2E7D32;font-weight:bold;';
+                    } else {
+                        $status = 'Concluído - Pendente';
+                        $statusColor = 'color:#F57C00;font-weight:bold;';
+                    }
                 } elseif ($percentualRealizado > 0) {
                     $status = number_format($percentualRealizado, 0) . '%';
                     $statusColor = 'color:#FF9800;';
@@ -996,16 +1002,25 @@ HTML;
             
             // Calcular totais da categoria
             $totalConcluidoCategoria = 0;
+            $totalAPagarCategoria = 0;
             foreach ($categoriaData['itens'] as $item) {
-                $stmtItem = $pdo->prepare('SELECT percentual_realizado FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND codigo = :codigo LIMIT 1');
+                $stmtItem = $pdo->prepare('SELECT percentual_realizado, pagamento_realizado FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND codigo = :codigo LIMIT 1');
                 $stmtItem->execute([':orcamento_id' => $orcamentoId, ':codigo' => $item['codigo']]);
                 $itemData = $stmtItem->fetch(\PDO::FETCH_ASSOC);
                 $percentualRealizado = (float)($itemData['percentual_realizado'] ?? 0);
-                $totalConcluidoCategoria += (float)$item['valor_total'] * ($percentualRealizado / 100);
+                $pagamentoRealizado = (int)($itemData['pagamento_realizado'] ?? 0);
+                
+                $valorConcluido = (float)$item['valor_total'] * ($percentualRealizado / 100);
+                $totalConcluidoCategoria += $valorConcluido;
+                
+                // Só conta como "a pagar" se não foi pago
+                if (!$pagamentoRealizado) {
+                    $totalAPagarCategoria += $valorConcluido;
+                }
             }
             
             $pctCategoriaObra = $totalGeral > 0 ? ($totalConcluidoCategoria / $totalGeral) * 100 : 0;
-            $pctCategoriaSaldo = $saldoAPagar > 0 ? ($totalConcluidoCategoria / $saldoAPagar) * 100 : 0;
+            $pctCategoriaSaldo = $saldoAPagar > 0 ? ($totalAPagarCategoria / $saldoAPagar) * 100 : 0;
             
             $html .= sprintf(
                 '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - %s</td><td class="right">R$ %s</td><td class="center">100,00%%</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="center">—</td></tr>',
@@ -1013,7 +1028,7 @@ HTML;
                 self::formatarValor($categoriaData['total']),
                 self::formatarValor($totalConcluidoCategoria),
                 number_format($pctCategoriaObra, 2, ',', '.'),
-                self::formatarValor($totalConcluidoCategoria),
+                self::formatarValor($totalAPagarCategoria),
                 number_format($pctCategoriaSaldo, 2, ',', '.')
             );
             
@@ -1100,6 +1115,7 @@ HTML;
             $vlrTotal = $vlrUnitTotal * $quantidade;
             
             $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+            $pagamentoRealizado = (int)($item['pagamento_realizado'] ?? 0);
             
             if (!isset($itensProcessados[$etapa])) {
                 $itensProcessados[$etapa] = [];
@@ -1110,12 +1126,19 @@ HTML;
             if (!isset($itensProcessados[$etapa][$grupo][$categoria])) {
                 $itensProcessados[$etapa][$grupo][$categoria] = [
                     'total' => 0.0,
-                    'concluido' => 0.0
+                    'concluido' => 0.0,
+                    'a_pagar' => 0.0
                 ];
             }
             
+            $valorConcluido = $vlrTotal * ($percentualRealizado / 100);
             $itensProcessados[$etapa][$grupo][$categoria]['total'] += $vlrTotal;
-            $itensProcessados[$etapa][$grupo][$categoria]['concluido'] += $vlrTotal * ($percentualRealizado / 100);
+            $itensProcessados[$etapa][$grupo][$categoria]['concluido'] += $valorConcluido;
+            
+            // Só conta como "a pagar" se não foi pago
+            if (!$pagamentoRealizado) {
+                $itensProcessados[$etapa][$grupo][$categoria]['a_pagar'] += $valorConcluido;
+            }
         }
         
         // Calcular totais por etapa
@@ -1161,9 +1184,11 @@ HTML;
                 // Calcular total do grupo
                 $totalGrupo = 0.0;
                 $totalConcluidoGrupo = 0.0;
+                $totalAPagarGrupo = 0.0;
                 foreach ($categorias as $categoria => $dados) {
                     $totalGrupo += $dados['total'];
                     $totalConcluidoGrupo += $dados['concluido'];
+                    $totalAPagarGrupo += $dados['a_pagar'];
                 }
                 
                 // Tabela de categorias dentro do grupo
@@ -1182,6 +1207,7 @@ HTML;
                 foreach ($categorias as $nomeCategoria => $dados) {
                     $totalCategoria = $dados['total'];
                     $totalConcluidoCategoria = $dados['concluido'];
+                    $totalAPagarCategoria = $dados['a_pagar'];
                     
                     $percentualNaEtapa = $totalEtapa > 0 
                         ? ($totalCategoria / $totalEtapa) * 100 
@@ -1196,11 +1222,11 @@ HTML;
                     $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
                     $saldoAPagar = $totalGeralObra - $valorEntrada;
                     $percentualAPagar = $saldoAPagar > 0 
-                        ? ($totalConcluidoCategoria / $saldoAPagar) * 100 
+                        ? ($totalAPagarCategoria / $saldoAPagar) * 100 
                         : 0.0;
                     
-                    // VALOR A PAGAR = valor concluído que ainda precisa ser pago
-                    $valorAPagar = $totalConcluidoCategoria;
+                    // VALOR A PAGAR = valor concluído que ainda não foi pago
+                    $valorAPagar = $totalAPagarCategoria;
                     
                     $html .= '<tr>';
                     $html .= '<td class="left">' . htmlspecialchars($nomeCategoria) . '</td>';
@@ -1227,11 +1253,11 @@ HTML;
                 $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
                 $saldoAPagar = $totalGeralObra - $valorEntrada;
                 $percentualAPagarGrupo = $saldoAPagar > 0 
-                    ? ($totalConcluidoGrupo / $saldoAPagar) * 100 
+                    ? ($totalAPagarGrupo / $saldoAPagar) * 100 
                     : 0.0;
                 
-                // VALOR A PAGAR do grupo
-                $valorAPagarGrupo = $totalConcluidoGrupo;
+                // VALOR A PAGAR do grupo = valor concluído que ainda não foi pago
+                $valorAPagarGrupo = $totalAPagarGrupo;
                 
                 $html .= '<tr style="background:#2C3E50 !important;color:#FFF !important;font-weight:bold;">';
                 $html .= '<td class="left" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
@@ -1504,6 +1530,7 @@ HTML;
                         $custoMo = (float)($item['custo_mao_obra'] ?? 0);
                         $custoEquip = (float)($item['custo_equipamento'] ?? 0);
                         $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+                        $pagamentoRealizado = (int)($item['pagamento_realizado'] ?? 0);
                         
                         $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
                         $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
@@ -1524,18 +1551,23 @@ HTML;
                         
                         $pctEtapa = $subtotalGrupo > 0 ? ($vlrTotal / $subtotalGrupo) * 100 : 0.0;
                         
-                        // Calcular valores concluídos e a pagar
+                        // Calcular valores concluídos e a pagar (só conta se não foi pago)
                         $vlrConcluido = $vlrTotal * ($percentualRealizado / 100);
                         $pctObra = $totalGeralObra > 0 ? ($vlrConcluido / $totalGeralObra) * 100 : 0.0;
-                        $vlrAPagar = $vlrConcluido;
-                        $pctSaldo = $saldoAPagar > 0 ? ($vlrConcluido / $saldoAPagar) * 100 : 0.0;
+                        $vlrAPagar = $pagamentoRealizado ? 0 : $vlrConcluido;
+                        $pctSaldo = $saldoAPagar > 0 ? ($vlrAPagar / $saldoAPagar) * 100 : 0.0;
                         
-                        // Determinar status baseado no percentual realizado
+                        // Determinar status baseado em execução e pagamento
                         $status = '';
                         $statusColor = '';
                         if ($percentualRealizado >= 100) {
-                            $status = 'Concluído';
-                            $statusColor = 'color:#4CAF50;font-weight:bold;';
+                            if ($pagamentoRealizado) {
+                                $status = 'Concluído - Pago';
+                                $statusColor = 'color:#2E7D32;font-weight:bold;';
+                            } else {
+                                $status = 'Concluído - Pendente';
+                                $statusColor = 'color:#F57C00;font-weight:bold;';
+                            }
                         } elseif ($percentualRealizado > 0) {
                             $status = number_format($percentualRealizado, 0) . '%';
                             $statusColor = 'color:#FF9800;';
@@ -1658,8 +1690,9 @@ HTML;
             $html .= '</div>';
         }
         
-        // Calcular totais gerais de todos os itens executados
+        // Calcular totais gerais de todos os itens executados e a pagar
         $totalConcluidoGeral = 0.0;
+        $totalAPagarGeral = 0.0;
         foreach ($grouped as $etapa => $grupos) {
             foreach ($grupos as $grupo => $categorias) {
                 foreach ($categorias as $categoria => $itensCategoria) {
@@ -1669,6 +1702,7 @@ HTML;
                         $custoMo = (float)($item['custo_mao_obra'] ?? 0);
                         $custoEquip = (float)($item['custo_equipamento'] ?? 0);
                         $percentualRealizado = (float)($item['percentual_realizado'] ?? 0);
+                        $pagamentoRealizado = (int)($item['pagamento_realizado'] ?? 0);
                         
                         $usaMargemPersonalizada = (int)($item['usa_margem_personalizada'] ?? 0);
                         $margemPersonalizada = (float)($item['margem_personalizada'] ?? 0);
@@ -1684,7 +1718,13 @@ HTML;
                         $vlrUnitTotal = $vlrUnitMat + $vlrUnitMo;
                         $vlrTotal = $vlrUnitTotal * $quantidade;
                         
-                        $totalConcluidoGeral += $vlrTotal * ($percentualRealizado / 100);
+                        $vlrConcluido = $vlrTotal * ($percentualRealizado / 100);
+                        $totalConcluidoGeral += $vlrConcluido;
+                        
+                        // Só conta como "a pagar" se não foi pago
+                        if (!$pagamentoRealizado) {
+                            $totalAPagarGeral += $vlrConcluido;
+                        }
                     }
                 }
             }
@@ -1693,7 +1733,8 @@ HTML;
         $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
         $saldoAPagar = $totalGeralObra - $valorEntrada;
         $pctObraGeral = $totalGeralObra > 0 ? ($totalConcluidoGeral / $totalGeralObra) * 100 : 0.0;
-        $pctSaldoGeral = $saldoAPagar > 0 ? ($totalConcluidoGeral / $saldoAPagar) * 100 : 0.0;
+        $pctSaldoGeral = $saldoAPagar > 0 ? ($totalAPagarGeral / $saldoAPagar) * 100 : 0.0;
+        $totalPago = $totalConcluidoGeral - $totalAPagarGeral;
         
         $html .= '<div style="margin-top:30px;padding:20px;background:#f8f9fa;border:2px solid #1a237e;page-break-inside:avoid;">';
         $html .= '<div style="font-weight:700;font-size:18px;margin-bottom:15px;text-align:center;color:#1a237e;">RESUMO GERAL DE EXECUÇÃO</div>';
@@ -1718,12 +1759,16 @@ HTML;
         $html .= '<td style="padding:10px;border:1px solid #ccc;">% DA OBRA EXECUTADA</td>';
         $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">' . number_format($pctObraGeral, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
+        $html .= '<tr style="background:#a5d6a7;">';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;font-weight:bold;">VALOR JÁ PAGO</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;font-weight:bold;">R$ ' . self::formatarValor($totalPago) . '</td>';
+        $html .= '</tr>';
         $html .= '<tr style="background:#fff3cd;font-weight:bold;">';
-        $html .= '<td style="padding:10px;border:1px solid #ccc;">VALOR A PAGAR (EXECUTADO)</td>';
-        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">R$ ' . self::formatarValor($totalConcluidoGeral) . '</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;">VALOR A PAGAR (PENDENTE)</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">R$ ' . self::formatarValor($totalAPagarGeral) . '</td>';
         $html .= '</tr>';
         $html .= '<tr style="background:#fff;">';
-        $html .= '<td style="padding:10px;border:1px solid #ccc;">% DO SALDO</td>';
+        $html .= '<td style="padding:10px;border:1px solid #ccc;">% DO SALDO RESTANTE</td>';
         $html .= '<td style="padding:10px;border:1px solid #ccc;text-align:right;">' . number_format($pctSaldoGeral, 2, ',', '.') . '%</td>';
         $html .= '</tr>';
         $html .= '</table>';

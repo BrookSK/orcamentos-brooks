@@ -454,6 +454,28 @@ function toggleAdicionarItem() {
                         <td>
                             <div class="row-actions">
                                 <a class="btn" href="/?route=orcamentos/itemEdit&orcamento_id=<?php echo (int)$orcamento['id']; ?>&id=<?php echo (int)$row['id']; ?>&return_anchor=item-<?php echo (int)$row['id']; ?>">Editar</a>
+                                
+                                <?php 
+                                $percentualRealizado = (float)($row['percentual_realizado'] ?? 0);
+                                $pagamentoRealizado = (int)($row['pagamento_realizado'] ?? 0);
+                                ?>
+                                
+                                <?php if ($percentualRealizado >= 100) : ?>
+                                    <?php if ($pagamentoRealizado) : ?>
+                                        <form class="inline" method="post" action="/?route=orcamentos/desmarcarPagamento">
+                                            <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
+                                            <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
+                                            <button class="btn" type="submit" style="background:#4CAF50; color:white;" title="Marcar como pendente">✓ Pago</button>
+                                        </form>
+                                    <?php else : ?>
+                                        <form class="inline" method="post" action="/?route=orcamentos/marcarPagamento">
+                                            <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
+                                            <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
+                                            <button class="btn" type="submit" style="background:#FF9800; color:white;" title="Marcar como pago">⏳ Pendente</button>
+                                        </form>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                                
                                 <form class="inline" method="post" action="/?route=orcamentos/itemDelete" onsubmit="return confirm('Excluir este item?');">
                                     <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
                                     <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">

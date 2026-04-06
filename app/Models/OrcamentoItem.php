@@ -108,8 +108,8 @@ final class OrcamentoItem
         }
 
         $stmt = $pdo->prepare(
-            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, custo_equipamento, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, margem_personalizada, usa_margem_personalizada, classificacao_custo) '
-            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :custo_equipamento, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :margem_personalizada, :usa_margem_personalizada, :classificacao_custo)'
+            'INSERT INTO orcamento_itens (orcamento_id, grupo, categoria, codigo, descricao, quantidade, unidade, valor_unitario, valor_total, ordem, etapa, custo_material, custo_mao_obra, custo_equipamento, valor_cobranca, margem_lucro, desconto_item, percentual_realizado, pagamento_realizado, margem_personalizada, usa_margem_personalizada, classificacao_custo) '
+            . 'VALUES (:orcamento_id, :grupo, :categoria, :codigo, :descricao, :quantidade, :unidade, :valor_unitario, :valor_total, :ordem, :etapa, :custo_material, :custo_mao_obra, :custo_equipamento, :valor_cobranca, :margem_lucro, :desconto_item, :percentual_realizado, :pagamento_realizado, :margem_personalizada, :usa_margem_personalizada, :classificacao_custo)'
         );
 
         $stmt->execute([
@@ -131,6 +131,7 @@ final class OrcamentoItem
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
             ':percentual_realizado' => $percentualRealizado,
+            ':pagamento_realizado' => (int)($data['pagamento_realizado'] ?? 0),
             ':margem_personalizada' => $margemPersonalizada,
             ':usa_margem_personalizada' => $usaMargemPersonalizada,
             ':classificacao_custo' => (string)($data['classificacao_custo'] ?? ''),
@@ -196,6 +197,7 @@ final class OrcamentoItem
             . ' margem_lucro = :margem_lucro,'
             . ' desconto_item = :desconto_item,'
             . ' percentual_realizado = :percentual_realizado,'
+            . ' pagamento_realizado = :pagamento_realizado,'
             . ' margem_personalizada = :margem_personalizada,'
             . ' usa_margem_personalizada = :usa_margem_personalizada,'
             . ' classificacao_custo = :classificacao_custo'
@@ -221,10 +223,31 @@ final class OrcamentoItem
             ':margem_lucro' => $margemLucro,
             ':desconto_item' => $descontoItem,
             ':percentual_realizado' => $percentualRealizado,
+            ':pagamento_realizado' => (int)($data['pagamento_realizado'] ?? 0),
             ':margem_personalizada' => $margemPersonalizada,
             ':usa_margem_personalizada' => $usaMargemPersonalizada,
             ':classificacao_custo' => (string)($data['classificacao_custo'] ?? ''),
         ]);
+    }
+
+    /**
+     * Marca um item como pago
+     */
+    public static function marcarComoPago(int $id): void
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare('UPDATE orcamento_itens SET pagamento_realizado = 1 WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+    }
+
+    /**
+     * Marca um item como pendente de pagamento
+     */
+    public static function marcarComoPendente(int $id): void
+    {
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare('UPDATE orcamento_itens SET pagamento_realizado = 0 WHERE id = :id');
+        $stmt->execute([':id' => $id]);
     }
 
     public static function validate(array $data): array

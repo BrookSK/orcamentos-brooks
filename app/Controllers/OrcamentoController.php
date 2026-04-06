@@ -1041,6 +1041,60 @@ final class OrcamentoController
         $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
     }
 
+    public function marcarPagamento(): void
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        $orcamentoId = (int)($_POST['orcamento_id'] ?? 0);
+        
+        if ($id <= 0 || $orcamentoId <= 0) {
+            $this->redirect('/?route=orcamentos/index');
+            return;
+        }
+        
+        $item = OrcamentoItem::find($id);
+        if (!$item || (int)$item['orcamento_id'] !== $orcamentoId) {
+            $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
+            return;
+        }
+        
+        OrcamentoItem::marcarComoPago($id);
+        
+        Logger::info('orcamentos.pagamento.marcado', [
+            'orcamento_id' => $orcamentoId,
+            'item_id' => $id,
+        ]);
+        
+        $_SESSION['scroll_to_item'] = $id;
+        $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
+    }
+
+    public function desmarcarPagamento(): void
+    {
+        $id = (int)($_POST['id'] ?? 0);
+        $orcamentoId = (int)($_POST['orcamento_id'] ?? 0);
+        
+        if ($id <= 0 || $orcamentoId <= 0) {
+            $this->redirect('/?route=orcamentos/index');
+            return;
+        }
+        
+        $item = OrcamentoItem::find($id);
+        if (!$item || (int)$item['orcamento_id'] !== $orcamentoId) {
+            $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
+            return;
+        }
+        
+        OrcamentoItem::marcarComoPendente($id);
+        
+        Logger::info('orcamentos.pagamento.desmarcado', [
+            'orcamento_id' => $orcamentoId,
+            'item_id' => $id,
+        ]);
+        
+        $_SESSION['scroll_to_item'] = $id;
+        $this->redirect('/?route=orcamentos/show&id=' . $orcamentoId);
+    }
+
     public function recalcularMargens(): void
     {
         header('Content-Type: application/json; charset=utf-8');
