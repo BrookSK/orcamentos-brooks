@@ -181,12 +181,7 @@ final class OrcamentoOpcao
         if ($idExistente) {
             // Já existe outro registro com este nome - fazer MERGE
             // Atualizar todos os itens que usam o nome atual para usar o novo nome
-            $campoTabela = $tipo; // grupo, categoria, ou unidade
-            $stmtUpdate = $pdo->prepare("UPDATE orcamento_itens SET {$campoTabela} = :nome_novo WHERE {$campoTabela} = :nome_antigo");
-            $stmtUpdate->execute([
-                ':nome_novo' => $nome,
-                ':nome_antigo' => $nomeAtual,
-            ]);
+            self::updateItemsField($pdo, $tipo, $nomeAtual, $nome);
             
             // Excluir o registro antigo (agora não tem mais itens usando)
             $stmtDelete = $pdo->prepare('DELETE FROM orcamento_opcoes WHERE id = :id AND tipo = :tipo');
@@ -195,12 +190,28 @@ final class OrcamentoOpcao
             return;
         }
         
-        // Se não existe duplicata, fazer update normal
+        // Se não existe duplicata, atualizar o registro e todos os itens que o usam
         $stmt = $pdo->prepare('UPDATE orcamento_opcoes SET nome = :nome WHERE id = :id AND tipo = :tipo');
         $stmt->execute([
             ':id' => $id,
             ':tipo' => $tipo,
             ':nome' => $nome,
+        ]);
+        
+        // Atualizar todos os itens que usam este valor
+        self::updateItemsField($pdo, $tipo, $nomeAtual, $nome);
+    }
+    
+    private static function updateItemsField(\PDO $pdo, string $tipo, string $nomeAtual, string $nomeNovo): void
+    {
+        // Mapear tipo para nome da coluna na tabela orcamento_itens
+        $campoTabela = $tipo; // grupo, categoria, unidade, etapa
+        
+        // Atualizar todos os itens que usam o nome atual
+        $stmtUpdate = $pdo->prepare("UPDATE orcamento_itens SET {$campoTabela} = :nome_novo WHERE {$campoTabela} = :nome_antigo");
+        $stmtUpdate->execute([
+            ':nome_novo' => $nomeNovo,
+            ':nome_antigo' => $nomeAtual,
         ]);
     }
 
