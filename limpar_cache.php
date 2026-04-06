@@ -1,57 +1,127 @@
-<?php
-/**
- * Script para limpar cache do OPcache
- * Acesse via navegador: https://orcamento.onsolutionsbrasil.com.br/limpar_cache.php
- */
-
-header('Content-Type: text/html; charset=utf-8');
-
-echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Limpar Cache</title>';
-echo '<style>body{font-family:monospace;padding:20px;background:#1a1a1a;color:#fff;}';
-echo '.box{background:#2d2d2d;border:2px solid #4CAF50;border-radius:8px;padding:20px;margin:20px 0;}';
-echo '.success{color:#4CAF50;} .error{color:#ff4444;} .info{color:#ffaa44;}';
-echo '</style></head><body>';
-
-echo '<div class="box">';
-echo '<h1>🧹 Limpeza de Cache</h1>';
-
-$success = false;
-
-// Tentar limpar OPcache
-if (function_exists('opcache_reset')) {
-    if (opcache_reset()) {
-        echo '<p class="success">✅ OPcache limpo com sucesso!</p>';
-        $success = true;
-    } else {
-        echo '<p class="error">❌ Falha ao limpar OPcache</p>';
-    }
-} else {
-    echo '<p class="info">⚠️ OPcache não disponível</p>';
-}
-
-// Invalidar arquivos específicos
-$files = [
-    __DIR__ . '/app/Controllers/OrcamentoController.php',
-    __DIR__ . '/app/Views/orcamentos/show.php',
-    __DIR__ . '/app/Views/orcamentos/show_sinapi.php'
-];
-
-if (function_exists('opcache_invalidate')) {
-    foreach ($files as $file) {
-        if (file_exists($file)) {
-            opcache_invalidate($file, true);
-            echo '<p class="success">✅ Invalidado: ' . basename($file) . '</p>';
-            $success = true;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpar Cache</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 40px;
+            margin: 0;
         }
-    }
-}
-
-if ($success) {
-    echo '<p class="info">Cache limpo! Tente acessar o orçamento agora:</p>';
-    echo '<p><a href="/?route=orcamentos/show&id=29" style="color:#4CAF50;">Abrir Orçamento ID 29</a></p>';
-} else {
-    echo '<p class="error">Não foi possível limpar o cache automaticamente.</p>';
-    echo '<p class="info">Você precisa reiniciar o PHP-FPM manualmente.</p>';
-}
-
-echo '</div></body></html>';
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        .result {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success {
+            border-left: 4px solid #4CAF50;
+        }
+        .info {
+            border-left: 4px solid #2196F3;
+        }
+        .warning {
+            border-left: 4px solid #ff9800;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn-secondary {
+            background: #2196F3;
+        }
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Limpeza de Cache</h1>
+        
+        <?php
+        $results = [];
+        
+        // 1. Limpar OPcache
+        if (function_exists('opcache_reset')) {
+            if (opcache_reset()) {
+                $results[] = ['type' => 'success', 'message' => '✓ OPcache limpo com sucesso'];
+            } else {
+                $results[] = ['type' => 'warning', 'message' => '⚠ Não foi possível limpar o OPcache'];
+            }
+        } else {
+            $results[] = ['type' => 'info', 'message' => 'ℹ OPcache não está habilitado'];
+        }
+        
+        // 2. Limpar cache de realpath
+        if (function_exists('clearstatcache')) {
+            clearstatcache(true);
+            $results[] = ['type' => 'success', 'message' => '✓ Cache de realpath limpo'];
+        }
+        
+        // 3. Informações sobre cache do navegador
+        $results[] = ['type' => 'info', 'message' => 'ℹ Para limpar o cache do navegador, pressione Ctrl+Shift+R (ou Cmd+Shift+R no Mac)'];
+        
+        // 4. Verificar se há sessão ativa
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $results[] = ['type' => 'info', 'message' => 'ℹ Sessão PHP ativa detectada'];
+        }
+        
+        // Exibir resultados
+        foreach ($results as $result) {
+            echo '<div class="result ' . $result['type'] . '">' . htmlspecialchars($result['message']) . '</div>';
+        }
+        ?>
+        
+        <div style="margin-top: 30px;">
+            <h2>📋 Instruções</h2>
+            <div class="result info">
+                <p><strong>Se o orçamento ainda não atualizar após editar um grupo:</strong></p>
+                <ol>
+                    <li>Clique no botão "Limpar Cache" abaixo</li>
+                    <li>Pressione <strong>Ctrl+Shift+R</strong> (ou <strong>Cmd+Shift+R</strong> no Mac) na página do orçamento</li>
+                    <li>Se ainda não funcionar, feche e abra o navegador novamente</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="limpar_cache.php" class="btn">🔄 Limpar Cache Novamente</a>
+            <a href="/?route=orcamentos/index" class="btn btn-secondary">← Voltar para Orçamentos</a>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 12px; color: #999;">
+            <strong>Informações do Sistema:</strong><br>
+            PHP Version: <?php echo PHP_VERSION; ?><br>
+            OPcache: <?php echo function_exists('opcache_get_status') && opcache_get_status() ? 'Habilitado' : 'Desabilitado'; ?><br>
+            Memory Limit: <?php echo ini_get('memory_limit'); ?><br>
+            Timestamp: <?php echo date('Y-m-d H:i:s'); ?>
+        </div>
+    </div>
+</body>
+</html>

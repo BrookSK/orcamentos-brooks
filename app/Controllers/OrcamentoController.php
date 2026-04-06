@@ -753,6 +753,12 @@ final class OrcamentoController
 
     public function show(): void
     {
+        // Desabilitar cache do navegador
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
         // Iniciar sessão se não estiver iniciada
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -1966,6 +1972,12 @@ final class OrcamentoController
 
     public function showSinapi(): void
     {
+        // Desabilitar cache do navegador
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
         // Iniciar sessão se não estiver iniciada
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
