@@ -458,6 +458,9 @@ function toggleAdicionarItem() {
                                 <?php 
                                 $percentualRealizado = (float)($row['percentual_realizado'] ?? 0);
                                 $pagamentoRealizado = (int)($row['pagamento_realizado'] ?? 0);
+                                
+                                // DEBUG: Mostrar valores para diagnóstico
+                                echo "<!-- DEBUG Item {$row['id']}: percentual_realizado={$percentualRealizado}, pagamento_realizado={$pagamentoRealizado} -->";
                                 ?>
                                 
                                 <?php if ($percentualRealizado >= 100) : ?>
@@ -465,15 +468,17 @@ function toggleAdicionarItem() {
                                         <form class="inline" method="post" action="/?route=orcamentos/desmarcarPagamento">
                                             <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
                                             <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
-                                            <button class="btn" type="submit" style="background:#4CAF50; color:white;" title="Marcar como pendente">✓ Pago</button>
+                                            <button class="btn" type="submit" style="background:#4CAF50; color:white;" title="Clique para marcar como pendente">✓ Pago</button>
                                         </form>
                                     <?php else : ?>
                                         <form class="inline" method="post" action="/?route=orcamentos/marcarPagamento">
                                             <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
                                             <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
-                                            <button class="btn" type="submit" style="background:#FF9800; color:white;" title="Marcar como pago">⏳ Pendente</button>
+                                            <button class="btn" type="submit" style="background:#FF9800; color:white;" title="Clique para marcar como pago">⏳ Pendente</button>
                                         </form>
                                     <?php endif; ?>
+                                <?php else : ?>
+                                    <!-- DEBUG: Item não está 100% concluído (<?php echo $percentualRealizado; ?>%) -->
                                 <?php endif; ?>
                                 
                                 <form class="inline" method="post" action="/?route=orcamentos/itemDelete" onsubmit="return confirm('Excluir este item?');">
