@@ -535,8 +535,8 @@ HTML;
             ['Descrição', 'Descrição detalhada do serviço ou material'],
             ['Un', 'Unidade de medida (m², m³, vb, etc.)'],
             ['Qtd', 'Quantidade do item'],
-            ['Vlr Unit. Mat.', 'Valor unitário de materiais (inclui BDI)'],
-            ['Vlr Unit. M.O.', 'Valor unitário de mão de obra (inclui BDI)'],
+            ['Vlr Unit. Mat.', 'Valor unitário de materiais'],
+            ['Vlr Unit. M.O.', 'Valor unitário de mão de obra'],
             ['Vlr Unit.Total', 'Valor unitário total (materiais + mão de obra)'],
             ['Vlr Total', 'Valor total do item (valor unitário × quantidade)'],
             ['% Etapa', 'Percentual que o item representa dentro da sua etapa'],
@@ -576,8 +576,8 @@ HTML;
         $html .= '<div>Quanto o valor executado representa do saldo que falta pagar.</div>';
         $html .= '</td>';
         $html .= '<td style="padding:10px;background:#f8f9fa;border:1px solid #ddd;vertical-align:top;">';
-        $html .= '<div style="font-weight:bold;margin-bottom:5px;color:#1a237e;">BDI</div>';
-        $html .= '<div>Percentual sobre custos diretos para cobrir despesas indiretas.</div>';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;color:#1a237e;">Percentual Realizado</div>';
+        $html .= '<div>Percentual de execução de cada item da obra (0% a 100%).</div>';
         $html .= '</td>';
         $html .= '</tr>';
         $html .= '</table>';
