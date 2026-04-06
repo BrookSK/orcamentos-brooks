@@ -518,6 +518,7 @@ HTML;
 
     private static function gerarPaginaLegendas(array $orcamento): string
     {
+        // PÁGINA 1: Colunas e Conceitos
         $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'LEGENDAS E EXPLICAÇÕES');
         
         $html .= '<div style="font-weight:700;font-size:12px;margin:15px 0 10px 0;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">ENTENDENDO AS COLUNAS DO ORÇAMENTO</div>';
@@ -581,26 +582,35 @@ HTML;
         $html .= '</tr>';
         $html .= '</table>';
         
-        // Hierarquia compacta
+        $html .= '<div class="page-footer"><div>FOLHA: LEGENDAS (1/2)</div></div>';
+        $html .= '</div>';
+        
+        // PÁGINA 2: Hierarquia e Exemplo Prático
+        $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'LEGENDAS E EXPLICAÇÕES');
+        
+        // Hierarquia
         $html .= '<div style="font-weight:700;font-size:12px;margin:15px 0 10px 0;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">HIERARQUIA DO ORÇAMENTO</div>';
-        $html .= '<div style="font-size:8pt;line-height:1.4;margin-bottom:15px;">';
-        $html .= '<div style="padding:6px;background:#1a237e;color:#FFF;margin-bottom:3px;font-weight:bold;">1. ETAPA (Fase) - Azul Escuro</div>';
-        $html .= '<div style="padding:6px;background:#2C3350;color:#FFF;margin-bottom:3px;margin-left:15px;font-weight:bold;">2. GRUPO - Azul Médio</div>';
-        $html .= '<div style="padding:6px;background:#4A5568;color:#FFF;margin-bottom:3px;margin-left:30px;font-weight:bold;">3. CATEGORIA - Cinza</div>';
-        $html .= '<div style="padding:6px;margin-left:45px;border:1px solid #ccc;">4. Itens individuais</div>';
+        $html .= '<div style="font-size:9pt;line-height:1.6;margin-bottom:20px;">';
+        $html .= '<div style="padding:10px;background:#1a237e;color:#FFF;margin-bottom:5px;font-weight:bold;font-size:10pt;">1. ETAPA (Fase) - Azul Escuro</div>';
+        $html .= '<div style="padding:10px;background:#2C3350;color:#FFF;margin-bottom:5px;margin-left:20px;font-weight:bold;font-size:10pt;">2. GRUPO - Azul Médio</div>';
+        $html .= '<div style="padding:10px;background:#4A5568;color:#FFF;margin-bottom:5px;margin-left:40px;font-weight:bold;font-size:10pt;">3. CATEGORIA - Cinza</div>';
+        $html .= '<div style="padding:10px;margin-left:60px;border:2px solid #ccc;background:#fff;font-size:9pt;">4. Itens individuais</div>';
         $html .= '</div>';
         
-        // Exemplo prático compacto
-        $html .= '<div style="font-weight:700;font-size:12px;margin:15px 0 10px 0;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">EXEMPLO PRÁTICO</div>';
-        $html .= '<div style="background:#fff3cd;padding:12px;border:1px solid #ffc107;font-size:8pt;line-height:1.5;">';
-        $html .= '<div style="font-weight:bold;margin-bottom:5px;">Obra de R$ 100.000 com entrada de R$ 30.000:</div>';
-        $html .= '<div>• Saldo Restante = R$ 70.000</div>';
-        $html .= '<div>• Etapa de R$ 7.000 concluída:</div>';
-        $html .= '<div style="margin-left:15px;">- % Obra = 7% (R$ 7.000 ÷ R$ 100.000)</div>';
-        $html .= '<div style="margin-left:15px;">- % do Saldo Restante = 10% (R$ 7.000 ÷ R$ 70.000)</div>';
+        // Exemplo prático expandido
+        $html .= '<div style="font-weight:700;font-size:12px;margin:20px 0 10px 0;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">EXEMPLO PRÁTICO</div>';
+        $html .= '<div style="background:#fff3cd;padding:20px;border:2px solid #ffc107;font-size:9pt;line-height:1.8;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:10px;font-size:10pt;color:#856404;">Obra de R$ 100.000 com entrada de R$ 30.000:</div>';
+        $html .= '<div style="margin-bottom:8px;">• <strong>Saldo Restante</strong> = R$ 70.000</div>';
+        $html .= '<div style="margin-bottom:12px;">• Etapa de R$ 7.000 foi 100% concluída:</div>';
+        $html .= '<div style="margin-left:20px;margin-bottom:6px;">- <strong>% Obra</strong> = 7% (R$ 7.000 ÷ R$ 100.000)</div>';
+        $html .= '<div style="margin-left:20px;margin-bottom:12px;">- <strong>% do Saldo Restante</strong> = 10% (R$ 7.000 ÷ R$ 70.000)</div>';
+        $html .= '<div style="background:#fff;padding:10px;border-left:4px solid #ffc107;margin-top:10px;">';
+        $html .= '<strong>Interpretação:</strong> Esta etapa representa 10% do que ainda precisa ser pago ao cliente.';
+        $html .= '</div>';
         $html .= '</div>';
         
-        $html .= '<div class="page-footer"><div>FOLHA: LEGENDAS</div></div>';
+        $html .= '<div class="page-footer"><div>FOLHA: LEGENDAS (2/2)</div></div>';
         $html .= '</div>';
         
         return $html;
