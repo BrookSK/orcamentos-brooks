@@ -1831,7 +1831,16 @@ CSS;
 
         // Processar cada grupo na ordem em que aparecem
         foreach ($itensPorGrupo as $nomeGrupo => $itensGrupo) {
-            if (empty($itensGrupo) || !is_array($itensGrupo)) {
+            // Garantir que $itensGrupo é sempre um array
+            if (!is_array($itensGrupo)) {
+                \App\Core\Logger::warning('orcamentos.pdf.itensGrupo_nao_array', [
+                    'grupo' => $nomeGrupo,
+                    'tipo' => gettype($itensGrupo)
+                ]);
+                $itensGrupo = [];
+            }
+            
+            if (empty($itensGrupo)) {
                 continue;
             }
             
