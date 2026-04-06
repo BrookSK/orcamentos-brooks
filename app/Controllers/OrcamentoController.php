@@ -57,33 +57,27 @@ final class OrcamentoController
 
     public function store(): void
     {
-        // Capturar TODOS os erros, incluindo fatais
-        set_error_handler(function($errno, $errstr, $errfile, $errline) {
-            http_response_code(500);
-            header('Content-Type: text/plain; charset=utf-8');
-            echo "ERRO PHP ($errno):\n";
-            echo "Mensagem: $errstr\n";
-            echo "Arquivo: $errfile\n";
-            echo "Linha: $errline\n";
-            exit;
-        });
-        
-        Logger::info('orcamentos.store.start');
+        Logger::info('orcamentos.store.start', ['post_keys' => array_keys($_POST), 'files_keys' => array_keys($_FILES)]);
         
         try {
             $data = Orcamento::normalize($_POST);
-        } catch (\Exception $e) {
-            Logger::error('orcamentos.store.normalize_failed', ['error' => $e->getMessage()]);
-            http_response_code(500);
-            echo 'Erro ao processar dados: ' . htmlspecialchars($e->getMessage());
-            return;
+            Logger::info('orcamentos.store.normalized', ['numero_proposta' => $data['numero_proposta'] ?? 'N/A']);
         } catch (\Throwable $e) {
-            Logger::error('orcamentos.store.normalize_fatal', ['error' => $e->getMessage()]);
+            Logger::error('orcamentos.store.normalize_failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
             http_response_code(500);
-            echo 'Erro fatal ao processar dados: ' . htmlspecialchars($e->getMessage());
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "ERRO AO NORMALIZAR DADOS:\n\n";
+            echo "Mensagem: " . $e->getMessage() . "\n";
+            echo "Arquivo: " . $e->getFile() . "\n";
+            echo "Linha: " . $e->getLine() . "\n";
             return;
         }
         
+        Logger::info('orcamentos.store.initializing_paths');
         // Inicializar logo_path e capa_path vazios
         $data['logo_path'] = '';
         $data['capa_path_1'] = '';
@@ -91,8 +85,10 @@ final class OrcamentoController
         $data['capa_path_3'] = '';
         $data['capa_path_4'] = '';
         
+        Logger::info('orcamentos.store.processing_uploads');
         // Processar upload de logo
         if (!empty($_FILES['logo']['tmp_name'])) {
+            Logger::info('orcamentos.store.uploading_logo');
             $uploadDir = __DIR__ . '/../../public/uploads/logos/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
@@ -109,6 +105,7 @@ final class OrcamentoController
         // Processar upload de capas (até 4)
         for ($i = 1; $i <= 4; $i++) {
             if (!empty($_FILES['capa_' . $i]['tmp_name'])) {
+                Logger::info('orcamentos.store.uploading_capa', ['index' => $i]);
                 $uploadDir = __DIR__ . '/../../public/uploads/capas/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
@@ -123,6 +120,7 @@ final class OrcamentoController
             }
         }
         
+        Logger::info('orcamentos.store.validating');
         $errors = Orcamento::validate($data);
 
         $templateItemsInput = $_POST['template_items'] ?? null;
