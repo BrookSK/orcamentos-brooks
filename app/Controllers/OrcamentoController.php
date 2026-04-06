@@ -1413,8 +1413,18 @@ final class OrcamentoController
         $id = (int)($_POST['id'] ?? 0);
         $nome = trim((string)($_POST['nome'] ?? ''));
         
+        // Detectar se é uma chamada AJAX
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        
         $errors = OrcamentoOpcao::validate($nome);
         if ($errors || $id <= 0) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $errors['nome'] ?? 'ID inválido']);
+                return;
+            }
+            
             $this->render('orcamentos/opcoes', [
                 'tipo' => 'grupo',
                 'titulo' => 'Grupos',
@@ -1426,9 +1436,22 @@ final class OrcamentoController
         
         try {
             OrcamentoOpcao::update($id, 'grupo', $nome);
+            
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
+                return;
+            }
+            
             header('Location: /?route=orcamentos/grupos&success=1');
             exit;
         } catch (\Exception $e) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                return;
+            }
+            
             $this->render('orcamentos/opcoes', [
                 'tipo' => 'grupo',
                 'titulo' => 'Grupos',

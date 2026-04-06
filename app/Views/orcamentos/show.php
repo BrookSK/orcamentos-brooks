@@ -757,16 +757,23 @@ function salvarNomeGrupo(grupoAtual, novoNome, tr, btnElement) {
         // Atualizar o nome do grupo
         return fetch('/?route=orcamentos/gruposUpdate', {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: 'id=' + data.id + '&nome=' + encodeURIComponent(novoNome)
         });
     })
     .then(r => {
-        if (r && r.ok) {
+        if (!r) return;
+        return r.json();
+    })
+    .then(data => {
+        if (data && data.success) {
             // Recarregar a página para mostrar as mudanças
             window.location.reload();
         } else {
-            alert('Erro ao salvar. Tente novamente.');
+            alert('Erro ao salvar: ' + (data?.error || 'Erro desconhecido'));
             cancelarEdicaoGrupo(tr, btnElement, grupoAtual);
         }
     })
