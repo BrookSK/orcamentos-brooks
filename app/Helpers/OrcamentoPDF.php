@@ -1036,13 +1036,14 @@ HTML;
                 // Tabela de categorias dentro do grupo
                 $html .= '<table class="table-detalhes">';
                 $html .= '<thead><tr>';
-                $html .= '<th class="left" style="width:30%;">CATEGORIA</th>';
-                $html .= '<th class="right" style="width:13%;">VALOR TOTAL</th>';
-                $html .= '<th class="center" style="width:9%;">% NO GRUPO</th>';
-                $html .= '<th class="center" style="width:9%;">% NA ETAPA</th>';
-                $html .= '<th class="right" style="width:13%;">VLR CONCLUÍDO</th>';
-                $html .= '<th class="center" style="width:9%;">% CONCLUÍDO</th>';
-                $html .= '<th class="center" style="width:9%;">% A PAGAR</th>';
+                $html .= '<th class="left" style="width:25%;">CATEGORIA</th>';
+                $html .= '<th class="right" style="width:11%;">VALOR TOTAL</th>';
+                $html .= '<th class="center" style="width:8%;">% NO GRUPO</th>';
+                $html .= '<th class="center" style="width:8%;">% NA ETAPA</th>';
+                $html .= '<th class="right" style="width:11%;">VLR CONCLUÍDO</th>';
+                $html .= '<th class="center" style="width:8%;">% CONCLUÍDO</th>';
+                $html .= '<th class="center" style="width:8%;">% A PAGAR</th>';
+                $html .= '<th class="right" style="width:11%;">VLR A PAGAR</th>';
                 $html .= '</tr></thead><tbody>';
                 
                 // Listar categorias do grupo
@@ -1070,6 +1071,10 @@ HTML;
                         ? ($totalConcluidoCategoria / $saldoAPagar) * 100 
                         : 0.0;
                     
+                    // VALOR A PAGAR = valor concluído que ainda precisa ser pago
+                    // Se já pagou entrada, desconta proporcionalmente
+                    $valorAPagar = $totalConcluidoCategoria;
+                    
                     $html .= '<tr>';
                     $html .= '<td class="left">' . htmlspecialchars($nomeCategoria) . '</td>';
                     $html .= '<td class="right">R$ ' . self::formatarValor($totalCategoria) . '</td>';
@@ -1078,6 +1083,7 @@ HTML;
                     $html .= '<td class="right">R$ ' . self::formatarValor($totalConcluidoCategoria) . '</td>';
                     $html .= '<td class="center">' . number_format($percentualConcluidoNaObra, 2, ',', '.') . '%</td>';
                     $html .= '<td class="center">' . number_format($percentualAPagar, 2, ',', '.') . '%</td>';
+                    $html .= '<td class="right">R$ ' . self::formatarValor($valorAPagar) . '</td>';
                     $html .= '</tr>';
                 }
                 
@@ -1098,6 +1104,9 @@ HTML;
                     ? ($totalConcluidoGrupo / $saldoAPagar) * 100 
                     : 0.0;
                 
+                // VALOR A PAGAR do grupo
+                $valorAPagarGrupo = $totalConcluidoGrupo;
+                
                 $html .= '<tr style="background:#2C3E50 !important;color:#FFF !important;font-weight:bold;">';
                 $html .= '<td class="left" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">SUBTOTAL — ' . htmlspecialchars(strtoupper($nomeGrupo)) . '</td>';
                 $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($totalGrupo) . '</td>';
@@ -1106,6 +1115,7 @@ HTML;
                 $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($totalConcluidoGrupo) . '</td>';
                 $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualConcluidoGrupoNaObra, 2, ',', '.') . '%</td>';
                 $html .= '<td class="center" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">' . number_format($percentualAPagarGrupo, 2, ',', '.') . '%</td>';
+                $html .= '<td class="right" style="padding:8px;background:#2C3E50 !important;color:#FFF !important;">R$ ' . self::formatarValor($valorAPagarGrupo) . '</td>';
                 $html .= '</tr>';
                 
                 $html .= '</tbody></table>';
