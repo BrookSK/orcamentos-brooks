@@ -1510,24 +1510,6 @@ HTML;
                     $html .= '<td colspan="14" class="left" style="padding:8px;background:#4A5568;color:#FFF;font-weight:bold;border:1px solid #4A5568;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
                     $html .= '</tr>';
                     
-                    // Repetir headers das colunas para facilitar leitura
-                    $html .= '<tr style="background:#666;color:#FFF;font-weight:bold;">';
-                    $html .= '<th class="left" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Cód.</th>';
-                    $html .= '<th class="left" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Descrição</th>';
-                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Un</th>';
-                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Qtd</th>';
-                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Unit. Mat.</th>';
-                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Unit. M.O.</th>';
-                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Unit.Total</th>';
-                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Total</th>';
-                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">% Etapa</th>';
-                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Concluído</th>';
-                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">% Obra</th>';
-                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr A Pagar</th>';
-                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">% do Saldo Restante</th>';
-                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Status</th>';
-                    $html .= '</tr>';
-                    
                     $subtotalCategoria = 0.0;
                     $totalConcluidoCategoria = 0.0;
                     
