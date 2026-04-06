@@ -68,6 +68,7 @@ final class OrcamentoPDF
             }
         }
         
+        $html .= self::gerarPaginaLegendas($orcamento);
         $html .= self::gerarPaginaResumoPorFase($orcamentoId, $orcamento);
         $html .= self::gerarPaginaDetalhamento($orcamentoId, $orcamento);
         $html .= self::gerarResumoFinal($orcamentoId, $orcamento); // Adicionar página de resumo final com impostos
@@ -513,6 +514,101 @@ HTML;
     </div>
 </div>
 HTML;
+    }
+
+    private static function gerarPaginaLegendas(array $orcamento): string
+    {
+        $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'LEGENDAS E EXPLICAÇÕES');
+        
+        $html .= '<div style="margin:20px 0;page-break-inside:avoid;">';
+        $html .= '<div style="font-weight:700;font-size:14px;margin-bottom:15px;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">ENTENDENDO AS COLUNAS DO ORÇAMENTO</div>';
+        
+        // Seção: Planilha Detalhada
+        $html .= '<div style="margin-bottom:25px;">';
+        $html .= '<div style="font-weight:700;font-size:12px;margin-bottom:10px;color:#2C3350;">PLANILHA DETALHADA (Itens)</div>';
+        $html .= '<table style="width:100%;border-collapse:collapse;font-size:9pt;">';
+        
+        $legendas = [
+            ['Cód.', 'Código do item no orçamento'],
+            ['Descrição', 'Descrição detalhada do serviço ou material'],
+            ['Un', 'Unidade de medida (m², m³, vb, etc.)'],
+            ['Qtd', 'Quantidade do item'],
+            ['Vlr Unit. Mat.', 'Valor unitário de materiais (inclui BDI)'],
+            ['Vlr Unit. M.O.', 'Valor unitário de mão de obra (inclui BDI)'],
+            ['Vlr Unit.Total', 'Valor unitário total (materiais + mão de obra)'],
+            ['Vlr Total', 'Valor total do item (valor unitário × quantidade)'],
+            ['% Etapa', 'Percentual que o item representa dentro da sua etapa'],
+            ['Vlr Concluído', 'Valor já executado do item (baseado no % realizado)'],
+            ['% Obra', 'Percentual que o valor executado representa do valor total da obra'],
+            ['Vlr A Pagar', 'Valor executado que ainda precisa ser pago'],
+            ['% do Saldo Restante', 'Percentual que o valor executado representa do saldo após a entrada'],
+            ['Status', 'Status de execução: Pendente, em andamento (%) ou Concluído']
+        ];
+        
+        foreach ($legendas as $legenda) {
+            $html .= '<tr style="border-bottom:1px solid #e0e0e0;">';
+            $html .= '<td style="padding:8px;width:25%;font-weight:bold;color:#2C3350;">' . htmlspecialchars($legenda[0]) . '</td>';
+            $html .= '<td style="padding:8px;">' . htmlspecialchars($legenda[1]) . '</td>';
+            $html .= '</tr>';
+        }
+        
+        $html .= '</table>';
+        $html .= '</div>';
+        
+        // Seção: Conceitos Importantes
+        $html .= '<div style="margin-bottom:25px;">';
+        $html .= '<div style="font-weight:700;font-size:12px;margin-bottom:10px;color:#2C3350;">CONCEITOS IMPORTANTES</div>';
+        $html .= '<div style="background:#f8f9fa;padding:15px;border-left:4px solid #1a237e;margin-bottom:10px;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;">Valor de Entrada</div>';
+        $html .= '<div style="font-size:9pt;">Valor pago antecipadamente pelo cliente antes do início da obra. Este valor é descontado do total para calcular o saldo restante a pagar.</div>';
+        $html .= '</div>';
+        
+        $html .= '<div style="background:#f8f9fa;padding:15px;border-left:4px solid #1a237e;margin-bottom:10px;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;">Saldo Restante</div>';
+        $html .= '<div style="font-size:9pt;">Valor Total da Obra - Valor de Entrada = Saldo que ainda precisa ser pago conforme a obra avança.</div>';
+        $html .= '</div>';
+        
+        $html .= '<div style="background:#f8f9fa;padding:15px;border-left:4px solid #1a237e;margin-bottom:10px;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;">% do Saldo Restante</div>';
+        $html .= '<div style="font-size:9pt;">Indica quanto o valor executado representa do saldo que ainda falta pagar. Útil para calcular parcelas de pagamento baseadas no progresso da obra.</div>';
+        $html .= '</div>';
+        
+        $html .= '<div style="background:#f8f9fa;padding:15px;border-left:4px solid #1a237e;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;">BDI (Benefícios e Despesas Indiretas)</div>';
+        $html .= '<div style="font-size:9pt;">Percentual aplicado sobre os custos diretos para cobrir despesas administrativas, impostos, lucro e outros custos indiretos da obra.</div>';
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        // Seção: Hierarquia
+        $html .= '<div style="margin-bottom:25px;">';
+        $html .= '<div style="font-weight:700;font-size:12px;margin-bottom:10px;color:#2C3350;">HIERARQUIA DO ORÇAMENTO</div>';
+        $html .= '<div style="font-size:9pt;line-height:1.6;">';
+        $html .= '<div style="padding:8px;background:#1a237e;color:#FFF;margin-bottom:5px;font-weight:bold;">1. ETAPA (Fase) - Azul Escuro</div>';
+        $html .= '<div style="padding:8px;background:#2C3350;color:#FFF;margin-bottom:5px;margin-left:20px;font-weight:bold;">2. GRUPO - Azul Médio</div>';
+        $html .= '<div style="padding:8px;background:#4A5568;color:#FFF;margin-left:40px;font-weight:bold;">3. CATEGORIA - Cinza</div>';
+        $html .= '<div style="padding:8px;margin-left:60px;border:1px solid #ccc;margin-top:5px;">4. Itens individuais</div>';
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        // Exemplo prático
+        $html .= '<div style="margin-bottom:25px;">';
+        $html .= '<div style="font-weight:700;font-size:12px;margin-bottom:10px;color:#2C3350;">EXEMPLO PRÁTICO</div>';
+        $html .= '<div style="background:#fff3cd;padding:15px;border:1px solid #ffc107;font-size:9pt;line-height:1.6;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:8px;">Obra de R$ 100.000,00 com entrada de R$ 30.000,00:</div>';
+        $html .= '<div>• Saldo Restante = R$ 70.000,00</div>';
+        $html .= '<div>• Se uma etapa de R$ 7.000,00 foi 100% concluída:</div>';
+        $html .= '<div style="margin-left:20px;">- % Obra = 7% (R$ 7.000 ÷ R$ 100.000)</div>';
+        $html .= '<div style="margin-left:20px;">- % do Saldo Restante = 10% (R$ 7.000 ÷ R$ 70.000)</div>';
+        $html .= '<div style="margin-top:8px;">• Isso significa que esta etapa representa 10% do que ainda precisa ser pago.</div>';
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        
+        $html .= '<div class="page-footer"><div>FOLHA: LEGENDAS</div></div>';
+        $html .= '</div>';
+        
+        return $html;
     }
 
     private static function gerarPaginasResumo(int $orcamentoId, array $orcamento): string
@@ -1375,6 +1471,24 @@ HTML;
                     $html .= '<td colspan="14" class="left" style="padding:8px;background:#4A5568;color:#FFF;font-weight:bold;border:1px solid #4A5568;">' . htmlspecialchars(strtoupper($nomeCategoria)) . '</td>';
                     $html .= '</tr>';
                     
+                    // Repetir headers das colunas para facilitar leitura
+                    $html .= '<tr style="background:#666;color:#FFF;font-weight:bold;">';
+                    $html .= '<th class="left" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Cód.</th>';
+                    $html .= '<th class="left" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Descrição</th>';
+                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Un</th>';
+                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Qtd</th>';
+                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Unit. Mat.</th>';
+                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Unit. M.O.</th>';
+                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Unit.Total</th>';
+                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Total</th>';
+                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">% Etapa</th>';
+                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr Concluído</th>';
+                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">% Obra</th>';
+                    $html .= '<th class="right" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Vlr A Pagar</th>';
+                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">% do Saldo Restante</th>';
+                    $html .= '<th class="center" style="padding:6px 4px;font-size:7pt;border:1px solid #666;">Status</th>';
+                    $html .= '</tr>';
+                    
                     $subtotalCategoria = 0.0;
                     $totalConcluidoCategoria = 0.0;
                     
@@ -1576,7 +1690,7 @@ HTML;
         $pctObraGeral = $totalGeralObra > 0 ? ($totalConcluidoGeral / $totalGeralObra) * 100 : 0.0;
         $pctSaldoGeral = $saldoAPagar > 0 ? ($totalConcluidoGeral / $saldoAPagar) * 100 : 0.0;
         
-        $html .= '<div style="margin-top:30px;padding:20px;background:#f8f9fa;border:2px solid #1a237e;">';
+        $html .= '<div style="margin-top:30px;padding:20px;background:#f8f9fa;border:2px solid #1a237e;page-break-inside:avoid;">';
         $html .= '<div style="font-weight:700;font-size:18px;margin-bottom:15px;text-align:center;color:#1a237e;">RESUMO GERAL DE EXECUÇÃO</div>';
         $html .= '<table style="width:100%;border-collapse:collapse;">';
         $html .= '<tr style="background:#1a237e;color:#FFF;font-weight:bold;">';
