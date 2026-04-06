@@ -2529,21 +2529,18 @@ final class OrcamentoController
                     'count_categories' => count($categories)
                 ]);
                 
-                $stmtUpdate = $pdo->prepare('UPDATE orcamento_itens SET ordem = :ordem, codigo = :codigo, categoria = :categoria, grupo = :grupo WHERE id = :id AND orcamento_id = :orcamento_id');
+                // IMPORTANTE: Não alterar grupo e categoria - apenas ordem e código
+                $stmtUpdate = $pdo->prepare('UPDATE orcamento_itens SET ordem = :ordem, codigo = :codigo WHERE id = :id AND orcamento_id = :orcamento_id');
                 
                 $updatedCodes = [];
                 $totalUpdated = 0;
                 
                 foreach ($categories as $catData) {
                     $ordemCategoria = (int)($catData['ordem_categoria'] ?? 0);
-                    $categoria = (string)($catData['categoria'] ?? '');
-                    $grupo = (string)($catData['grupo'] ?? '');
                     $items = $catData['items'] ?? [];
                     
                     Logger::info('orcamentos.reorderItems.processing_category', [
                         'ordem' => $ordemCategoria,
-                        'categoria' => $categoria,
-                        'grupo' => $grupo,
                         'items_count' => count($items)
                     ]);
                     
@@ -2557,17 +2554,13 @@ final class OrcamentoController
                         
                         Logger::info('orcamentos.reorderItems.updating_item', [
                             'item_id' => $itemId,
-                            'new_code' => $newCode,
-                            'new_categoria' => $categoria,
-                            'new_grupo' => $grupo
+                            'new_code' => $newCode
                         ]);
                         
                         $stmtUpdate->execute([
                             ':id' => $itemId,
                             ':ordem' => ($ordemCategoria * 1000) + $ordemItem, // Ordem global para manter sequência
                             ':codigo' => $newCode,
-                            ':categoria' => $categoria,
-                            ':grupo' => $grupo,
                             ':orcamento_id' => $orcamentoId
                         ]);
                         

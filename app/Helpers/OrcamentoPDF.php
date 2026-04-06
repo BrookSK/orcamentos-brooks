@@ -157,7 +157,7 @@ final class OrcamentoPDF
         $areaTotal = $dadosAreas['total'];
         $areasPersonalizadas = $dadosAreas['areas'];
         
-        // Tabela ÚNICA com TODAS as informações: CATEGORIA, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
+        // Tabela ÚNICA com TODAS as informações: GRUPO, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
         $html .= '<table class="table-resumo" style="margin-top:15px;">';
         $html .= '<thead><tr>';
         $html .= '<th class="left" style="width:30%;">CATEGORIA</th>';
@@ -167,14 +167,15 @@ final class OrcamentoPDF
         $html .= '<th class="right" style="width:23%;">PREÇO / m2</th>';
         $html .= '</tr></thead><tbody>';
         
-        foreach ($categoriasAgrupadas as $categoriaNome => $totalCategoria) {
-            $pctObra = $totalGeral > 0 ? ($totalCategoria / $totalGeral) * 100 : 0;
-            $precoM2 = $areaTotal > 0 ? $totalCategoria / $areaTotal : 0;
+        foreach ($grupos as $grupoNome => $grupoData) {
+            $totalGrupo = $grupoData['total'];
+            $pctObra = $totalGeral > 0 ? ($totalGrupo / $totalGeral) * 100 : 0;
+            $precoM2 = $areaTotal > 0 ? $totalGrupo / $areaTotal : 0;
             
             $html .= sprintf(
                 '<tr><td class="left">%s</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="center">%s</td><td class="right">R$ %s</td></tr>',
-                htmlspecialchars(strtoupper($categoriaNome)),
-                self::formatarValor($totalCategoria),
+                htmlspecialchars(strtoupper($grupoNome)),
+                self::formatarValor($totalGrupo),
                 number_format($pctObra, 2, ',', '.'),
                 number_format($areaTotal, 2, ',', '.'),
                 self::formatarValor($precoM2)
@@ -626,38 +627,43 @@ HTML;
 
     private static function gerarPaginasResumo(int $orcamentoId, array $orcamento): string
     {
-        // Buscar itens agrupados por CATEGORIA (não por etapa hardcoded)
+        // Buscar itens ORDENADOS (respeitando a ordem visual do painel)
         $pdo = \App\Core\Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT codigo, descricao, grupo, categoria, (quantidade * valor_cobranca) as valor_total '
+            'SELECT codigo, descricao, grupo, categoria, etapa, (quantidade * valor_cobranca) as valor_total '
             . 'FROM orcamento_itens WHERE orcamento_id = :id '
-            . 'ORDER BY CAST(SUBSTRING_INDEX(codigo, \'.\', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(codigo, \'.\', -1) AS UNSIGNED)'
+            . 'ORDER BY ordem, id'
         );
         $stmt->execute([':id' => $orcamentoId]);
         $itensAgrupados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         
-        // Agrupar por categoria
-        $categorias = [];
+        // Agrupar por GRUPO (não por categoria) - respeitando a ordem visual
+        $grupos = [];
+        $grupoAtual = null;
         $totalGeral = 0;
         
         foreach ($itensAgrupados as $item) {
-            $categoria = trim((string)($item['categoria'] ?? 'SEM CATEGORIA'));
+            $grupo = trim((string)($item['grupo'] ?? 'SEM GRUPO'));
             $valor = (float)$item['valor_total'];
             
-            if (!isset($categorias[$categoria])) {
-                $categorias[$categoria] = [
-                    'itens' => [],
-                    'total' => 0
-                ];
+            // Se mudou de grupo, criar novo grupo
+            if ($grupo !== $grupoAtual) {
+                $grupoAtual = $grupo;
+                if (!isset($grupos[$grupo])) {
+                    $grupos[$grupo] = [
+                        'itens' => [],
+                        'total' => 0
+                    ];
+                }
             }
             
-            $categorias[$categoria]['itens'][] = $item;
-            $categorias[$categoria]['total'] += $valor;
+            $grupos[$grupo]['itens'][] = $item;
+            $grupos[$grupo]['total'] += $valor;
             $totalGeral += $valor;
         }
         
-        // Se não houver categorias, gerar apenas página de áreas
-        if (empty($categorias)) {
+        // Se não houver grupos, gerar apenas página de áreas
+        if (empty($grupos)) {
             $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
             $html .= '<div class="etapa-header">RESUMO GERAL</div>';
             
@@ -685,13 +691,9 @@ HTML;
                     if ($tipoArea === 'terrea') {
                         $nomeExibicao = $nome . ' *';
                     } elseif ($tipoArea === 'superior') {
-
                         $nomeExibicao = $nome . ' **';
-
                     } elseif ($tipoArea === 'nao_somar') {
-
                         $nomeExibicao = $nome . '<br><span style="font-size:8px;">Não utilizado para cálculo</span>';
-
                     }
                     
                     $html .= sprintf(
@@ -763,22 +765,6 @@ HTML;
         $areaTotal = $dadosAreas['total'];
         $areasPersonalizadas = $dadosAreas['areas'];
         
-        // Agrupar categorias por nome principal (remover sufixos como " - MATERIAIS", " - MÃO DE OBRA", etc)
-        $categoriasAgrupadas = [];
-        foreach ($categorias as $categoriaNome => $categoriaData) {
-            // Extrair categoria principal (antes do " - ")
-            $categoriaPrincipal = $categoriaNome;
-            if (strpos($categoriaNome, ' - ') !== false) {
-                $categoriaPrincipal = trim(explode(' - ', $categoriaNome)[0]);
-            }
-            
-            if (!isset($categoriasAgrupadas[$categoriaPrincipal])) {
-                $categoriasAgrupadas[$categoriaPrincipal] = 0;
-            }
-            
-            $categoriasAgrupadas[$categoriaPrincipal] += $categoriaData['total'];
-        }
-        
         $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
         $html .= '<div class="etapa-header">RESUMO GERAL</div>';
         
@@ -791,7 +777,7 @@ HTML;
         $valorImpostos = $subtotal * ($percentualImpostos / 100);
         $totalFinal = $subtotal + $valorCustosAdm + $valorImpostos;
         
-        // Tabela ÚNICA com TODAS as informações: CATEGORIA, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
+        // Tabela ÚNICA com TODAS as informações: GRUPO, VALOR TOTAL, % DA OBRA, M2, PREÇO/m2
         $html .= '<table class="table-resumo" style="margin-top:15px;">';
         $html .= '<thead><tr>';
         $html .= '<th class="left" style="width:30%;">CATEGORIA</th>';
@@ -934,16 +920,16 @@ HTML;
         $html .= '<div class="page-footer"><div>FOLHA: 1</div></div>';
         $html .= '</div>';
         
-        // DEPOIS: Gerar páginas de resumo por categoria
+        // DEPOIS: Gerar páginas de resumo por grupo
         $paginaNum = 2;
         
         // Obter valor de entrada para cálculos
         $valorEntrada = (float)($orcamento['valor_entrada'] ?? 0);
         $saldoAPagar = $totalGeral - $valorEntrada;
         
-        foreach ($categorias as $categoriaNome => $categoriaData) {
+        foreach ($grupos as $grupoNome => $grupoData) {
             $html .= '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'PLANILHA RESUMO');
-            $html .= '<div class="etapa-header">' . htmlspecialchars(strtoupper($categoriaNome)) . '</div>';
+            $html .= '<div class="etapa-header">' . htmlspecialchars(strtoupper($grupoNome)) . '</div>';
             $html .= '<table class="table-resumo"><thead><tr>';
             $html .= '<th style="width:6%;">Nº</th><th style="width:28%;">DESCRIÇÃO</th>';
             $html .= '<th class="right" style="width:11%;">VALOR TOTAL</th>';
@@ -955,9 +941,9 @@ HTML;
             $html .= '<th class="center" style="width:12%;">Status</th>';
             $html .= '</tr></thead><tbody>';
             
-            foreach ($categoriaData['itens'] as $item) {
+            foreach ($grupoData['itens'] as $item) {
                 $valorTotal = (float)$item['valor_total'];
-                $pctEtapa = $categoriaData['total'] > 0 ? ($valorTotal / $categoriaData['total']) * 100 : 0;
+                $pctEtapa = $grupoData['total'] > 0 ? ($valorTotal / $grupoData['total']) * 100 : 0;
                 
                 // Buscar percentual_realizado do item
                 $stmtItem = $pdo->prepare('SELECT percentual_realizado, pagamento_realizado FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND codigo = :codigo LIMIT 1');
@@ -1011,7 +997,7 @@ HTML;
             // Calcular totais da categoria
             $totalConcluidoCategoria = 0;
             $totalAPagarCategoria = 0;
-            foreach ($categoriaData['itens'] as $item) {
+            foreach ($grupoData['itens'] as $item) {
                 $stmtItem = $pdo->prepare('SELECT percentual_realizado, pagamento_realizado FROM orcamento_itens WHERE orcamento_id = :orcamento_id AND codigo = :codigo LIMIT 1');
                 $stmtItem->execute([':orcamento_id' => $orcamentoId, ':codigo' => $item['codigo']]);
                 $itemData = $stmtItem->fetch(\PDO::FETCH_ASSOC);
@@ -1032,8 +1018,8 @@ HTML;
             
             $html .= sprintf(
                 '<tr class="subtotal-row"><td colspan="2">SUBTOTAL - %s</td><td class="right">R$ %s</td><td class="center">100,00%%</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="right">R$ %s</td><td class="center">%s%%</td><td class="center">—</td></tr>',
-                htmlspecialchars(strtoupper($categoriaNome)),
-                self::formatarValor($categoriaData['total']),
+                htmlspecialchars(strtoupper($grupoNome)),
+                self::formatarValor($grupoData['total']),
                 self::formatarValor($totalConcluidoCategoria),
                 number_format($pctCategoriaObra, 2, ',', '.'),
                 self::formatarValor($totalAPagarCategoria),
