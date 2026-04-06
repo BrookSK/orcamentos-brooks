@@ -1387,24 +1387,34 @@ final class OrcamentoController
 
     public function buscarIdGrupo(): void
     {
-        header('Content-Type: application/json');
-        
-        $nome = trim((string)($_POST['nome'] ?? ''));
-        
-        if ($nome === '') {
-            echo json_encode(['error' => 'Nome não informado']);
-            return;
+        // Limpar qualquer output anterior
+        if (ob_get_level()) {
+            ob_clean();
         }
         
-        $pdo = Database::pdo();
-        $stmt = $pdo->prepare('SELECT id FROM orcamento_opcoes WHERE tipo = :tipo AND nome = :nome LIMIT 1');
-        $stmt->execute([':tipo' => 'grupo', ':nome' => $nome]);
-        $result = $stmt->fetch();
+        header('Content-Type: application/json');
         
-        if ($result) {
-            echo json_encode(['id' => (int)$result['id']]);
-        } else {
-            echo json_encode(['error' => 'Grupo não encontrado']);
+        try {
+            $nome = trim((string)($_POST['nome'] ?? ''));
+            
+            if ($nome === '') {
+                echo json_encode(['error' => 'Nome não informado']);
+                return;
+            }
+            
+            $pdo = Database::pdo();
+            $stmt = $pdo->prepare('SELECT id FROM orcamento_opcoes WHERE tipo = :tipo AND nome = :nome LIMIT 1');
+            $stmt->execute([':tipo' => 'grupo', ':nome' => $nome]);
+            $result = $stmt->fetch();
+            
+            if ($result) {
+                echo json_encode(['id' => (int)$result['id']]);
+            } else {
+                echo json_encode(['error' => 'Grupo não encontrado']);
+            }
+        } catch (\Exception $e) {
+            Logger::error('orcamentos.buscarIdGrupo.failed', ['error' => $e->getMessage()]);
+            echo json_encode(['error' => 'Erro ao buscar grupo: ' . $e->getMessage()]);
         }
     }
 
@@ -1417,10 +1427,17 @@ final class OrcamentoController
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
                   strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
         
+        if ($isAjax) {
+            // Limpar qualquer output anterior
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json');
+        }
+        
         $errors = OrcamentoOpcao::validate($nome);
         if ($errors || $id <= 0) {
             if ($isAjax) {
-                header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => $errors['nome'] ?? 'ID inválido']);
                 return;
             }
@@ -1438,7 +1455,6 @@ final class OrcamentoController
             OrcamentoOpcao::update($id, 'grupo', $nome);
             
             if ($isAjax) {
-                header('Content-Type: application/json');
                 echo json_encode(['success' => true]);
                 return;
             }
@@ -1447,7 +1463,6 @@ final class OrcamentoController
             exit;
         } catch (\Exception $e) {
             if ($isAjax) {
-                header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => $e->getMessage()]);
                 return;
             }

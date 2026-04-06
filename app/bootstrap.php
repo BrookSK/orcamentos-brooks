@@ -29,10 +29,34 @@ set_exception_handler(static function (\Throwable $e): void {
     ]);
 
     http_response_code(500);
+    
+    // Detectar se é uma requisição AJAX
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+              strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    
     $debug = ((string)($_GET['debug'] ?? '') === '1') || ((string)getenv('APP_DEBUG') === '1');
     
     // SEMPRE mostrar erro detalhado (remova esta linha em produção)
     $debug = true;
+    
+    if ($isAjax) {
+        // Para requisições AJAX, sempre retornar JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'error' => $debug ? $e->getMessage() : 'Erro interno do servidor',
+            'debug' => $debug ? [
+                'class' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ] : null
+        ]);
+        return;
+    }
     
     if ($debug) {
         header('Content-Type: text/plain; charset=utf-8');
