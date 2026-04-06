@@ -520,13 +520,14 @@ HTML;
     {
         $html = '<div class="page">' . self::gerarHeaderPadrao($orcamento, 'LEGENDAS E EXPLICAÇÕES');
         
-        $html .= '<div style="margin:20px 0;page-break-inside:avoid;">';
-        $html .= '<div style="font-weight:700;font-size:14px;margin-bottom:15px;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">ENTENDENDO AS COLUNAS DO ORÇAMENTO</div>';
+        $html .= '<div style="font-weight:700;font-size:12px;margin:15px 0 10px 0;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">ENTENDENDO AS COLUNAS DO ORÇAMENTO</div>';
         
-        // Seção: Planilha Detalhada
-        $html .= '<div style="margin-bottom:25px;">';
-        $html .= '<div style="font-weight:700;font-size:12px;margin-bottom:10px;color:#2C3350;">PLANILHA DETALHADA (Itens)</div>';
-        $html .= '<table style="width:100%;border-collapse:collapse;font-size:9pt;">';
+        // Tabela de legendas em 2 colunas
+        $html .= '<table style="width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:15px;">';
+        $html .= '<tr style="background:#666;color:#FFF;font-weight:bold;">';
+        $html .= '<td style="padding:6px;border:1px solid #666;width:20%;">COLUNA</td>';
+        $html .= '<td style="padding:6px;border:1px solid #666;">SIGNIFICADO</td>';
+        $html .= '</tr>';
         
         $legendas = [
             ['Cód.', 'Código do item no orçamento'],
@@ -541,68 +542,62 @@ HTML;
             ['Vlr Concluído', 'Valor já executado do item (baseado no % realizado)'],
             ['% Obra', 'Percentual que o valor executado representa do valor total da obra'],
             ['Vlr A Pagar', 'Valor executado que ainda precisa ser pago'],
-            ['% do Saldo Restante', 'Percentual que o valor executado representa do saldo após a entrada'],
-            ['Status', 'Status de execução: Pendente, em andamento (%) ou Concluído']
+            ['% do Saldo Restante', 'Percentual que representa do saldo após a entrada'],
+            ['Status', 'Pendente, em andamento (%) ou Concluído']
         ];
         
         foreach ($legendas as $legenda) {
             $html .= '<tr style="border-bottom:1px solid #e0e0e0;">';
-            $html .= '<td style="padding:8px;width:25%;font-weight:bold;color:#2C3350;">' . htmlspecialchars($legenda[0]) . '</td>';
-            $html .= '<td style="padding:8px;">' . htmlspecialchars($legenda[1]) . '</td>';
+            $html .= '<td style="padding:5px;font-weight:bold;color:#2C3350;border:1px solid #e0e0e0;">' . htmlspecialchars($legenda[0]) . '</td>';
+            $html .= '<td style="padding:5px;border:1px solid #e0e0e0;">' . htmlspecialchars($legenda[1]) . '</td>';
             $html .= '</tr>';
         }
         
         $html .= '</table>';
+        
+        // Conceitos em grid 2x2
+        $html .= '<div style="font-weight:700;font-size:12px;margin:15px 0 10px 0;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">CONCEITOS IMPORTANTES</div>';
+        
+        $html .= '<table style="width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:15px;">';
+        $html .= '<tr>';
+        $html .= '<td style="width:50%;padding:10px;background:#f8f9fa;border:1px solid #ddd;vertical-align:top;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;color:#1a237e;">Valor de Entrada</div>';
+        $html .= '<div>Valor pago antecipadamente pelo cliente antes do início da obra.</div>';
+        $html .= '</td>';
+        $html .= '<td style="width:50%;padding:10px;background:#f8f9fa;border:1px solid #ddd;vertical-align:top;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;color:#1a237e;">Saldo Restante</div>';
+        $html .= '<div>Valor Total da Obra - Valor de Entrada = Saldo a pagar.</div>';
+        $html .= '</td>';
+        $html .= '</tr>';
+        $html .= '<tr>';
+        $html .= '<td style="padding:10px;background:#f8f9fa;border:1px solid #ddd;vertical-align:top;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;color:#1a237e;">% do Saldo Restante</div>';
+        $html .= '<div>Quanto o valor executado representa do saldo que falta pagar.</div>';
+        $html .= '</td>';
+        $html .= '<td style="padding:10px;background:#f8f9fa;border:1px solid #ddd;vertical-align:top;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;color:#1a237e;">BDI</div>';
+        $html .= '<div>Percentual sobre custos diretos para cobrir despesas indiretas.</div>';
+        $html .= '</td>';
+        $html .= '</tr>';
+        $html .= '</table>';
+        
+        // Hierarquia compacta
+        $html .= '<div style="font-weight:700;font-size:12px;margin:15px 0 10px 0;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">HIERARQUIA DO ORÇAMENTO</div>';
+        $html .= '<div style="font-size:8pt;line-height:1.4;margin-bottom:15px;">';
+        $html .= '<div style="padding:6px;background:#1a237e;color:#FFF;margin-bottom:3px;font-weight:bold;">1. ETAPA (Fase) - Azul Escuro</div>';
+        $html .= '<div style="padding:6px;background:#2C3350;color:#FFF;margin-bottom:3px;margin-left:15px;font-weight:bold;">2. GRUPO - Azul Médio</div>';
+        $html .= '<div style="padding:6px;background:#4A5568;color:#FFF;margin-bottom:3px;margin-left:30px;font-weight:bold;">3. CATEGORIA - Cinza</div>';
+        $html .= '<div style="padding:6px;margin-left:45px;border:1px solid #ccc;">4. Itens individuais</div>';
         $html .= '</div>';
         
-        // Seção: Conceitos Importantes
-        $html .= '<div style="margin-bottom:25px;">';
-        $html .= '<div style="font-weight:700;font-size:12px;margin-bottom:10px;color:#2C3350;">CONCEITOS IMPORTANTES</div>';
-        $html .= '<div style="background:#f8f9fa;padding:15px;border-left:4px solid #1a237e;margin-bottom:10px;">';
-        $html .= '<div style="font-weight:bold;margin-bottom:5px;">Valor de Entrada</div>';
-        $html .= '<div style="font-size:9pt;">Valor pago antecipadamente pelo cliente antes do início da obra. Este valor é descontado do total para calcular o saldo restante a pagar.</div>';
-        $html .= '</div>';
-        
-        $html .= '<div style="background:#f8f9fa;padding:15px;border-left:4px solid #1a237e;margin-bottom:10px;">';
-        $html .= '<div style="font-weight:bold;margin-bottom:5px;">Saldo Restante</div>';
-        $html .= '<div style="font-size:9pt;">Valor Total da Obra - Valor de Entrada = Saldo que ainda precisa ser pago conforme a obra avança.</div>';
-        $html .= '</div>';
-        
-        $html .= '<div style="background:#f8f9fa;padding:15px;border-left:4px solid #1a237e;margin-bottom:10px;">';
-        $html .= '<div style="font-weight:bold;margin-bottom:5px;">% do Saldo Restante</div>';
-        $html .= '<div style="font-size:9pt;">Indica quanto o valor executado representa do saldo que ainda falta pagar. Útil para calcular parcelas de pagamento baseadas no progresso da obra.</div>';
-        $html .= '</div>';
-        
-        $html .= '<div style="background:#f8f9fa;padding:15px;border-left:4px solid #1a237e;">';
-        $html .= '<div style="font-weight:bold;margin-bottom:5px;">BDI (Benefícios e Despesas Indiretas)</div>';
-        $html .= '<div style="font-size:9pt;">Percentual aplicado sobre os custos diretos para cobrir despesas administrativas, impostos, lucro e outros custos indiretos da obra.</div>';
-        $html .= '</div>';
-        $html .= '</div>';
-        
-        // Seção: Hierarquia
-        $html .= '<div style="margin-bottom:25px;">';
-        $html .= '<div style="font-weight:700;font-size:12px;margin-bottom:10px;color:#2C3350;">HIERARQUIA DO ORÇAMENTO</div>';
-        $html .= '<div style="font-size:9pt;line-height:1.6;">';
-        $html .= '<div style="padding:8px;background:#1a237e;color:#FFF;margin-bottom:5px;font-weight:bold;">1. ETAPA (Fase) - Azul Escuro</div>';
-        $html .= '<div style="padding:8px;background:#2C3350;color:#FFF;margin-bottom:5px;margin-left:20px;font-weight:bold;">2. GRUPO - Azul Médio</div>';
-        $html .= '<div style="padding:8px;background:#4A5568;color:#FFF;margin-left:40px;font-weight:bold;">3. CATEGORIA - Cinza</div>';
-        $html .= '<div style="padding:8px;margin-left:60px;border:1px solid #ccc;margin-top:5px;">4. Itens individuais</div>';
-        $html .= '</div>';
-        $html .= '</div>';
-        
-        // Exemplo prático
-        $html .= '<div style="margin-bottom:25px;">';
-        $html .= '<div style="font-weight:700;font-size:12px;margin-bottom:10px;color:#2C3350;">EXEMPLO PRÁTICO</div>';
-        $html .= '<div style="background:#fff3cd;padding:15px;border:1px solid #ffc107;font-size:9pt;line-height:1.6;">';
-        $html .= '<div style="font-weight:bold;margin-bottom:8px;">Obra de R$ 100.000,00 com entrada de R$ 30.000,00:</div>';
-        $html .= '<div>• Saldo Restante = R$ 70.000,00</div>';
-        $html .= '<div>• Se uma etapa de R$ 7.000,00 foi 100% concluída:</div>';
-        $html .= '<div style="margin-left:20px;">- % Obra = 7% (R$ 7.000 ÷ R$ 100.000)</div>';
-        $html .= '<div style="margin-left:20px;">- % do Saldo Restante = 10% (R$ 7.000 ÷ R$ 70.000)</div>';
-        $html .= '<div style="margin-top:8px;">• Isso significa que esta etapa representa 10% do que ainda precisa ser pago.</div>';
-        $html .= '</div>';
-        $html .= '</div>';
-        
+        // Exemplo prático compacto
+        $html .= '<div style="font-weight:700;font-size:12px;margin:15px 0 10px 0;color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:5px;">EXEMPLO PRÁTICO</div>';
+        $html .= '<div style="background:#fff3cd;padding:12px;border:1px solid #ffc107;font-size:8pt;line-height:1.5;">';
+        $html .= '<div style="font-weight:bold;margin-bottom:5px;">Obra de R$ 100.000 com entrada de R$ 30.000:</div>';
+        $html .= '<div>• Saldo Restante = R$ 70.000</div>';
+        $html .= '<div>• Etapa de R$ 7.000 concluída:</div>';
+        $html .= '<div style="margin-left:15px;">- % Obra = 7% (R$ 7.000 ÷ R$ 100.000)</div>';
+        $html .= '<div style="margin-left:15px;">- % do Saldo Restante = 10% (R$ 7.000 ÷ R$ 70.000)</div>';
         $html .= '</div>';
         
         $html .= '<div class="page-footer"><div>FOLHA: LEGENDAS</div></div>';
