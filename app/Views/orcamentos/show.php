@@ -6,6 +6,23 @@ use App\Models\OrcamentoItem;
 
 $itens = $itens ?? [];
 
+// DEBUG: Mostrar o que está vindo do banco
+if (isset($_GET['debug'])) {
+    echo '<pre style="background:#000;color:#0f0;padding:20px;margin:20px;border:2px solid #0f0;">';
+    echo "=== DEBUG: DADOS DO BANCO ===\n\n";
+    echo "Total de itens: " . count($itens) . "\n\n";
+    if (!empty($itens)) {
+        echo "Primeiro item:\n";
+        print_r($itens[0]);
+        echo "\nGrupos únicos:\n";
+        $gruposUnicos = array_unique(array_column($itens, 'grupo'));
+        foreach ($gruposUnicos as $g) {
+            echo "  - $g\n";
+        }
+    }
+    echo '</pre>';
+}
+
 $grouped = [];
 foreach ($itens as $it) {
     $grupo = (string)($it['grupo'] ?? '');

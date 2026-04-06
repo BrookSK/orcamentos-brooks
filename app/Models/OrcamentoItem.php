@@ -58,11 +58,39 @@ final class OrcamentoItem
     public static function allByOrcamento(int $orcamentoId): array
     {
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare('SELECT * FROM orcamento_itens WHERE orcamento_id = :id ORDER BY ordem, id');
+        
+        // Buscar itens com JOIN para pegar nomes atualizados das opções
+        // Isso garante que sempre mostra o nome atual, mesmo se foi editado
+        $sql = "
+            SELECT 
+                oi.*,
+                COALESCE(og.nome, oi.grupo) as grupo_atual,
+                COALESCE(oc.nome, oi.categoria) as categoria_atual,
+                COALESCE(oe.nome, oi.etapa) as etapa_atual,
+                COALESCE(ou.nome, oi.unidade) as unidade_atual
+            FROM orcamento_itens oi
+            LEFT JOIN orcamento_opcoes og ON og.tipo = 'grupo' AND og.nome = oi.grupo
+            LEFT JOIN orcamento_opcoes oc ON oc.tipo = 'categoria' AND oc.nome = oi.categoria
+            LEFT JOIN orcamento_opcoes oe ON oe.tipo = 'etapa' AND oe.nome = oi.etapa
+            LEFT JOIN orcamento_opcoes ou ON ou.tipo = 'unidade' AND ou.nome = oi.unidade
+            WHERE oi.orcamento_id = :id
+            ORDER BY oi.ordem, oi.id
+        ";
+        
+        $stmt = $pdo->prepare($sql);
         $stmt->execute([':id' => $orcamentoId]);
         $items = $stmt->fetchAll();
 
         foreach ($items as &$item) {
+            // Usar os nomes atualizados
+            $item['grupo'] = $item['grupo_atual'];
+            $item['categoria'] = $item['categoria_atual'];
+            $item['etapa'] = $item['etapa_atual'];
+            $item['unidade'] = $item['unidade_atual'];
+            
+            // Remover campos temporários
+            unset($item['grupo_atual'], $item['categoria_atual'], $item['etapa_atual'], $item['unidade_atual']);
+            
             $item['valor_total'] = self::calculateTotal((float)$item['quantidade'], (float)$item['valor_unitario']);
         }
 
