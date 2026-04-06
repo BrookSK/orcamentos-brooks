@@ -1411,7 +1411,20 @@ final class OrcamentoController
             if ($result) {
                 echo json_encode(['id' => (int)$result['id']]);
             } else {
-                echo json_encode(['error' => 'Grupo não encontrado']);
+                // Grupo não existe na tabela orcamento_opcoes, criar automaticamente
+                Logger::info('orcamentos.buscarIdGrupo.creating', ['nome' => $nome]);
+                OrcamentoOpcao::create('grupo', $nome);
+                
+                // Buscar o ID recém-criado
+                $stmt = $pdo->prepare('SELECT id FROM orcamento_opcoes WHERE tipo = :tipo AND nome = :nome LIMIT 1');
+                $stmt->execute([':tipo' => 'grupo', ':nome' => $nome]);
+                $result = $stmt->fetch();
+                
+                if ($result) {
+                    echo json_encode(['id' => (int)$result['id'], 'created' => true]);
+                } else {
+                    echo json_encode(['error' => 'Erro ao criar grupo']);
+                }
             }
         } catch (\Exception $e) {
             Logger::error('orcamentos.buscarIdGrupo.failed', ['error' => $e->getMessage()]);
