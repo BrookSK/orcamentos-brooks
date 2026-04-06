@@ -214,46 +214,61 @@ final class OrcamentoController
      */
     private function saveItemsAsTemplate(int $orcamentoId): void
     {
-        $itens = OrcamentoItem::allByOrcamento($orcamentoId);
-        
-        if (empty($itens)) {
-            return;
-        }
-        
-        // Preparar array de itens para o template
-        $templateItems = [];
-        foreach ($itens as $item) {
-            $templateItems[] = [
-                'etapa' => $item['etapa'] ?? '',
-                'grupo' => $item['grupo'] ?? '',
-                'categoria' => $item['categoria'] ?? '',
-                'codigo' => $item['codigo'] ?? '',
-                'descricao' => $item['descricao'] ?? '',
-                'quantidade' => $item['quantidade'] ?? 0,
-                'unidade' => $item['unidade'] ?? '',
-                'custo_material' => $item['custo_material'] ?? 0,
-                'custo_mao_obra' => $item['custo_mao_obra'] ?? 0,
-                'custo_equipamento' => $item['custo_equipamento'] ?? 0,
-                'classificacao_custo' => $item['classificacao_custo'] ?? null,
+        try {
+            $itens = OrcamentoItem::allByOrcamento($orcamentoId);
+            
+            if (empty($itens)) {
+                Logger::warning('orcamentos.template_save.no_items', ['orcamento_id' => $orcamentoId]);
+                return;
+            }
+            
+            // Preparar array de itens para o template
+            $templateItems = [];
+            foreach ($itens as $item) {
+                $templateItems[] = [
+                    'etapa' => (string)($item['etapa'] ?? ''),
+                    'grupo' => (string)($item['grupo'] ?? ''),
+                    'categoria' => (string)($item['categoria'] ?? ''),
+                    'codigo' => (string)($item['codigo'] ?? ''),
+                    'descricao' => (string)($item['descricao'] ?? ''),
+                    'quantidade' => (float)($item['quantidade'] ?? 0),
+                    'unidade' => (string)($item['unidade'] ?? ''),
+                    'custo_material' => (float)($item['custo_material'] ?? 0),
+                    'custo_mao_obra' => (float)($item['custo_mao_obra'] ?? 0),
+                    'custo_equipamento' => (float)($item['custo_equipamento'] ?? 0),
+                    'classificacao_custo' => ($item['classificacao_custo'] ?? null) === null ? null : (string)$item['classificacao_custo'],
+                ];
+            }
+            
+            // Salvar no arquivo estimativa_custos.json
+            $templatePath = __DIR__ . '/../../estimativa_custos.json';
+            $templateData = [
+                'template_version' => '2.0',
+                'updated_at' => date('Y-m-d H:i:s'),
+                'source_orcamento_id' => $orcamentoId,
+                'items' => $templateItems
             ];
+            
+            $json = json_encode($templateData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            if ($json === false) {
+                throw new \Exception('Erro ao gerar JSON: ' . json_last_error_msg());
+            }
+            
+            if (file_put_contents($templatePath, $json) === false) {
+                throw new \Exception('Erro ao salvar arquivo de template');
+            }
+            
+            Logger::info('orcamentos.template_updated', [
+                'orcamento_id' => $orcamentoId,
+                'items_count' => count($templateItems)
+            ]);
+        } catch (\Exception $e) {
+            Logger::error('orcamentos.template_save.failed', [
+                'orcamento_id' => $orcamentoId,
+                'error' => $e->getMessage()
+            ]);
+            // Não propagar o erro para não interromper o fluxo de atualização do orçamento
         }
-        
-        // Salvar no arquivo estimativa_custos.json
-        $templatePath = __DIR__ . '/../../estimativa_custos.json';
-        $templateData = [
-            'template_version' => '2.0',
-            'updated_at' => date('Y-m-d H:i:s'),
-            'source_orcamento_id' => $orcamentoId,
-            'items' => $templateItems
-        ];
-        
-        $json = json_encode($templateData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        file_put_contents($templatePath, $json);
-        
-        Logger::info('orcamentos.template_updated', [
-            'orcamento_id' => $orcamentoId,
-            'items_count' => count($templateItems)
-        ]);
     }
     private static function templateItems(): array
     {
