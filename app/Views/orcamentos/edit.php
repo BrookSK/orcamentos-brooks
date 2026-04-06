@@ -243,6 +243,21 @@ declare(strict_types=1);
                 <div class="muted" style="font-size:12px;margin-top:8px;">Faça upload de até 4 imagens tamanho A4 para usar como capas do PDF exportado.</div>
             </div>
 
+            <div class="field full" style="border-top:1px solid rgba(255,255,255,.08); padding-top:16px; margin-top:12px;">
+                <label style="display:flex; align-items:center; gap:12px; cursor:pointer; background:rgba(201,151,58,0.1); padding:16px; border-radius:8px; border:2px solid rgba(201,151,58,0.3);">
+                    <input type="checkbox" name="tornar_template" value="1" style="width:auto; margin:0;">
+                    <div>
+                        <div style="font-size:15px; font-weight:700; color:#C9973A;">
+                            ⭐ Tornar esse o novo template padrão
+                        </div>
+                        <div class="muted" style="font-size:12px; margin-top:4px;">
+                            Ao marcar esta opção, todos os itens deste orçamento serão salvos como template. 
+                            Novos orçamentos criados com template usarão estes itens como base.
+                        </div>
+                    </div>
+                </label>
+            </div>
+
             <div class="field full" style="display:flex; justify-content:flex-end; gap:8px; flex-direction:row; align-items:center;">
                 <a class="btn" href="/?route=orcamentos/show&id=<?php echo (int)($orcamento['id'] ?? 0); ?>">Cancelar</a>
                 <button class="btn primary" type="submit">Atualizar</button>

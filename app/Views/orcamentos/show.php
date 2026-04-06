@@ -338,9 +338,13 @@ function toggleAdicionarItem() {
             <tr class="group-row" draggable="true" data-grupo="<?php echo htmlspecialchars($grupo); ?>" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8f 100%); cursor:move;">
                 <td style="cursor:move; text-align:center; width:30px; color:#4FC3F7; font-size:18px; padding:10px;">⋮⋮</td>
                 <td colspan="11" style="cursor:move; font-weight:800; padding:12px; font-size:15px; color:#fff; letter-spacing:1px;">
-                    <?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?>
+                    <span class="grupo-nome-display"><?php echo htmlspecialchars($grupo !== '' ? $grupo : 'SEM GRUPO'); ?></span>
+                    <input type="text" class="grupo-nome-edit" value="<?php echo htmlspecialchars($grupo); ?>" style="display:none; width:500px; padding:10px; font-size:15px; font-weight:800; border:2px solid #4FC3F7; border-radius:6px; background:#1a1a2e; color:#fff;">
                 </td>
                 <td colspan="2" style="padding:8px; text-align:right;">
+                    <button class="btn" style="padding:6px 12px; font-size:12px; background:#FFA726; color:#000; margin-right:8px;" onclick="editarNomeGrupo('<?php echo htmlspecialchars($grupo); ?>', this); event.stopPropagation();">
+                        ✏️ Editar Nome
+                    </button>
                     <button class="btn" style="padding:6px 12px; font-size:12px; background:#4FC3F7; color:#000;" onclick="editarDescontoGrupo('<?php echo htmlspecialchars($grupo); ?>', <?php echo (int)$orcamento['id']; ?>); event.stopPropagation();">
                         ⚙️ Ajuste de Valores
                     </button>
@@ -676,6 +680,103 @@ document.getElementById('toggle-admin-columns').addEventListener('change', funct
 <script src="/public/orcamento-drag-drop.js"></script>
 
 <script>
+function editarNomeGrupo(grupoAtual, btnElement) {
+    event.stopPropagation();
+    
+    // Encontrar a linha do grupo
+    const tr = btnElement.closest('tr.group-row');
+    const displaySpan = tr.querySelector('.grupo-nome-display');
+    const editInput = tr.querySelector('.grupo-nome-edit');
+    
+    if (!displaySpan || !editInput) return;
+    
+    // Esconder o texto e mostrar o input
+    displaySpan.style.display = 'none';
+    editInput.style.display = 'inline-block';
+    editInput.focus();
+    editInput.select();
+    
+    // Mudar o botão para "Salvar"
+    btnElement.innerHTML = '💾 Salvar';
+    btnElement.style.background = '#4CAF50';
+    btnElement.onclick = function(e) {
+        e.stopPropagation();
+        salvarNomeGrupo(grupoAtual, editInput.value.trim(), tr, btnElement);
+    };
+    
+    // Permitir salvar com Enter
+    editInput.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            salvarNomeGrupo(grupoAtual, editInput.value.trim(), tr, btnElement);
+        } else if (e.key === 'Escape') {
+            cancelarEdicaoGrupo(tr, btnElement, grupoAtual);
+        }
+    };
+}
+
+function cancelarEdicaoGrupo(tr, btnElement, grupoAtual) {
+    const displaySpan = tr.querySelector('.grupo-nome-display');
+    const editInput = tr.querySelector('.grupo-nome-edit');
+    
+    displaySpan.style.display = 'inline';
+    editInput.style.display = 'none';
+    
+    btnElement.innerHTML = '✏️ Editar Nome';
+    btnElement.style.background = '#FFA726';
+    btnElement.onclick = function(e) {
+        e.stopPropagation();
+        editarNomeGrupo(grupoAtual, btnElement);
+    };
+}
+
+function salvarNomeGrupo(grupoAtual, novoNome, tr, btnElement) {
+    if (!novoNome || novoNome === grupoAtual) {
+        cancelarEdicaoGrupo(tr, btnElement, grupoAtual);
+        return;
+    }
+    
+    // Mostrar loading
+    btnElement.innerHTML = '⏳ Salvando...';
+    btnElement.disabled = true;
+    
+    // Buscar o ID do grupo na tabela orcamento_opcoes
+    fetch('/?route=orcamentos/buscarIdGrupo', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'nome=' + encodeURIComponent(grupoAtual)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.id) {
+            alert('Erro: Grupo não encontrado no sistema');
+            cancelarEdicaoGrupo(tr, btnElement, grupoAtual);
+            return;
+        }
+        
+        // Atualizar o nome do grupo
+        return fetch('/?route=orcamentos/gruposUpdate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'id=' + data.id + '&nome=' + encodeURIComponent(novoNome)
+        });
+    })
+    .then(r => {
+        if (r && r.ok) {
+            // Recarregar a página para mostrar as mudanças
+            window.location.reload();
+        } else {
+            alert('Erro ao salvar. Tente novamente.');
+            cancelarEdicaoGrupo(tr, btnElement, grupoAtual);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Erro ao salvar: ' + err.message);
+        cancelarEdicaoGrupo(tr, btnElement, grupoAtual);
+    });
+}
+
 function editarDescontoGrupo(grupo, orcamentoId) {
     const modal = document.createElement('div');
     modal.id = 'modal-desconto-grupo';

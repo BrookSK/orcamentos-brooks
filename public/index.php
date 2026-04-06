@@ -326,6 +326,7 @@ if ($controllerName === 'orcamentos') {
         'gruposStore' => ['POST'],
         'gruposUpdate' => ['POST'],
         'gruposDelete' => ['POST'],
+        'buscarIdGrupo' => ['POST'],
         'categorias' => ['GET'],
         'categoriasStore' => ['POST'],
         'categoriasUpdate' => ['POST'],

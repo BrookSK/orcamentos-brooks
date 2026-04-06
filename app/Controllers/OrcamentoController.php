@@ -730,6 +730,13 @@ final class OrcamentoController
         try {
             Orcamento::update($id, $data);
             Logger::info('orcamentos.update.updated', ['id' => $id]);
+            
+            // Se marcou para tornar template, salvar itens como template
+            if (!empty($_POST['tornar_template'])) {
+                $this->saveItemsAsTemplate($id);
+                Logger::info('orcamentos.update.template_saved', ['id' => $id]);
+            }
+            
             $this->redirect('/?route=orcamentos/show&id=' . $id);
         } catch (\Exception $e) {
             Logger::error('orcamentos.update.failed', ['id' => $id, 'error' => $e->getMessage()]);
@@ -1361,6 +1368,29 @@ final class OrcamentoController
             OrcamentoOpcao::delete($id, 'grupo');
         }
         $this->redirect('/?route=orcamentos/grupos');
+    }
+
+    public function buscarIdGrupo(): void
+    {
+        header('Content-Type: application/json');
+        
+        $nome = trim((string)($_POST['nome'] ?? ''));
+        
+        if ($nome === '') {
+            echo json_encode(['error' => 'Nome não informado']);
+            return;
+        }
+        
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare('SELECT id FROM orcamento_opcoes WHERE tipo = :tipo AND nome = :nome LIMIT 1');
+        $stmt->execute([':tipo' => 'grupo', ':nome' => $nome]);
+        $result = $stmt->fetch();
+        
+        if ($result) {
+            echo json_encode(['id' => (int)$result['id']]);
+        } else {
+            echo json_encode(['error' => 'Grupo não encontrado']);
+        }
     }
 
     public function gruposUpdate(): void
