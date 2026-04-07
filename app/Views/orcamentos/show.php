@@ -276,6 +276,35 @@ $totalGeral = 0.0;
 </div>
 
 <script>
+// ========== FUNÇÕES PARA MANTER POSIÇÃO DO SCROLL ==========
+function salvarPosicaoScroll() {
+    // Salvar posição E a URL atual para garantir que só restaura na mesma página
+    sessionStorage.setItem('scrollPosition', window.scrollY.toString());
+    sessionStorage.setItem('scrollPageUrl', window.location.href);
+}
+
+function restaurarPosicaoScroll() {
+    const scrollPos = sessionStorage.getItem('scrollPosition');
+    const scrollPageUrl = sessionStorage.getItem('scrollPageUrl');
+    
+    // Só restaura se:
+    // 1. Existe uma posição salva
+    // 2. A URL é a mesma (mesma página)
+    if (scrollPos !== null && scrollPageUrl === window.location.href) {
+        // Pequeno delay para garantir que a página carregou completamente
+        setTimeout(() => {
+            window.scrollTo(0, parseInt(scrollPos));
+            // Limpar após usar
+            sessionStorage.removeItem('scrollPosition');
+            sessionStorage.removeItem('scrollPageUrl');
+        }, 100);
+    }
+}
+
+// Restaurar posição ao carregar a página
+window.addEventListener('load', restaurarPosicaoScroll);
+
+// ========== TOGGLE ADICIONAR ITEM ==========
 function toggleAdicionarItem() {
     const form = document.getElementById('form-adicionar-item');
     const icon = document.getElementById('toggle-icon');
@@ -484,7 +513,7 @@ function toggleAdicionarItem() {
                                     <!-- DEBUG: Item não está 100% concluído (<?php echo $percentualRealizado; ?>%) -->
                                 <?php endif; ?>
                                 
-                                <form class="inline" method="post" action="/?route=orcamentos/itemDelete" onsubmit="return confirm('Excluir este item?');">
+                                <form class="inline" method="post" action="/?route=orcamentos/itemDelete" onsubmit="salvarPosicaoScroll(); return confirm('Excluir este item?');">
                                     <input type="hidden" name="orcamento_id" value="<?php echo (int)$orcamento['id']; ?>">
                                     <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
                                     <button class="btn danger" type="submit">Excluir</button>
@@ -910,6 +939,9 @@ function excluirGrupo(grupo, orcamentoId) {
         return;
     }
     
+    // Salvar posição do scroll
+    salvarPosicaoScroll();
+    
     const loadingMsg = document.createElement('div');
     loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:10001;';
     loadingMsg.innerHTML = '⏳ Excluindo grupo...';
@@ -950,6 +982,9 @@ function excluirCategoria(grupo, categoria, orcamentoId) {
     if (!confirm(`Tem certeza que deseja excluir a categoria "${categoria}" do grupo "${grupo}" e TODOS os seus itens?\n\nEsta ação não pode ser desfeita!`)) {
         return;
     }
+    
+    // Salvar posição do scroll
+    salvarPosicaoScroll();
     
     const loadingMsg = document.createElement('div');
     loadingMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2196F3;color:white;padding:12px 20px;border-radius:8px;z-index:10001;';
