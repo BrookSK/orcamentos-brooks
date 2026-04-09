@@ -36,6 +36,7 @@ $margemEquipamentosGlobal = (float)($orcamento['margem_equipamentos'] ?? 20);
         <div class="actions">
             <a class="btn" href="/?route=orcamentos/index">Voltar</a>
             <a class="btn" href="/?route=orcamentos/edit&id=<?php echo (int)$orcamento['id']; ?>">Editar cabeçalho</a>
+            <a class="btn" href="/?route=orcamentos/csv&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Exportar CSV</a>
             <a class="btn" style="background: #e94560; color: white;" href="/?route=orcamentos/adequacao&id=<?php echo (int)$orcamento['id']; ?>">💰 Ajustar Valor do Contrato</a>
             <a class="btn primary" href="/?route=orcamentos/pdf&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">📄 PDF Comercial</a>
             <a class="btn" style="background: #6b4423; color: white;" href="/?route=orcamentos/pdfAdmin&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">📊 PDF Administrativo</a>

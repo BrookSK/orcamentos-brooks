@@ -46,6 +46,7 @@ $totalGeral = 0.0;
         <div class="actions">
             <a class="btn" href="/?route=orcamentos/index">Voltar</a>
             <a class="btn" href="/?route=orcamentos/edit&id=<?php echo (int)$orcamento['id']; ?>">Editar cabeçalho</a>
+            <a class="btn" href="/?route=orcamentos/csv&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Exportar CSV</a>
             <button class="btn" style="background: #2196F3; color: white;" onclick="recalcularMargens(<?php echo (int)$orcamento['id']; ?>)">🔄 Recalcular Margens</button>
             <a class="btn" style="background: #e94560; color: white;" href="/?route=orcamentos/adequacao&id=<?php echo (int)$orcamento['id']; ?>">💰 Ajustar Valor do Contrato</a>
             <!-- <a class="btn" href="/?route=orcamentos/print&id=<?php echo (int)$orcamento['id']; ?>" target="_blank">Imprimir</a> -->
