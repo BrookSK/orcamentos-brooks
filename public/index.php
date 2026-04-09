@@ -338,6 +338,7 @@ if ($controllerName === 'orcamentos') {
         'print' => ['GET'],
         'pdf' => ['GET'],
         'pdfAdmin' => ['GET'],
+        'csv' => ['GET'],
         'adequacao' => ['GET'],
         'adequacaoPreview' => ['POST'],
         'adequacaoAplicar' => ['POST'],

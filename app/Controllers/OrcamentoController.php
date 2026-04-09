@@ -271,6 +271,89 @@ final class OrcamentoController
             // Não propagar o erro para não interromper o fluxo de atualização do orçamento
         }
     }
+
+    public function csv(): void
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        Logger::info('orcamentos.csv', ['id' => $id]);
+
+        $orcamento = Orcamento::find($id);
+        if (!$orcamento) {
+            Logger::warning('orcamentos.csv.not_found', ['id' => $id]);
+            $this->redirect('/?route=orcamentos/index');
+            return;
+        }
+
+        $items = OrcamentoItem::allByOrcamento($id);
+
+        $numeroProposta = (string)($orcamento['numero_proposta'] ?? ('orcamento_' . $id));
+        $safe = preg_replace('/[^A-Za-z0-9._-]+/', '_', $numeroProposta);
+        if (!is_string($safe) || $safe === '') {
+            $safe = 'orcamento_' . $id;
+        }
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $safe . '_' . $id . '.csv"');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+
+        $out = fopen('php://output', 'wb');
+        if (!is_resource($out)) {
+            http_response_code(500);
+            echo 'Erro ao gerar CSV.';
+            return;
+        }
+
+        fprintf($out, "\xEF\xBB\xBF");
+
+        $header = [
+            'id',
+            'orcamento_id',
+            'grupo',
+            'categoria',
+            'codigo',
+            'descricao',
+            'quantidade',
+            'unidade',
+            'valor_unitario',
+            'valor_total',
+            'ordem',
+            'etapa',
+            'custo_material',
+            'custo_mao_obra',
+            'margem_lucro',
+            'desconto_item',
+            'valor_cobranca',
+            'percentual_realizado',
+        ];
+        fputcsv($out, $header, ';');
+
+        foreach ($items as $it) {
+            $row = [
+                (string)($it['id'] ?? ''),
+                (string)($it['orcamento_id'] ?? ''),
+                (string)($it['grupo'] ?? ''),
+                (string)($it['categoria'] ?? ''),
+                (string)($it['codigo'] ?? ''),
+                (string)($it['descricao'] ?? ''),
+                self::formatPtBrNumber((float)($it['quantidade'] ?? 0), 2),
+                (string)($it['unidade'] ?? ''),
+                self::formatPtBrNumber((float)($it['valor_unitario'] ?? 0), 2),
+                self::formatPtBrNumber((float)($it['valor_total'] ?? 0), 2),
+                (string)($it['ordem'] ?? ''),
+                (string)($it['etapa'] ?? ''),
+                self::formatPtBrNumber((float)($it['custo_material'] ?? 0), 2),
+                self::formatPtBrNumber((float)($it['custo_mao_obra'] ?? 0), 2),
+                self::formatPtBrNumber((float)($it['margem_lucro'] ?? 0), 2),
+                self::formatPtBrNumber((float)($it['desconto_item'] ?? 0), 2),
+                self::formatPtBrNumber((float)($it['valor_cobranca'] ?? 0), 2),
+                self::formatPtBrNumber((float)($it['percentual_realizado'] ?? 0), 2),
+            ];
+            fputcsv($out, $row, ';');
+        }
+
+        fclose($out);
+        exit;
+    }
     private static function templateItems(): array
     {
         $jsonPath = __DIR__ . '/../../estimativa_custos.json';

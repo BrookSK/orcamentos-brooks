@@ -8,6 +8,12 @@ declare(strict_types=1);
             <strong>Erro:</strong> <?php echo htmlspecialchars((string)$errors['geral']); ?>
         </div>
     <?php endif; ?>
+
+    <div class="actions" style="margin-bottom:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="/?route=orcamentos/show&id=<?php echo (int)($orcamento['id'] ?? 0); ?>">Voltar</a>
+        <a class="btn" href="/?route=orcamentos/csv&id=<?php echo (int)($orcamento['id'] ?? 0); ?>" target="_blank">Exportar CSV completo</a>
+    </div>
+
     <form method="post" action="/?route=orcamentos/update" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?php echo (int)($orcamento['id'] ?? 0); ?>">
         <input type="hidden" name="tipo_orcamento" value="<?php echo htmlspecialchars((string)($orcamento['tipo_orcamento'] ?? 'manual')); ?>">
