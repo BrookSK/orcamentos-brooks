@@ -327,7 +327,31 @@ final class OrcamentoController
         ];
         fputcsv($out, $header, ';');
 
+        $sumCustoMaterial = 0.0;
+        $sumCustoMaoObra = 0.0;
+        $sumValorTotal = 0.0;
+        $sumValorCobranca = 0.0;
+
         foreach ($items as $it) {
+            $quantidade = (float)($it['quantidade'] ?? 0);
+            $valorUnitario = (float)($it['valor_unitario'] ?? 0);
+            $custoMaterial = (float)($it['custo_material'] ?? 0);
+            $custoMaoObra = (float)($it['custo_mao_obra'] ?? 0);
+            $margemLucro = (float)($it['margem_lucro'] ?? 0);
+            $descontoItem = (float)($it['desconto_item'] ?? 0);
+
+            $valorCobranca = (float)($it['valor_cobranca'] ?? 0);
+            if ($valorCobranca <= 0) {
+                $valorCobranca = $valorUnitario;
+            }
+
+            $valorTotal = round($quantidade * $valorCobranca, 2);
+
+            $sumCustoMaterial += $custoMaterial;
+            $sumCustoMaoObra += $custoMaoObra;
+            $sumValorTotal += $valorTotal;
+            $sumValorCobranca += $valorCobranca;
+
             $row = [
                 (string)($it['id'] ?? ''),
                 (string)($it['orcamento_id'] ?? ''),
@@ -335,21 +359,39 @@ final class OrcamentoController
                 (string)($it['categoria'] ?? ''),
                 (string)($it['codigo'] ?? ''),
                 (string)($it['descricao'] ?? ''),
-                self::formatPtBrNumber((float)($it['quantidade'] ?? 0), 2),
+                self::formatPtBrNumber($quantidade, 2),
                 (string)($it['unidade'] ?? ''),
-                self::formatPtBrNumber((float)($it['valor_unitario'] ?? 0), 2),
-                self::formatPtBrNumber((float)($it['valor_total'] ?? 0), 2),
+                self::formatPtBrNumber($valorUnitario, 2),
+                self::formatPtBrNumber($valorTotal, 2),
                 (string)($it['ordem'] ?? ''),
                 (string)($it['etapa'] ?? ''),
-                self::formatPtBrNumber((float)($it['custo_material'] ?? 0), 2),
-                self::formatPtBrNumber((float)($it['custo_mao_obra'] ?? 0), 2),
-                self::formatPtBrNumber((float)($it['margem_lucro'] ?? 0), 2),
-                self::formatPtBrNumber((float)($it['desconto_item'] ?? 0), 2),
-                self::formatPtBrNumber((float)($it['valor_cobranca'] ?? 0), 2),
+                self::formatPtBrNumber($custoMaterial, 2),
+                self::formatPtBrNumber($custoMaoObra, 2),
+                self::formatPtBrNumber($margemLucro, 2),
+                self::formatPtBrNumber($descontoItem, 2),
+                self::formatPtBrNumber($valorCobranca, 2),
                 self::formatPtBrNumber((float)($it['percentual_realizado'] ?? 0), 2),
             ];
             fputcsv($out, $row, ';');
         }
+
+        $totaisGerais = OrcamentoItem::getTotaisGerais($id);
+        $rowTotais = array_fill(0, count($header), '');
+        $rowTotais[0] = 'TOTAIS';
+        $rowTotais[5] = 'Soma itens';
+        $rowTotais[9] = self::formatPtBrNumber($sumValorTotal, 2);
+        $rowTotais[12] = self::formatPtBrNumber($sumCustoMaterial, 2);
+        $rowTotais[13] = self::formatPtBrNumber($sumCustoMaoObra, 2);
+        $rowTotais[16] = self::formatPtBrNumber($sumValorCobranca, 2);
+        fputcsv($out, $rowTotais, ';');
+
+        $rowTotaisDb = array_fill(0, count($header), '');
+        $rowTotaisDb[0] = 'TOTAIS_DB';
+        $rowTotaisDb[5] = 'getTotaisGerais';
+        $rowTotaisDb[12] = self::formatPtBrNumber((float)($totaisGerais['total_material'] ?? 0), 2);
+        $rowTotaisDb[13] = self::formatPtBrNumber((float)($totaisGerais['total_mao_obra'] ?? 0), 2);
+        $rowTotaisDb[16] = self::formatPtBrNumber((float)($totaisGerais['total_cobranca'] ?? 0), 2);
+        fputcsv($out, $rowTotaisDb, ';');
 
         fclose($out);
         exit;
